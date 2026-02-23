@@ -1,0 +1,30 @@
+# Environment
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets (real credentials)
+secrets/database.json
+secrets/slack.json
+secrets/ssh_key
+
+# Runtime
+runtime/*.json
+runtime/*.jsonl
+runtime/logs/*.log
+runtime/logs/*.json
+
+# Frontend payloads (generated)
+frontend/warden_payload.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

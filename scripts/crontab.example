@@ -1,0 +1,20 @@
+# ============================================
+# Warden — Cron Schedule (Ubuntu)
+# ============================================
+# Add to crontab: crontab -e
+# Adjust paths to your installation.
+
+# Export payload every 15 seconds (via wrapper — cron min is 1 min)
+* * * * * cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
+* * * * * sleep 15 && cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
+* * * * * sleep 30 && cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
+* * * * * sleep 45 && cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
+
+# Slack alerts (threshold warnings/criticals) every minute
+* * * * * cd /opt/warden && /usr/bin/python3 scripts/slack_alerts.py >> runtime/logs/slack_alerts.log 2>&1
+
+# Daily Slack digest at 08:00 (server local time)
+0 8 * * * cd /opt/warden && /usr/bin/python3 scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
+
+# Daily janitor at 03:00
+0 3 * * * cd /opt/warden && /usr/bin/python3 scripts/janitor.py >> runtime/logs/janitor.log 2>&1
