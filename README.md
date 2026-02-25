@@ -178,7 +178,8 @@ Warden/
 
 ### Alertas imediatos (`scripts/slack_alerts.py`)
 - Avalia thresholds do payload exportado (`CPU`, `RAM`, `Disco`, `MariaDB`)
-- Envia `warning` e `critical` para Slack com deduplicação + cooldown (`SLACK_ALERT_COOLDOWN_MINUTES`)
+- Só envia `warning`/`critical` após persistirem acima do threshold por `SLACK_ALERT_SUSTAIN_MINUTES` (default: `2`)
+- Após confirmação, aplica deduplicação + cooldown (`SLACK_ALERT_COOLDOWN_MINUTES`) para lembretes
 - Envia recoveries quando o alerta volta a `resolved` (se `notify_on_recovery=true`)
 - Mensagens incluem `<!channel>`, severidade, valor atual, limite e timestamps
 
@@ -204,6 +205,7 @@ cd /home/eferreira/MAIATRON/Warden
 ### Variáveis e segredos de Slack
 - `.env`:
   - `SLACK_ENABLED=true`
+  - `SLACK_ALERT_SUSTAIN_MINUTES=2`
   - `SLACK_ALERT_COOLDOWN_MINUTES=15`
   - `SLACK_DIGEST_HOUR_UTC=8`
   - `SLACK_DIGEST_MINUTE_UTC=0`

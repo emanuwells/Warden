@@ -174,6 +174,8 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
     state_alerts = state.get("alerts", {})
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
+    sustain_minutes = max(0, int(getattr(settings, "slack_alert_sustain_minutes", 2)))
+    sustain_window = timedelta(minutes=sustain_minutes)
     cooldown = timedelta(minutes=max(1, settings.slack_alert_cooldown_minutes))
 
     sent_count = 0
@@ -194,26 +196,39 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
         if new_status == "firing":
             send_now = False
             reminder = False
+            notification: str | None = None
+            became_firing = previous_status != "firing"
+            if became_firing:
+                open_since = now_iso
+                open_since_dt = now
+            else:
+                open_since_dt = _parse_iso(open_since)
+                if open_since_dt is None:
+                    open_since = now_iso
+                    open_since_dt = now
+
+            sustained = (now - open_since_dt) >= sustain_window
             escalated_to_critical = (
                 previous_status == "firing"
+                and previous_notified
                 and is_critical
                 and previous_severity != "critical"
             )
-            became_firing = previous_status != "firing"
-
-            if became_firing:
-                open_since = now_iso
-            elif escalated_to_critical:
-                send_now = True
 
             if SEND_WARNINGS_TO_SLACK or is_critical:
-                if became_firing:
+                if not previous_notified and sustained:
                     send_now = True
-                elif previous_last_sent and (now - previous_last_sent) >= cooldown:
+                    notification = "firing"
+                elif escalated_to_critical:
+                    send_now = True
+                    notification = "escalated"
+                elif previous_notified and previous_last_sent and (now - previous_last_sent) >= cooldown:
                     send_now = True
                     reminder = True
-                elif previous_last_sent is None:
+                    notification = "reminder"
+                elif previous_notified and previous_last_sent is None:
                     send_now = True
+                    notification = "reminder"
 
             sent_to_slack = False
 
@@ -224,8 +239,7 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                     sent_to_slack = True
                     previous["last_sent_at"] = now_iso
 
-            if became_firing or reminder or escalated_to_critical:
-                notification = "reminder" if reminder else ("escalated" if escalated_to_critical else "firing")
+            if notification is not None:
                 _append_event(
                     {
                         "sent_at": now_iso,
@@ -265,7 +279,7 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                 sent_to_slack = True
                 previous["last_sent_at"] = now_iso
 
-        if was_firing:
+        if was_firing and previous_notified:
             _append_event(
                 {
                     "sent_at": now_iso,

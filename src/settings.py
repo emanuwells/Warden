@@ -98,6 +98,7 @@ class Settings:
     # Slack
     slack_enabled: bool = True
     slack_config_path: str = "secrets/slack.json"
+    slack_alert_sustain_minutes: int = 2
     slack_alert_cooldown_minutes: int = 15
     slack_digest_hour_utc: int = 8
     slack_digest_minute_utc: int = 0
@@ -143,6 +144,7 @@ class Settings:
             db_monitor_interval=int(os.getenv("DB_MONITOR_INTERVAL", "60")),
             slack_enabled=_env_bool("SLACK_ENABLED", True),
             slack_config_path=os.getenv("SLACK_CONFIG_PATH", "secrets/slack.json"),
+            slack_alert_sustain_minutes=int(os.getenv("SLACK_ALERT_SUSTAIN_MINUTES", "2")),
             slack_alert_cooldown_minutes=int(os.getenv("SLACK_ALERT_COOLDOWN_MINUTES", "15")),
             slack_digest_hour_utc=int(os.getenv("SLACK_DIGEST_HOUR_UTC", "8")),
             slack_digest_minute_utc=int(os.getenv("SLACK_DIGEST_MINUTE_UTC", "0")),
