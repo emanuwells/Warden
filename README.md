@@ -1,276 +1,132 @@
-# Warden — System Resource Monitor
+# Warden — Runtime Oficial do Pipeline
 
-> O guardião da tua infraestrutura. Monitoriza CPU, RAM, Disco e Rede em semi-real time.
+Warden é o runtime de monitorização (collector + export + alertas) do ecossistema MAIATRON.
 
-## Visão Geral
+## Contrato operacional atual
 
-O **Warden** é um monitor de recursos de sistema de alta performance para servidores Ubuntu. Recolhe métricas vitais via `psutil`, armazena em MariaDB (JSON), e alimenta um dashboard frontend com design MAIATRON.
-
-Complementa o monitor de pipelines **Overseer**.
+- Frontend oficial: `/usr/share/nginx/html/MAIATRON/apps/warden` (UI + `api.php`)
+- Runtime oficial deste repo: `/home/eferreira/MAIATRON/Warden`
+- Snapshots exportados para consumo da API:
+  - `runtime/export/warden_fast_snapshot.json`
+  - `runtime/export/warden_heavy_snapshot.json`
+  - `runtime/export/warden_payload.json`
+- Retenção operacional: `RETENTION_DAYS=7`
+- Histórico estendido: snapshot semanal agregado (`runtime/archive/weekly`)
 
 ## Arquitetura
 
-```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────┐
-│  warden.py       │────>│  MariaDB          │────>│ export_payload.py    │
-│  (Collector)     │     │  warden_metrics   │     │ (cron every 15s)     │
-│  psutil @ 15s    │     │  - id             │     └──────────┬───────────┘
-│                  │     │  - captured_at    │                │
-│  Janitor         │     │  - metrics (JSON) │                v
-│  (daily cleanup) │     └──────────────────┘     ┌──────────────────────┐
-└──────────────────┘                               │ warden_payload.json  │
-                                                   │ (static file)        │
-                                                   └──────────┬───────────┘
-                                                              │
-                                                              v
-                                                   ┌──────────────────────┐
-                                                   │ index.html           │
-                                                   │ (MAIATRON Dashboard) │
-                                                   │ - Gauges             │
-                                                   │ - Line Charts        │
-                                                   │ - Per-core bars      │
-                                                   │ - Dark/Light mode    │
-                                                   └──────────────────────┘
-```
+1. `warden.py` recolhe métricas (CPU/RAM/Disco/Rede + processos/top disco).
+2. Dados entram na DB `Warden` (`warden_metrics`).
+3. `scripts/export_payload.py` gera snapshots `fast/heavy/full`.
+4. `apps/warden/api.php` (no MAIATRON) lê snapshots e serve `ops_fast/ops_heavy/full`.
+5. Jobs auxiliares:
+   - `scripts/janitor.py`
+   - `scripts/slack_alerts.py`
+   - `scripts/slack_daily_digest.py`
+   - `scripts/weekly_archive.py`
 
-## Quick Start
+## Setup rápido (host)
 
-### 1. Instalar dependências
 ```bash
-cd Warden
+cd /home/eferreira/MAIATRON/Warden
+python3 -m venv .venv
+. .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 2. Configurar
-```bash
 cp .env.example .env
 cp secrets/database.json.example secrets/database.json
-# Editar com as credenciais reais
 ```
 
-### 3. Criar tabela
+Criar schema base:
+
 ```bash
-python warden.py --setup
+.venv/bin/python warden.py --setup
 ```
 
-### 4. Testar captura
+Teste de recolha:
+
 ```bash
-python warden.py --once
+.venv/bin/python warden.py --once
+.venv/bin/python scripts/export_payload.py --mode fast
+.venv/bin/python scripts/export_payload.py --mode heavy
+.venv/bin/python scripts/export_payload.py --mode full
 ```
 
-### 5. Arrancar collector
-```bash
-python warden.py
-```
+## Serviço + cron (host)
 
-### 6. Deploy como serviço
+- Serviço systemd: `systemd/warden.service`
+- Cron recomendado: `scripts/crontab.example`
+
+Passos típicos:
+
 ```bash
 sudo cp systemd/warden.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now warden
-```
-
-### 7. Configurar export (cron)
-```bash
+# Evitar collector duplicado via user service:
+systemctl --user stop warden.service || true
+systemctl --user disable warden.service || true
 crontab -e
-# Adicionar linhas de scripts/crontab.example
+# colar conteúdo de scripts/crontab.example
 ```
 
-### 7.1. Configurar alertas Slack (opcional, recomendado)
-```bash
-cp secrets/slack.json.example secrets/slack.json
-# Editar webhook_url e channel
-```
+## Docker (pipeline-only, DB externa)
 
-Jobs de cron recomendados (já incluídos em `scripts/crontab.example`):
-- `scripts/slack_alerts.py` a cada minuto (warnings/criticals + recovery)
-- `scripts/slack_daily_digest.py` às `08:00` (hora local do servidor)
+Este repo inclui dockerização do pipeline (não frontend).
 
-Comportamento atual de notificações Slack:
-- Alertas `warning` e `critical` enviam mensagem imediata com menção `<!channel>`
-- Recoveries podem ser enviados (controlado por `notify_on_recovery` em `secrets/slack.json`)
-- Digest diário envia resumo com menção `<!channel>`
+Ficheiros:
+- `Dockerfile`
+- `docker-compose.yml`
+- `.env.docker.example`
+- `scripts/docker.crontab`
+- `scripts/docker-scheduler.sh`
 
-### 8. Servir frontend (nginx)
-```nginx
-server {
-    listen 80;
-    server_name warden.example.com;
-    root /opt/warden/frontend;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
-
-## Estrutura
-
-```
-Warden/
-├── warden.py                # CLI principal
-├── requirements.txt
-├── .env.example
-├── .gitignore
-├── AGENTS.md
-├── CHANGELOG.md
-├── README.md
-│
-├── src/
-│   ├── __init__.py
-│   ├── settings.py          # Configuração
-│   ├── collector.py         # Captura métricas (psutil)
-│   ├── db_writer.py         # MariaDB read/write
-│   ├── slack_notifier.py    # Webhook Slack
-│   └── janitor.py           # Cleanup automático
-│
-├── frontend/
-│   ├── index.html           # Dashboard (MAIATRON)
-│   ├── warden.css           # Estilos
-│   ├── warden.js            # Lógica SPA
-│   └── warden_payload.json  # (gerado, gitignored)
-│
-├── scripts/
-│   ├── setup_db.sql         # DDL MariaDB
-│   ├── export_payload.py    # DB → JSON
-│   ├── janitor.py           # Cleanup manual
-│   ├── slack_alerts.py      # Alertas imediatos para Slack
-│   ├── slack_daily_digest.py # Digest diário para Slack
-│   └── crontab.example
-│
-├── config/
-│   └── auth.local.json.example
-│
-├── secrets/
-│   ├── database.json.example
-│   └── README.md
-│
-├── systemd/
-│   └── warden.service
-│
-└── runtime/
-    └── logs/
-```
-
-## Métricas Capturadas
-
-| Categoria | Métricas |
-|---|---|
-| **CPU** | Total %, per-core %, frequência, load average |
-| **RAM** | Total, usada, livre, %, swap |
-| **Disco** | Total, usado, livre, %, I/O read/write, top consumidores (ficheiros) |
-| **Rede** | Upload/Download Mbps, bytes, pacotes |
-
-## Frontend Features
-
-- **Dashboard Overview:** 4 gauges + 2 gráficos 24h
-- **CPU Tab:** Gráfico tempo real + barras per-core + histórico 7 dias
-- **Memória Tab:** Info cards + gráfico tempo real + histórico 7 dias
-- **Disco Tab:** Info cards + I/O tempo real + doughnut de espaço + top consumidores de disco
-- **Rede Tab:** Info cards + gráfico tempo real + histórico 7 dias
-- **Auth:** Login com sessão persistente (MAIATRON auth)
-- **Theme:** Dark mode (padrão) / Light mode toggle
-- **Auto-refresh:** Cada 15 segundos
-- **Responsivo:** Mobile-first
-
-## Slack Notifications
-
-### Alertas imediatos (`scripts/slack_alerts.py`)
-- Avalia thresholds do payload exportado (`CPU`, `RAM`, `Disco`, `MariaDB`)
-- Só envia `warning`/`critical` após persistirem acima do threshold por `SLACK_ALERT_SUSTAIN_MINUTES` (default: `2`)
-- Após confirmação, aplica deduplicação + cooldown (`SLACK_ALERT_COOLDOWN_MINUTES`) para lembretes
-- Envia recoveries quando o alerta volta a `resolved` (se `notify_on_recovery=true`)
-- Mensagens incluem `<!channel>`, severidade, valor atual, limite e timestamps
-
-Exemplo de execução manual:
-```bash
-cd /home/eferreira/MAIATRON/Warden
-.venv/bin/python scripts/slack_alerts.py --dry-run
-```
-
-### Digest diário (`scripts/slack_daily_digest.py`)
-- Resume o dia anterior (UTC) com:
-  - Host (uptime estimado + picos CPU/RAM/Disco)
-  - MariaDB (QPS/TPS médios, slow_qps max, threads_running max)
-  - Alertas (eventos, firing, critical, warning, top recorrentes)
-- Mensagem inclui menção `<!channel>`
-
-Exemplo de execução manual:
-```bash
-cd /home/eferreira/MAIATRON/Warden
-.venv/bin/python scripts/slack_daily_digest.py --dry-run
-```
-
-### Variáveis e segredos de Slack
-- `.env`:
-  - `SLACK_ENABLED=true`
-  - `SLACK_ALERT_SUSTAIN_MINUTES=2`
-  - `SLACK_ALERT_COOLDOWN_MINUTES=15`
-  - `SLACK_DIGEST_HOUR_UTC=8`
-  - `SLACK_DIGEST_MINUTE_UTC=0`
-- `secrets/slack.json`:
-  - `webhook_url`
-  - `channel`
-  - `notify_on_recovery`
-
-### Cron (exemplo)
-```cron
-* * * * * flock -n /tmp/warden_slack_alerts.lock -c 'cd /home/eferreira/MAIATRON/Warden && .venv/bin/python scripts/slack_alerts.py >> runtime/logs/slack_alerts.log 2>&1'
-0 8 * * * cd /home/eferreira/MAIATRON/Warden && .venv/bin/python scripts/slack_daily_digest.py >> runtime/logs/slack_digest.log 2>&1
-```
-
-## Requisitos
-
-- **Python:** 3.10+
-- **MariaDB:** 10.2+ (suporte JSON)
-- **SO:** Ubuntu Server (recomendado)
-- **Browser:** Chrome, Firefox, Safari, Edge (moderno)
-
-## Retenção de dados (30 dias)
-
-- `RETENTION_DAYS=30` por defeito
-- limpeza diária via janitor (`src/janitor.py`)
-- query aplicada: `DELETE FROM warden_metrics WHERE captured_at < NOW() - INTERVAL %s DAY`
-
-### Verificação manual (SQL)
-
-```sql
-SELECT COUNT(*) AS old_rows
-FROM warden_metrics
-WHERE captured_at < NOW() - INTERVAL 30 DAY;
-```
-
-Resultado esperado após janitor: `old_rows = 0`
-
-### Execução manual do janitor
+Arranque:
 
 ```bash
-cd /home/eferreira/MAIATRON/Warden
-.venv/bin/python scripts/janitor.py
+cp .env.docker.example .env.docker
+docker compose up -d --build
 ```
 
-## Top consumidores de disco (visibilidade total via helper root)
+Serviços:
+- `warden-collector`: corre `python warden.py`
+- `warden-scheduler`: corre cron para export/janitor/slack/archive
 
-Por defeito, o `warden.service` corre como utilizador não-root (`eferreira`), por isso o scan local de disco só vê ficheiros legíveis por esse utilizador.
+### Host metrics em Docker
 
-Para mostrar **top ficheiros do sistema inteiro** no dashboard (`source=sudo_helper`, `visibility_scope=system`), usar helper root dedicado:
+Para recolher métricas da máquina anfitriã:
 
-1. Instalar helper root-owned:
-   - `/usr/local/libexec/warden-disk-top-helper.py`
-   - `/usr/local/sbin/warden-disk-top-helper`
-2. Criar sudoers restrito:
-   - `/etc/sudoers.d/warden-disk-top`
-3. Configurar `.env`:
-   - `DISK_TOP_SCAN_MODE=sudo_helper`
-   - `DISK_TOP_SUDO_HELPER_CMD=/usr/local/sbin/warden-disk-top-helper`
+- `MONITOR_ROOT_PATH=/hostfs` (env)
+- mount host root read-only: `/:/hostfs:ro`
+- `pid: host`
+- `network_mode: host`
 
-Templates para instalação:
-- `scripts/warden_disk_top_helper.py`
-- `scripts/warden-disk-top-helper.wrapper.sh`
-- `scripts/warden-disk-top.sudoers`
+Isto mantém o comportamento de monitorização de disco/processos coerente com host.
 
-Se o helper root falhar, o collector faz fallback automático para scan local e o payload marca:
-- `source=local_scan`
-- `visibility_scope=user_limited`
-- `warning=\"root helper unavailable; using local scan\"`
+## Variáveis-chave
+
+- `RETENTION_DAYS=7`
+- `WEEKLY_ARCHIVE_RETENTION_WEEKS=6`
+- `EXPORT_PATH`, `EXPORT_FAST_PATH`, `EXPORT_HEAVY_PATH`
+- `MONITOR_ROOT_PATH` (novo)
+- `ALERT_DISK_WARN=95`, `ALERT_DISK_CRITICAL=98`
+- `SLACK_WARNING_*` e `SLACK_CRITICAL_*`
+
+## QA rápido
+
+```bash
+python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py
+```
+
+Smoke API (no host MAIATRON):
+
+```bash
+curl -I http://127.0.0.1/MAIATRON/apps/warden/index.html
+curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast | head
+curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy | head
+```
+
+## Git readiness checklist
+
+- Não commitar `.env` nem segredos em `secrets/*.json` reais.
+- Não commitar artefactos gerados em `runtime/export`, `runtime/cache`, `runtime/archive`, `runtime/logs`.
+- Commits devem conter apenas código, docs, scripts e templates (`*.example`).

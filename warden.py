@@ -112,7 +112,7 @@ def cmd_setup():
 
 def cmd_once():
     """Single metric capture → DB insert → stdout."""
-    payload = collect()
+    payload = collect(include_heavy=True)
     insert_metric(payload)
     print(json.dumps(payload, indent=2))
     logger.info("Single capture done.")
@@ -132,7 +132,7 @@ def cmd_run():
 
     while _running:
         try:
-            payload = collect()
+            payload = collect(include_heavy=False)
             insert_metric(payload)
             logger.debug("Metric captured: CPU=%.1f%% MEM=%.1f%%",
                          payload["cpu"]["total_percent"],
@@ -165,7 +165,7 @@ def cmd_export():
     summary_7d = fetch_summary(hours=168)     # 7d averages
 
     # Current snapshot (last record)
-    current = latest[-1]["metrics"] if latest else collect()
+    current = latest[-1]["metrics"] if latest else collect(include_heavy=True)
     db_current = collect_db_metrics()
     alerts_current = evaluate_alerts(current, db_current)
     alerts_history = _load_recent_alert_history()

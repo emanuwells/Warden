@@ -143,7 +143,9 @@ def _load_db_summary(start_dt: datetime, end_dt: datetime) -> dict[str, Any]:
             "count": 0,
             "qps_avg": 0.0,
             "tps_avg": 0.0,
-            "slow_qps_max": 0.0,
+            "db_storage_gb_max": 0.0,
+            "storage_growth_gb_h_avg": 0.0,
+            "storage_growth_gb_h_max": 0.0,
             "threads_running_max": 0,
         }
 
@@ -151,7 +153,9 @@ def _load_db_summary(start_dt: datetime, end_dt: datetime) -> dict[str, Any]:
         "count": len(filtered),
         "qps_avg": round(mean(_to_float(item.get("qps")) for item in filtered), 3),
         "tps_avg": round(mean(_to_float(item.get("tps")) for item in filtered), 3),
-        "slow_qps_max": round(max(_to_float(item.get("slow_qps")) for item in filtered), 3),
+        "db_storage_gb_max": round(max(_to_float(item.get("storage_total_gb")) for item in filtered), 3),
+        "storage_growth_gb_h_avg": round(mean(_to_float(item.get("storage_growth_gb_h")) for item in filtered), 3),
+        "storage_growth_gb_h_max": round(max(_to_float(item.get("storage_growth_gb_h")) for item in filtered), 3),
         "threads_running_max": int(max(_to_float(item.get("threads_running")) for item in filtered)),
     }
 
@@ -223,7 +227,11 @@ def _build_message(
             f"TPS medio: `{_fmt_num(db_summary['tps_avg'], 3)}`"
         ),
         (
-            f"- slow_qps max: `{_fmt_num(db_summary['slow_qps_max'], 3)}` | "
+            f"- Consumo DB max: `{_fmt_num(db_summary['db_storage_gb_max'], 3)} GB` | "
+            f"crescimento medio/h: `{_fmt_num(db_summary['storage_growth_gb_h_avg'], 3)} GB/h`"
+        ),
+        (
+            f"- Crescimento max/h: `{_fmt_num(db_summary['storage_growth_gb_h_max'], 3)} GB/h` | "
             f"threads_running max: `{db_summary['threads_running_max']}`"
         ),
         "",

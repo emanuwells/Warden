@@ -1,5 +1,6 @@
 # Environment
 .env
+.env.docker
 venv/
 .venv/
 __pycache__/
@@ -13,8 +14,16 @@ secrets/ssh_key
 # Runtime
 runtime/*.json
 runtime/*.jsonl
+runtime/.cron_env
 runtime/logs/*.log
 runtime/logs/*.json
+runtime/logs/*.err.log
+runtime/cache/**
+runtime/export/**
+runtime/archive/**
+!runtime/cache/.gitkeep
+!runtime/export/.gitkeep
+!runtime/archive/.gitkeep
 
 # Frontend payloads (generated)
 frontend/warden_payload.json

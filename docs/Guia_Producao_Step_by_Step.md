@@ -1,174 +1,137 @@
-# Guia de Produção — Warden
+# Guia de Produção — Warden (estado atual)
 
-## Pré-requisitos
+## 1) Contexto e paths oficiais
 
-1. **Servidor Ubuntu** com Python 3.10+ e MariaDB 10.2+
-2. **Nginx** para servir o frontend
-3. **Acesso SSH** (se DB é remota)
+- Runtime/pipeline oficial: `/home/eferreira/MAIATRON/Warden`
+- Frontend/API oficial: `/usr/share/nginx/html/MAIATRON/apps/warden`
+- Fonte de snapshots consumidos pela API:
+  - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_fast_snapshot.json`
+  - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_heavy_snapshot.json`
+  - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_payload.json`
 
-## Passo a Passo
-
-### 1. Clonar / Copiar para `/opt/warden`
-
-```bash
-sudo mkdir -p /opt/warden
-sudo cp -r Warden/* /opt/warden/
-sudo chown -R warden:warden /opt/warden
-```
-
-### 2. Ambiente Virtual Python
+## 2) Bootstrap host (sem Docker)
 
 ```bash
-cd /opt/warden
-python3 -m venv venv
-source venv/bin/activate
+cd /home/eferreira/MAIATRON/Warden
+python3 -m venv .venv
+. .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 3. Configurar Credenciais
-
-```bash
 cp .env.example .env
-nano .env  # Preencher DB_HOST, DB_USER, DB_PASSWORD, etc.
-
 cp secrets/database.json.example secrets/database.json
-nano secrets/database.json  # Alternativa: credenciais via JSON
 ```
 
-### 4. Criar Base de Dados
+Config mínima no `.env`:
+
+- `DB_*`
+- `RETENTION_DAYS=7`
+- `EXPORT_PATH=runtime/export/warden_payload.json`
+- `EXPORT_FAST_PATH=runtime/export/warden_fast_snapshot.json`
+- `EXPORT_HEAVY_PATH=runtime/export/warden_heavy_snapshot.json`
+
+Criar tabela e validar:
 
 ```bash
-# No servidor MariaDB:
-mysql -u root -p < scripts/setup_db.sql
+.venv/bin/python warden.py --setup
+.venv/bin/python warden.py --once
+.venv/bin/python scripts/export_payload.py --mode fast
+.venv/bin/python scripts/export_payload.py --mode heavy
 ```
 
-### 5. Testar
+## 3) Serviço + cron
 
-```bash
-python warden.py --setup    # Cria tabela
-python warden.py --once     # Captura teste
-python warden.py --export   # Gera JSON
-```
-
-### 6. Instalar Serviço systemd
+### Serviço
 
 ```bash
 sudo cp systemd/warden.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable warden
-sudo systemctl start warden
-sudo systemctl status warden
+sudo systemctl enable --now warden
+sudo systemctl status warden --no-pager
+
+# Garantir 1 único collector (evitar user service paralelo)
+systemctl --user stop warden.service || true
+systemctl --user disable warden.service || true
 ```
 
-### 7. Configurar Cron para Export
+### Cron
 
 ```bash
 crontab -e
-```
-Adicionar (15 em 15 segundos + retenção 30d):
-```
-* * * * * cd /opt/warden && venv/bin/python scripts/export_payload.py >/dev/null 2>&1
-* * * * * sleep 15 && cd /opt/warden && venv/bin/python scripts/export_payload.py >/dev/null 2>&1
-* * * * * sleep 30 && cd /opt/warden && venv/bin/python scripts/export_payload.py >/dev/null 2>&1
-* * * * * sleep 45 && cd /opt/warden && venv/bin/python scripts/export_payload.py >/dev/null 2>&1
-0 3 * * * cd /opt/warden && venv/bin/python scripts/janitor.py >> runtime/logs/janitor.log 2>&1
+# inserir conteúdo de scripts/crontab.example
 ```
 
-### 8. Configurar Nginx
+Jobs críticos:
+
+- fast export (cadência alta)
+- heavy export (5 em 5 min)
+- janitor diário
+- slack alerts (2 min)
+- digest diário
+- weekly archive
+
+## 4) Integração com MAIATRON (API)
+
+Garantir no nginx/php os env vars para `apps/warden/api.php`:
+
+- `WARDEN_SOURCE_PATH`
+- `WARDEN_FAST_SOURCE_PATH`
+- `WARDEN_HEAVY_SOURCE_PATH`
+
+Smoke:
 
 ```bash
-sudo nano /etc/nginx/sites-available/warden
+curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast | head
+curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy | head
 ```
 
-```nginx
-server {
-    listen 80;
-    server_name warden.maia.local;
-    root /opt/warden/frontend;
-    index index.html;
+## 5) Docker (pipeline-only, DB externa)
 
-    location / {
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache";
-    }
-
-    location ~* \.json$ {
-        add_header Cache-Control "no-store, no-cache";
-        add_header Access-Control-Allow-Origin "*";
-    }
-}
-```
+### 5.1 Configurar
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/warden /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+cp .env.docker.example .env.docker
 ```
 
-### 9. Copiar Logo MAIATRON
+### 5.2 Arrancar
 
 ```bash
-cp /path/to/MAIATRON_LOGO_NOBG.png /opt/warden/frontend/assets/
+docker compose up -d --build
+docker compose ps
 ```
 
-### 10. Verificar
+### 5.3 Serviços no compose
 
-- Abrir `http://warden.maia.local` no browser
-- Login com credenciais do `config/auth.local.json`
-- Verificar gauges e gráficos
+- `warden-collector`: processo contínuo (`python warden.py`)
+- `warden-scheduler`: cron (`scripts/docker.crontab`)
 
-## Troubleshooting
+### 5.4 Host metrics em Docker
 
-| Problema | Solução |
-|---|---|
-| JSON não atualiza | Verificar cron: `crontab -l` |
-| Serviço não arranca | `journalctl -u warden -f` |
-| DB connection error | Verificar `.env` e que MariaDB aceita conexões |
-| Frontend vazio | Verificar que `warden_payload.json` existe |
-| Login não funciona | Copiar `config/auth.local.json.example` → `config/auth.local.json` |
+Config obrigatória para refletir máquina anfitriã:
 
-## Verificação de retenção (30 dias)
+- `MONITOR_ROOT_PATH=/hostfs`
+- mount `/:/hostfs:ro`
+- `pid: host`
+- `network_mode: host`
+
+## 6) Verificações operacionais
+
+### Retenção 7 dias
 
 ```sql
-SELECT COUNT(*) AS old_rows
-FROM warden_metrics
-WHERE captured_at < NOW() - INTERVAL 30 DAY;
+SELECT COUNT(*) FROM Warden.warden_metrics
+WHERE captured_at < NOW() - INTERVAL 7 DAY;
 ```
 
-O valor esperado após o janitor diário é `0`.
+Esperado: `0` após ciclo do janitor.
 
-## Top consumidores de disco (visibilidade total)
-
-O serviço `warden` corre como utilizador não-root. Para o painel **Top consumidores de disco** mostrar ficheiros do sistema inteiro, instalar helper root dedicado e sudoers restrito:
-
-### 1) Instalar helper (root-owned)
-
-Usar os templates do repo:
-- `scripts/warden_disk_top_helper.py`
-- `scripts/warden-disk-top-helper.wrapper.sh`
-- `scripts/warden-disk-top.sudoers`
-
-Destino final recomendado:
-- `/usr/local/libexec/warden-disk-top-helper.py`
-- `/usr/local/sbin/warden-disk-top-helper`
-- `/etc/sudoers.d/warden-disk-top`
-
-### 2) Configurar `.env`
-
-```dotenv
-DISK_TOP_SCAN_MODE=sudo_helper
-DISK_TOP_SUDO_HELPER_CMD=/usr/local/sbin/warden-disk-top-helper
-DISK_TOP_SUDO_TIMEOUT_SECONDS=12
-```
-
-### 3) Reiniciar serviço
+### Sintaxe Python
 
 ```bash
-sudo systemctl restart warden
+python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py
 ```
 
-### 4) Validar payload
+## 7) Troubleshooting rápido
 
-O `warden_payload.json` deve passar a indicar:
-- `current.disk.top_consumers.source = \"sudo_helper\"`
-- `current.disk.top_consumers.visibility_scope = \"system\"`
+- **API sem dados**: validar paths `WARDEN_*_SOURCE_PATH` e permissões de leitura.
+- **Snapshots não atualizam**: validar cron/scheduler e logs em `runtime/logs`.
+- **Retenção não aplica**: confirmar `RETENTION_DAYS` no processo `warden.service` ativo.
+- **Docker sem métricas de host**: confirmar `MONITOR_ROOT_PATH=/hostfs`, `pid: host` e mount root host.

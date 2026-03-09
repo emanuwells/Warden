@@ -1,49 +1,55 @@
 # AGENTS.md — Warden
 
 ## Projeto
-**Warden** — Monitor de recursos de sistema (CPU, RAM, Disco, Rede) para servidores Ubuntu.
+**Warden** — monitor operacional de recursos do host (CPU, RAM, disco, rede, DB MariaDB).
 
-## Arquitetura
+## Arquitetura Atual
 ```
-DB → JSON → Static Frontend (No-API runtime)
+Collector + DB monitor -> MariaDB (schema Warden) -> Export fast/heavy/full -> API MAIATRON -> Frontend Warden
 ```
 
-### Componentes
+### Paths oficiais
+- Runtime/pipeline/scripts/docs: `/home/eferreira/MAIATRON/Warden`
+- Frontend/API live: `/usr/share/nginx/html/MAIATRON/apps/warden`
+- Snapshots exportados pelo runtime:
+  - `runtime/export/warden_fast_snapshot.json`
+  - `runtime/export/warden_heavy_snapshot.json`
+  - `runtime/export/warden_payload.json`
+
+### Componentes principais
 | Componente | Ficheiro | Função |
 |---|---|---|
-| **Collector** | `src/collector.py` | Captura métricas via psutil |
-| **DB Writer** | `src/db_writer.py` | Inserção/leitura MariaDB (PyMySQL, SSH tunnel opcional) |
-| **Janitor** | `src/janitor.py` | Limpeza de dados > 30 dias |
-| **Settings** | `src/settings.py` | Carregamento de config (.env + secrets/database.json) |
-| **Slack Notifier** | `src/slack_notifier.py` | Envio via Slack Incoming Webhook |
-| **Warden CLI** | `warden.py` | Entrypoint principal: `--setup`, `--once`, `--export`, `--cleanup` |
-| **Export** | `scripts/export_payload.py` | DB → JSON para frontend (cron) |
-| **Slack Alerts** | `scripts/slack_alerts.py` | Warnings/criticals imediatos (dedupe + cooldown) |
-| **Slack Digest** | `scripts/slack_daily_digest.py` | Resumo diário para Slack (08:00) |
-| **Frontend** | `frontend/` | Dashboard HTML/CSS/JS (MAIATRON Design System) |
+| Collector | `src/collector.py` | Captura métricas do host via psutil |
+| DB Monitor | `src/db_monitor.py` | QPS/TPS/threads + consumo DB em disco |
+| DB Writer | `src/db_writer.py` | Inserção/leitura MariaDB |
+| Janitor | `src/janitor.py` | Retenção operacional (7 dias) |
+| Export | `scripts/export_payload.py` | Gera snapshots `fast/heavy/full` |
+| Weekly Archive | `scripts/weekly_archive.py` | Snapshot semanal agregado horário (30d agregado) |
+| Slack Alerts | `scripts/slack_alerts.py` | Warning/critical + recovery com cadência por severidade |
+| Slack Digest | `scripts/slack_daily_digest.py` | Resumo diário |
+| Entrypoint | `warden.py` | `--setup`, `--once`, `--export`, `--cleanup` |
 
-### Fluxo de Dados
-1. `warden.py` corre como serviço systemd — captura métricas a cada 5s → insere em MariaDB.
-2. `scripts/export_payload.py` corre via cron — lê DB → gera `warden_payload.json`.
-3. `scripts/slack_alerts.py` corre via cron (1 min) — envia `warning`/`critical` e recoveries para Slack com `<!channel>`.
-4. `scripts/slack_daily_digest.py` corre via cron (08:00) — envia digest diário para Slack com `<!channel>`.
-5. Frontend (nginx) lê o JSON estático e renderiza gauges + gráficos.
+## Defaults operacionais
+- `RETENTION_DAYS=7`
+- `WEEKLY_ARCHIVE_RETENTION_WEEKS=6`
+- Alertas disco: `WARN=95%`, `CRITICAL=98%`
+- Slack warning cadence: sustain 10m / cooldown 60m
+- Slack critical cadence: sustain 2m / cooldown 15m
 
-## Regras de Código
+## Regras de código
 - Python 3.10+
 - Type hints obrigatórios
-- Logging via `logging` (nunca `print` em production)
-- Segredos via `.env` ou `secrets/database.json` — nunca hardcoded
-- Frontend segue MAIATRON Design System PRD v1.0
+- Logging via `logging` (evitar `print` fora de CLIs)
+- Segredos via `.env` ou `secrets/*.json` (nunca hardcoded)
 
-## Tabela Chave
-**warden_metrics**: `id`, `captured_at` (TIMESTAMP indexed), `metrics` (JSON)
-
-## Comandos Úteis
+## Comandos úteis
 ```bash
-python warden.py --setup      # Cria tabela
-python warden.py               # Arranca collector
-python warden.py --once        # Captura única
-python warden.py --export      # Exporta JSON
-python warden.py --cleanup     # Janitor manual
+python warden.py --setup
+python warden.py
+python warden.py --once
+python scripts/export_payload.py --mode fast
+python scripts/export_payload.py --mode heavy
+python scripts/export_payload.py --mode full
+python scripts/janitor.py
+python scripts/weekly_archive.py
 ```

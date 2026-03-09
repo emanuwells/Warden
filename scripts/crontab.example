@@ -4,17 +4,52 @@
 # Add to crontab: crontab -e
 # Adjust paths to your installation.
 
-# Export payload every 15 seconds (via wrapper — cron min is 1 min)
-* * * * * cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
-* * * * * sleep 15 && cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
-* * * * * sleep 30 && cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
-* * * * * sleep 45 && cd /opt/warden && /usr/bin/python3 scripts/export_payload.py >> /dev/null 2>&1
+# FAST snapshot (light lane, near-real-time)
+* * * * * sleep 0;  flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 2;  flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 4;  flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 6;  flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 8;  flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 10; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 12; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 14; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 16; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 18; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 20; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 22; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 24; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 26; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 28; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 30; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 32; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 34; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 36; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 38; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 40; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 42; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 44; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 46; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 48; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 50; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 52; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 54; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 56; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+* * * * * sleep 58; flock -n /tmp/warden_export_fast.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
 
-# Slack alerts (threshold warnings/criticals) every minute
-* * * * * cd /opt/warden && /usr/bin/python3 scripts/slack_alerts.py >> runtime/logs/slack_alerts.log 2>&1
+# HEAVY snapshot (history, processes, disk top consumers)
+*/5 * * * * flock -n /tmp/warden_export_heavy.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/export_payload.py --mode heavy > /dev/null 2>> runtime/logs/export_heavy.err.log'
+
+# Slack alerts (threshold warnings/criticals) every 2 minutes
+*/2 * * * * cd /opt/warden && /usr/bin/python3 scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log
 
 # Daily Slack digest at 08:00 (server local time)
 0 8 * * * cd /opt/warden && /usr/bin/python3 scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
 
 # Daily janitor at 03:00
-0 3 * * * cd /opt/warden && /usr/bin/python3 scripts/janitor.py >> runtime/logs/janitor.log 2>&1
+0 3 * * * flock -n /tmp/warden_janitor.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/janitor.py >> runtime/logs/janitor.log 2>&1'
+
+# Weekly hourly archive (Sunday 23:58 UTC/local host time)
+58 23 * * 0 flock -n /tmp/warden_weekly_archive.lock -c 'cd /opt/warden && /usr/bin/python3 scripts/weekly_archive.py >> runtime/logs/weekly_archive.log 2>&1'
+
+# Daily trim for large runtime logs
+25 3 * * * find /opt/warden/runtime/logs -maxdepth 1 -type f \( -name '*.log' -o -name '*.err.log' \) -size +20M -exec truncate -s 0 {} +

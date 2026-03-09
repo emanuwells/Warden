@@ -73,7 +73,8 @@ class Settings:
 
     # Collector
     collect_interval: int = 15        # seconds
-    retention_days: int = 30
+    retention_days: int = 7
+    monitor_root_path: str = "/"
     disk_top_enabled: bool = True
     disk_top_root: str = "/"
     disk_top_max_items: int = 10
@@ -83,9 +84,11 @@ class Settings:
     disk_top_scan_mode: str = "local"  # local | sudo_helper | auto
     disk_top_sudo_helper_cmd: str = "/usr/local/sbin/warden-disk-top-helper"
     disk_top_sudo_timeout_seconds: int = 12
+    process_top_scan_interval_seconds: int = 15
+    process_top_network_scan_interval_seconds: int = 15
 
     # Export
-    export_path: str = "frontend/warden_payload.json"
+    export_path: str = "runtime/export/warden_payload.json"
 
     # Logging
     log_level: str = "INFO"
@@ -100,19 +103,26 @@ class Settings:
     slack_config_path: str = "secrets/slack.json"
     slack_alert_sustain_minutes: int = 2
     slack_alert_cooldown_minutes: int = 15
+    slack_warning_sustain_minutes: int = 10
+    slack_warning_cooldown_minutes: int = 60
+    slack_critical_sustain_minutes: int = 2
+    slack_critical_cooldown_minutes: int = 15
     slack_digest_hour_utc: int = 8
     slack_digest_minute_utc: int = 0
 
     # Alert thresholds
     alert_cpu_warn: float = 85.0
     alert_ram_warn: float = 90.0
-    alert_disk_warn: float = 92.0
+    alert_disk_warn: float = 95.0
+    alert_disk_critical: float = 98.0
     alert_db_threads_running_warn: float = 20.0
-    alert_db_slow_qps_warn: float = 1.0
+    alert_db_storage_gb_warn: float = 20.0
 
     @classmethod
     def load(cls) -> "Settings":
         secrets = _load_db_secrets()
+        legacy_alert_sustain = int(os.getenv("SLACK_ALERT_SUSTAIN_MINUTES", "2"))
+        legacy_alert_cooldown = int(os.getenv("SLACK_ALERT_COOLDOWN_MINUTES", "15"))
         return cls(
             db_host=_env("DB_HOST", "127.0.0.1", secrets),
             db_port=int(_env("DB_PORT", "3306", secrets)),
@@ -124,7 +134,8 @@ class Settings:
             ssh_user=os.getenv("SSH_USER", ""),
             ssh_key_path=os.getenv("SSH_KEY_PATH", ""),
             collect_interval=int(os.getenv("COLLECT_INTERVAL", "15")),
-            retention_days=int(os.getenv("RETENTION_DAYS", "30")),
+            retention_days=int(os.getenv("RETENTION_DAYS", "7")),
+            monitor_root_path=os.getenv("MONITOR_ROOT_PATH", "/").strip() or "/",
             disk_top_enabled=_env_bool("DISK_TOP_ENABLED", True),
             disk_top_root=os.getenv("DISK_TOP_ROOT", "/"),
             disk_top_max_items=int(os.getenv("DISK_TOP_MAX_ITEMS", "10")),
@@ -137,22 +148,37 @@ class Settings:
             disk_top_scan_mode=os.getenv("DISK_TOP_SCAN_MODE", "local").strip().lower() or "local",
             disk_top_sudo_helper_cmd=os.getenv("DISK_TOP_SUDO_HELPER_CMD", "/usr/local/sbin/warden-disk-top-helper"),
             disk_top_sudo_timeout_seconds=int(os.getenv("DISK_TOP_SUDO_TIMEOUT_SECONDS", "12")),
-            export_path=os.getenv("EXPORT_PATH", "frontend/warden_payload.json"),
+            process_top_scan_interval_seconds=int(os.getenv("PROCESS_TOP_SCAN_INTERVAL_SECONDS", "15")),
+            process_top_network_scan_interval_seconds=int(os.getenv("PROCESS_TOP_NETWORK_SCAN_INTERVAL_SECONDS", "15")),
+            export_path=os.getenv("EXPORT_PATH", "runtime/export/warden_payload.json"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             log_file=os.getenv("LOG_FILE", "runtime/logs/warden.log"),
             db_monitor_enabled=_env_bool("DB_MONITOR_ENABLED", True),
             db_monitor_interval=int(os.getenv("DB_MONITOR_INTERVAL", "60")),
             slack_enabled=_env_bool("SLACK_ENABLED", True),
             slack_config_path=os.getenv("SLACK_CONFIG_PATH", "secrets/slack.json"),
-            slack_alert_sustain_minutes=int(os.getenv("SLACK_ALERT_SUSTAIN_MINUTES", "2")),
-            slack_alert_cooldown_minutes=int(os.getenv("SLACK_ALERT_COOLDOWN_MINUTES", "15")),
+            slack_alert_sustain_minutes=legacy_alert_sustain,
+            slack_alert_cooldown_minutes=legacy_alert_cooldown,
+            slack_warning_sustain_minutes=int(
+                os.getenv("SLACK_WARNING_SUSTAIN_MINUTES", str(legacy_alert_sustain))
+            ),
+            slack_warning_cooldown_minutes=int(
+                os.getenv("SLACK_WARNING_COOLDOWN_MINUTES", str(legacy_alert_cooldown))
+            ),
+            slack_critical_sustain_minutes=int(
+                os.getenv("SLACK_CRITICAL_SUSTAIN_MINUTES", str(legacy_alert_sustain))
+            ),
+            slack_critical_cooldown_minutes=int(
+                os.getenv("SLACK_CRITICAL_COOLDOWN_MINUTES", str(legacy_alert_cooldown))
+            ),
             slack_digest_hour_utc=int(os.getenv("SLACK_DIGEST_HOUR_UTC", "8")),
             slack_digest_minute_utc=int(os.getenv("SLACK_DIGEST_MINUTE_UTC", "0")),
             alert_cpu_warn=float(os.getenv("ALERT_CPU_WARN", "85")),
             alert_ram_warn=float(os.getenv("ALERT_RAM_WARN", "90")),
-            alert_disk_warn=float(os.getenv("ALERT_DISK_WARN", "92")),
+            alert_disk_warn=float(os.getenv("ALERT_DISK_WARN", "95")),
+            alert_disk_critical=float(os.getenv("ALERT_DISK_CRITICAL", "98")),
             alert_db_threads_running_warn=float(os.getenv("ALERT_DB_THREADS_RUNNING_WARN", "20")),
-            alert_db_slow_qps_warn=float(os.getenv("ALERT_DB_SLOW_QPS_WARN", "1")),
+            alert_db_storage_gb_warn=float(os.getenv("ALERT_DB_STORAGE_GB_WARN", "20")),
         )
 
     @property

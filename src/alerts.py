@@ -17,7 +17,14 @@ def _to_float(value: Any) -> float:
         return 0.0
 
 
-def _severity(value: float, warn: float, critical_multiple: float = 1.12) -> str:
+def _severity(
+    value: float,
+    warn: float,
+    critical_multiple: float = 1.12,
+    critical_threshold: float | None = None,
+) -> str:
+    if critical_threshold is not None and value >= critical_threshold:
+        return "critical"
     if value >= (warn * critical_multiple):
         return "critical"
     return "warning"
@@ -37,36 +44,44 @@ def evaluate_alerts(
     ram_val = _to_float((current.get("memory") or {}).get("percent"))
     disk_val = _to_float((current.get("disk") or {}).get("percent"))
     db_threads = _to_float(db_current.get("threads_running"))
-    db_slow_qps = _to_float(db_current.get("slow_qps"))
+    db_storage_gb = _to_float(db_current.get("storage_total_gb"))
 
     rules = [
-        ("cpu_high", "CPU usage high", cpu_val, cfg.alert_cpu_warn),
-        ("ram_high", "RAM usage high", ram_val, cfg.alert_ram_warn),
-        ("disk_high", "Disk usage high", disk_val, cfg.alert_disk_warn),
+        ("cpu_high", "CPU usage high", cpu_val, cfg.alert_cpu_warn, None),
+        ("ram_high", "RAM usage high", ram_val, cfg.alert_ram_warn, None),
+        ("disk_high", "Disk usage high", disk_val, cfg.alert_disk_warn, cfg.alert_disk_critical),
         (
             "db_threads_running_high",
             "MariaDB threads running high",
             db_threads,
             cfg.alert_db_threads_running_warn,
+            None,
         ),
         (
-            "db_slow_qps_high",
-            "MariaDB slow query rate high",
-            db_slow_qps,
-            cfg.alert_db_slow_qps_warn,
+            "db_storage_usage_high",
+            "MariaDB storage usage high",
+            db_storage_gb,
+            cfg.alert_db_storage_gb_warn,
+            None,
         ),
     ]
 
     out: list[dict[str, Any]] = []
-    for key, title, value, threshold in rules:
+    for key, title, value, threshold, critical_threshold in rules:
         firing = value >= float(threshold)
+        severity = _severity(value, float(threshold), critical_threshold=critical_threshold)
+        threshold_for_message = (
+            float(critical_threshold)
+            if (critical_threshold is not None and severity == "critical")
+            else float(threshold)
+        )
         out.append(
             {
                 "key": key,
-                "severity": _severity(value, float(threshold)),
+                "severity": severity,
                 "title": title,
                 "value": round(value, 3),
-                "threshold": float(threshold),
+                "threshold": threshold_for_message,
                 "status": "firing" if firing else "resolved",
                 "first_seen_at": now_iso if firing else None,
                 "evaluated_at": now_iso,

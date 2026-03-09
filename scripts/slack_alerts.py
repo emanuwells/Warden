@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -48,8 +49,8 @@ def _value_with_unit(alert: dict[str, Any], field: str) -> str:
     raw = alert.get(field)
     if key in {"cpu_high", "ram_high", "disk_high"}:
         return f"{_fmt_num(raw)}%"
-    if key == "db_slow_qps_high":
-        return f"{_fmt_num(raw)} qps"
+    if key == "db_storage_usage_high":
+        return f"{_fmt_num(raw)} GB"
     return _fmt_num(raw)
 
 
@@ -94,15 +95,60 @@ def _load_json(path: Path) -> dict[str, Any]:
         return {}
 
 
+def _as_path(raw: str) -> Path:
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    return BASE_DIR / path
+
+
+def _payload_looks_usable(payload: dict[str, Any]) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    current = payload.get("current")
+    return isinstance(current, dict) and bool(current)
+
+
 def _load_payload(path: Path | None = None) -> dict[str, Any]:
     if path:
         return _load_json(path)
-    primary = BASE_DIR / settings.export_path
-    fallback = BASE_DIR / "frontend" / "warden_payload.json"
-    if primary.exists():
-        return _load_json(primary)
-    if fallback.exists():
-        return _load_json(fallback)
+
+    primary = _as_path(settings.export_path)
+    fast_env = (os.getenv("EXPORT_FAST_PATH") or "").strip()
+    fast_primary = _as_path(fast_env) if fast_env else primary.parent / "warden_fast_snapshot.json"
+    candidates: list[tuple[str, Path]] = [
+        ("fast_primary", fast_primary),
+        ("primary", primary),
+        ("frontend_fast_fallback", BASE_DIR / "frontend" / "warden_fast_snapshot.json"),
+        ("frontend_full_fallback", BASE_DIR / "frontend" / "warden_payload.json"),
+    ]
+
+    seen: set[str] = set()
+    best_payload: dict[str, Any] = {}
+    best_meta: tuple[float, str, Path] | None = None
+    for label, candidate in candidates:
+        key = str(candidate.resolve()) if candidate.exists() else str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not candidate.exists():
+            continue
+        payload = _load_json(candidate)
+        if not _payload_looks_usable(payload):
+            continue
+        try:
+            mtime = candidate.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        if best_meta is None or mtime > best_meta[0]:
+            best_meta = (mtime, label, candidate)
+            best_payload = payload
+
+    if best_meta is not None:
+        _mtime, label, source = best_meta
+        logger.info("Using payload source for slack alerts: %s (%s)", label, source)
+        return best_payload
+
     return {}
 
 
@@ -144,12 +190,25 @@ def _format_resolved(alert: dict[str, Any], open_since: str | None, resolved_at:
     duration = _format_duration(open_since, resolved_at)
     duration_line = f"\nDuração do alerta: `{duration}`" if duration else ""
     return (
-        f":white_check_mark: *Warden Recovery* | *{_severity_badge(str(alert.get('severity') or 'warning'))}*\n"
+        f"{ALERT_MENTION} :white_check_mark: *Warden Recovery* | *{_severity_badge(str(alert.get('severity') or 'warning'))}*\n"
         f"*{alert.get('title')}* voltou ao normal\n"
         f"Valor atual: `{_value_with_unit(alert, 'value')}` | Limite: `{_value_with_unit(alert, 'threshold')}`\n"
         f"Chave: `{alert.get('key')}`\n"
         f"Resolvido em: `{resolved_at}`{duration_line}"
     )
+
+
+def _timing_minutes_for_severity(severity: str) -> tuple[int, int]:
+    legacy_sustain = max(0, int(getattr(settings, "slack_alert_sustain_minutes", 2)))
+    legacy_cooldown = max(1, int(getattr(settings, "slack_alert_cooldown_minutes", 15)))
+    sev = severity.lower().strip()
+    if sev == "critical":
+        sustain = max(0, int(getattr(settings, "slack_critical_sustain_minutes", legacy_sustain)))
+        cooldown = max(1, int(getattr(settings, "slack_critical_cooldown_minutes", legacy_cooldown)))
+        return sustain, cooldown
+    sustain = max(0, int(getattr(settings, "slack_warning_sustain_minutes", legacy_sustain)))
+    cooldown = max(1, int(getattr(settings, "slack_warning_cooldown_minutes", legacy_cooldown)))
+    return sustain, cooldown
 
 
 def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
@@ -174,9 +233,15 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
     state_alerts = state.get("alerts", {})
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
-    sustain_minutes = max(0, int(getattr(settings, "slack_alert_sustain_minutes", 2)))
-    sustain_window = timedelta(minutes=sustain_minutes)
-    cooldown = timedelta(minutes=max(1, settings.slack_alert_cooldown_minutes))
+    warning_sustain, warning_cooldown = _timing_minutes_for_severity("warning")
+    critical_sustain, critical_cooldown = _timing_minutes_for_severity("critical")
+    logger.info(
+        "Slack cadence: warning sustain=%sm cooldown=%sm | critical sustain=%sm cooldown=%sm",
+        warning_sustain,
+        warning_cooldown,
+        critical_sustain,
+        critical_cooldown,
+    )
 
     sent_count = 0
     for alert in alerts:
@@ -191,6 +256,9 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
         open_since = str(previous.get("open_since") or now_iso)
         severity = str(alert.get("severity") or "warning")
         is_critical = severity == "critical"
+        sustain_minutes, cooldown_minutes = _timing_minutes_for_severity(severity)
+        sustain_window = timedelta(minutes=sustain_minutes)
+        cooldown = timedelta(minutes=cooldown_minutes)
         previous_notified = bool(previous.get("notified_firing"))
 
         if new_status == "firing":
