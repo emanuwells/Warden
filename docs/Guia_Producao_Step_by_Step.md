@@ -123,6 +123,19 @@ WHERE captured_at < NOW() - INTERVAL 7 DAY;
 
 Esperado: `0` após ciclo do janitor.
 
+### Campos de crescimento por janela (Disco + DB)
+
+Validar no snapshot full:
+
+```bash
+jq '.history_24h[0] | {disk_total_gb_avg,disk_used_gb_avg,disk_free_gb_avg,disk_growth_gb_h_avg}' runtime/export/warden_payload.json
+jq '.db.history["24h"][0] | {storage_total_gb_avg,storage_growth_gb_h_avg}' runtime/export/warden_payload.json
+```
+
+Validar no frontend:
+- tab `Disk` mostra gráfico dedicado de crescimento com hint `Atual + Média janela`.
+- tab `DB` mostra gráfico dedicado de consumo/crescimento separado de `QPS/TPS`.
+
 ### Sintaxe Python
 
 ```bash

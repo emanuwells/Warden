@@ -2,6 +2,25 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.0.0] - 2026-03-10
+
+### Adicionado
+- Histórico de disco em GB por janela (`1h/24h/7d/30d`) com novos campos:
+  - `disk_total_gb_avg`
+  - `disk_used_gb_avg`
+  - `disk_free_gb_avg`
+  - `disk_growth_gb_h_avg`
+- Novo gráfico no frontend (tab Disk): **Crescimento de Espaço em Disco (janela)** com séries `used GB` + `growth GB/h`.
+- Novo gráfico dedicado no frontend (tab DB): **Consumo e Crescimento DB (janela)** separado do throughput `QPS/TPS`.
+- Hints operacionais nos novos gráficos com semântica `Atual + Média janela`.
+
+### Alterado
+- `src/db_writer.py`: `fetch_summary` passou a agregar também os campos de disco em GB.
+- `scripts/export_payload.py`: enriquecimento/fallback de histórico de disco para dados antigos sem colunas GB, mantendo compatibilidade.
+- `scripts/weekly_archive.py`: snapshots semanais passam a incluir métricas de disco em GB e crescimento/h.
+- `apps/warden/api.php`: ingest/fallback 30d estendidos para persistir e servir os novos campos de disco em GB/crescimento.
+- `apps/warden/warden.js` e `index.html`: integração dos novos gráficos no ciclo de range + controlos de zoom/reset/ampliar.
+
 ## [1.0.2] - 2026-02-25
 
 ### Alterado

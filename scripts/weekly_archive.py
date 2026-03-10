@@ -48,6 +48,54 @@ def _parse_iso(raw: str | None) -> datetime | None:
     return value.astimezone(timezone.utc)
 
 
+def _enrich_system_rows_with_growth(
+    rows: list[dict[str, Any]],
+    fallback_total_gb: float | None = None,
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    prev_ts: int | None = None
+    prev_used: float | None = None
+
+    for raw in rows:
+        row = dict(raw)
+        bucket = str(row.get("bucket") or "").strip()
+        bucket_dt = _parse_iso(bucket)
+        bucket_ts = int(bucket_dt.timestamp()) if bucket_dt else None
+
+        disk_total = _safe_float(row.get("disk_total_gb_avg"))
+        if disk_total <= 0 and fallback_total_gb is not None and fallback_total_gb > 0:
+            disk_total = float(fallback_total_gb)
+        if disk_total <= 0:
+            disk_total = 0.0
+
+        disk_used = _safe_float(row.get("disk_used_gb_avg"))
+        disk_percent = _safe_float(row.get("disk_avg"))
+        if disk_used <= 0 and disk_total > 0 and disk_percent > 0:
+            disk_used = disk_total * (disk_percent / 100.0)
+
+        disk_free = _safe_float(row.get("disk_free_gb_avg"))
+        if disk_free <= 0 and disk_total > 0 and disk_used >= 0:
+            disk_free = max(0.0, disk_total - disk_used)
+
+        growth = _safe_float(row.get("disk_growth_gb_h_avg"))
+        if growth == 0.0 and prev_ts is not None and prev_used is not None and bucket_ts is not None and bucket_ts > prev_ts:
+            elapsed_h = (bucket_ts - prev_ts) / 3600.0
+            if elapsed_h > 0:
+                growth = (disk_used - prev_used) / elapsed_h
+
+        if bucket_ts is not None:
+            prev_ts = bucket_ts
+            prev_used = disk_used
+
+        row["disk_total_gb_avg"] = round(disk_total, 3) if disk_total > 0 else None
+        row["disk_used_gb_avg"] = round(disk_used, 3) if disk_used > 0 else None
+        row["disk_free_gb_avg"] = round(disk_free, 3) if disk_free >= 0 else None
+        row["disk_growth_gb_h_avg"] = round(growth, 3)
+        out.append(row)
+
+    return out
+
+
 def _week_bounds(target: date) -> tuple[datetime, datetime, str]:
     monday = target - timedelta(days=target.isoweekday() - 1)
     start = datetime.combine(monday, time.min, tzinfo=timezone.utc)
@@ -65,6 +113,9 @@ def _fetch_system_hourly(start: datetime, end: datetime) -> list[dict[str, Any]]
             AVG(JSON_EXTRACT(metrics, '$.cpu.total_percent'))    AS cpu_avg,
             AVG(JSON_EXTRACT(metrics, '$.memory.percent'))       AS mem_avg,
             AVG(JSON_EXTRACT(metrics, '$.disk.percent'))         AS disk_avg,
+            AVG(JSON_EXTRACT(metrics, '$.disk.total_gb'))        AS disk_total_gb_avg,
+            AVG(JSON_EXTRACT(metrics, '$.disk.used_gb'))         AS disk_used_gb_avg,
+            AVG(JSON_EXTRACT(metrics, '$.disk.free_gb'))         AS disk_free_gb_avg,
             AVG(JSON_EXTRACT(metrics, '$.network.upload_mbps'))  AS net_up_avg,
             AVG(JSON_EXTRACT(metrics, '$.network.download_mbps'))AS net_down_avg
         FROM warden_metrics
@@ -90,11 +141,14 @@ def _fetch_system_hourly(start: datetime, end: datetime) -> list[dict[str, Any]]
                 "cpu_avg": round(_safe_float(row.get("cpu_avg")), 3),
                 "mem_avg": round(_safe_float(row.get("mem_avg")), 3),
                 "disk_avg": round(_safe_float(row.get("disk_avg")), 3),
+                "disk_total_gb_avg": round(_safe_float(row.get("disk_total_gb_avg")), 3),
+                "disk_used_gb_avg": round(_safe_float(row.get("disk_used_gb_avg")), 3),
+                "disk_free_gb_avg": round(_safe_float(row.get("disk_free_gb_avg")), 3),
                 "net_up_avg": round(_safe_float(row.get("net_up_avg")), 3),
                 "net_down_avg": round(_safe_float(row.get("net_down_avg")), 3),
             }
         )
-    return out
+    return _enrich_system_rows_with_growth(out)
 
 
 def _fetch_db_hourly(start: datetime, end: datetime) -> list[dict[str, Any]]:
@@ -201,7 +255,7 @@ def main() -> None:
     db_rows = _fetch_db_hourly(start, end)
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "week": week_id,
         "week_start": start.isoformat(),
         "week_end": end.isoformat(),

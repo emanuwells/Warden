@@ -12,6 +12,7 @@ Warden é o runtime de monitorização (collector + export + alertas) do ecossis
   - `runtime/export/warden_payload.json`
 - Retenção operacional: `RETENTION_DAYS=7`
 - Histórico estendido: snapshot semanal agregado (`runtime/archive/weekly`)
+- Janelas operacionais suportadas no frontend: `1h`, `24h`, `7d`, `30d` (30d agregado)
 
 ## Arquitetura
 
@@ -24,6 +25,26 @@ Warden é o runtime de monitorização (collector + export + alertas) do ecossis
    - `scripts/slack_alerts.py`
    - `scripts/slack_daily_digest.py`
    - `scripts/weekly_archive.py`
+
+## Métricas de crescimento (v2.x)
+
+Além de CPU/RAM/Rede, o payload expõe crescimento por janela para Disco e DB:
+
+- Histórico sistema (`history_*`):
+  - `disk_total_gb_avg`
+  - `disk_used_gb_avg`
+  - `disk_free_gb_avg`
+  - `disk_growth_gb_h_avg`
+- Histórico DB (`db.history.*`):
+  - `storage_total_gb_avg`
+  - `storage_growth_gb_h_avg`
+
+No frontend:
+- Tab `Disk`: gráfico dedicado `Disco usado (GB)` + `Crescimento/h (GB/h)`.
+- Tab `DB`: gráfico dedicado `Consumo DB (GB)` + `Crescimento/h (GB/h)` separado de throughput.
+
+Fallback compatível com histórico antigo:
+- quando faltarem colunas GB antigas, o export deriva `disk_used_gb_avg` a partir de `disk_avg` e `disk_total_gb` atual.
 
 ## Setup rápido (host)
 

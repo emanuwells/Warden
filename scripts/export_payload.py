@@ -231,6 +231,85 @@ def _bucket_seconds(window_key: str) -> int:
     return 3600
 
 
+def _safe_float_or_none(value: Any) -> float | None:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    if parsed != parsed:  # NaN
+        return None
+    return parsed
+
+
+def _enrich_system_history_rows(
+    rows: list[dict[str, Any]],
+    fallback_total_gb: float | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    enriched: list[dict[str, Any]] = []
+    derived_total = 0
+    derived_used = 0
+    derived_free = 0
+    derived_growth = 0
+    prev_ts_ms: int | None = None
+    prev_used_gb: float | None = None
+
+    for raw in rows:
+        if not isinstance(raw, dict):
+            continue
+        row = dict(raw)
+        bucket_raw = row.get("bucket") or row.get("timestamp")
+        bucket_ts_ms = parse_ts_ms = None
+        if isinstance(bucket_raw, str):
+            try:
+                parsed_bucket = _parse_iso(bucket_raw)
+                parse_ts_ms = int(parsed_bucket.timestamp() * 1000) if parsed_bucket else None
+            except Exception:
+                parse_ts_ms = None
+        bucket_ts_ms = parse_ts_ms
+
+        disk_total = _safe_float_or_none(row.get("disk_total_gb_avg"))
+        if (disk_total is None or disk_total <= 0) and fallback_total_gb is not None and fallback_total_gb > 0:
+            disk_total = float(fallback_total_gb)
+            derived_total += 1
+
+        disk_used = _safe_float_or_none(row.get("disk_used_gb_avg"))
+        disk_pct = _safe_float_or_none(row.get("disk_avg"))
+        if (disk_used is None or disk_used < 0) and disk_total is not None and disk_pct is not None:
+            disk_used = disk_total * (disk_pct / 100.0)
+            derived_used += 1
+
+        disk_free = _safe_float_or_none(row.get("disk_free_gb_avg"))
+        if (disk_free is None or disk_free < 0) and disk_total is not None and disk_used is not None:
+            disk_free = max(0.0, disk_total - disk_used)
+            derived_free += 1
+
+        growth = _safe_float_or_none(row.get("disk_growth_gb_h_avg"))
+        if growth is None and prev_ts_ms is not None and prev_used_gb is not None and bucket_ts_ms is not None and bucket_ts_ms > prev_ts_ms and disk_used is not None:
+            elapsed_h = (bucket_ts_ms - prev_ts_ms) / 3600000.0
+            if elapsed_h > 0:
+                growth = (disk_used - prev_used_gb) / elapsed_h
+                derived_growth += 1
+        if growth is None and disk_used is not None:
+            growth = 0.0
+
+        if bucket_ts_ms is not None and disk_used is not None:
+            prev_ts_ms = bucket_ts_ms
+            prev_used_gb = disk_used
+
+        row["disk_total_gb_avg"] = round(disk_total, 3) if disk_total is not None else None
+        row["disk_used_gb_avg"] = round(disk_used, 3) if disk_used is not None else None
+        row["disk_free_gb_avg"] = round(disk_free, 3) if disk_free is not None else None
+        row["disk_growth_gb_h_avg"] = round(growth, 3) if growth is not None else None
+        enriched.append(row)
+
+    return enriched, {
+        "derived_disk_total_rows": derived_total,
+        "derived_disk_used_rows": derived_used,
+        "derived_disk_free_rows": derived_free,
+        "derived_disk_growth_rows": derived_growth,
+    }
+
+
 def _load_db_history_windows(include_30d: bool = False) -> dict[str, list[dict[str, Any]]]:
     windows = {"1h": 1, "24h": 24, "7d": 168}
     if include_30d:
@@ -490,6 +569,7 @@ def _build_heavy_payload(
     history_30d: list[dict[str, Any]],
     db_history: dict[str, list[dict[str, Any]]],
     alerts_history: list[dict[str, Any]],
+    history_derivation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     history_map = {
         "1h": history_1h,
@@ -522,6 +602,7 @@ def _build_heavy_payload(
         "meta": {
             "kind": "heavy",
             "collector_interval_seconds": settings.collect_interval,
+            "history_derivation": history_derivation or {},
         },
     }
 
@@ -538,6 +619,7 @@ def _build_full_payload(
     history_24h: list[dict[str, Any]],
     history_7d: list[dict[str, Any]],
     history_30d: list[dict[str, Any]],
+    history_derivation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     realtime = []
     for row in latest[-120:]:
@@ -577,6 +659,9 @@ def _build_full_payload(
         "history_24h": history_24h,
         "history_7d": history_7d,
         "history_30d": history_30d,
+        "meta": {
+            "history_derivation": history_derivation or {},
+        },
     }
 
 
@@ -598,9 +683,15 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
         return
 
     # heavy/full modes share heavy components
-    summary_1h = fetch_summary(hours=1)
-    summary_24h = fetch_summary(hours=hours_overview)
-    summary_7d = fetch_summary(hours=168)
+    current_disk = current.get("disk") if isinstance(current.get("disk"), dict) else {}
+    fallback_disk_total_gb = _safe_float_or_none(current_disk.get("total_gb"))
+
+    summary_1h_raw = fetch_summary(hours=1)
+    summary_24h_raw = fetch_summary(hours=hours_overview)
+    summary_7d_raw = fetch_summary(hours=168)
+    summary_1h, deriv_1h = _enrich_system_history_rows(summary_1h_raw, fallback_total_gb=fallback_disk_total_gb)
+    summary_24h, deriv_24h = _enrich_system_history_rows(summary_24h_raw, fallback_total_gb=fallback_disk_total_gb)
+    summary_7d, deriv_7d = _enrich_system_history_rows(summary_7d_raw, fallback_total_gb=fallback_disk_total_gb)
     db_history = _load_db_history_windows(include_30d=False)
     summary_30d, db_30d = _build_30d_from_archives(
         live_system_rows_7d=summary_7d,
@@ -609,10 +700,17 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
     if not summary_30d:
         # Safe fallback for bootstrap scenarios before first weekly archive exists.
         summary_30d = fetch_summary(hours=THIRTY_DAYS_HOURS)
+    summary_30d, deriv_30d = _enrich_system_history_rows(summary_30d, fallback_total_gb=fallback_disk_total_gb)
     if not db_30d:
         db_30d = _load_db_history_windows(include_30d=True).get("30d", [])
     db_history["30d"] = db_30d
     alerts_history = _load_recent_alert_history()
+    history_derivation = {
+        "1h": deriv_1h,
+        "24h": deriv_24h,
+        "7d": deriv_7d,
+        "30d": deriv_30d,
+    }
     try:
         heavy_current = collect(include_heavy=True)
     except Exception:
@@ -627,6 +725,7 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
         history_30d=summary_30d,
         db_history=db_history,
         alerts_history=alerts_history,
+        history_derivation=history_derivation,
     )
     _write_json_atomic(out["heavy"], heavy_payload)
     logger.info("HEAVY snapshot exported -> %s (%d bytes)", out["heavy"], out["heavy"].stat().st_size)
@@ -652,6 +751,7 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
         history_24h=summary_24h,
         history_7d=summary_7d,
         history_30d=summary_30d,
+        history_derivation=history_derivation,
     )
     _write_json_atomic(out["full"], full_payload)
     logger.info("FULL snapshot exported -> %s (%d bytes)", out["full"], out["full"].stat().st_size)

@@ -139,6 +139,9 @@ def fetch_summary(hours: int = 24, cfg: Settings | None = None) -> list[dict]:
             AVG(JSON_EXTRACT(metrics, '$.cpu.total_percent'))    AS cpu_avg,
             AVG(JSON_EXTRACT(metrics, '$.memory.percent'))       AS mem_avg,
             AVG(JSON_EXTRACT(metrics, '$.disk.percent'))         AS disk_avg,
+            AVG(JSON_EXTRACT(metrics, '$.disk.total_gb'))        AS disk_total_gb_avg,
+            AVG(JSON_EXTRACT(metrics, '$.disk.used_gb'))         AS disk_used_gb_avg,
+            AVG(JSON_EXTRACT(metrics, '$.disk.free_gb'))         AS disk_free_gb_avg,
             AVG(JSON_EXTRACT(metrics, '$.network.upload_mbps'))  AS net_up_avg,
             AVG(JSON_EXTRACT(metrics, '$.network.download_mbps'))AS net_down_avg
         FROM warden_metrics

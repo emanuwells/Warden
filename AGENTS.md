@@ -36,6 +36,10 @@ Collector + DB monitor -> MariaDB (schema Warden) -> Export fast/heavy/full -> A
 - Slack warning cadence: sustain 10m / cooldown 60m
 - Slack critical cadence: sustain 2m / cooldown 15m
 
+## Métricas de janela obrigatórias (v2.x)
+- Sistema (`history_*`): `disk_total_gb_avg`, `disk_used_gb_avg`, `disk_free_gb_avg`, `disk_growth_gb_h_avg`
+- DB (`db.history.*`): `storage_total_gb_avg`, `storage_growth_gb_h_avg`
+
 ## Regras de código
 - Python 3.10+
 - Type hints obrigatórios
