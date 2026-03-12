@@ -53,3 +53,8 @@
 
 # Daily trim for large runtime logs
 25 3 * * * find /opt/warden/runtime/logs -maxdepth 1 -type f \( -name '*.log' -o -name '*.err.log' \) -size +20M -exec truncate -s 0 {} +
+
+# Optional root cron outside the runtime user:
+# 20 3 * * 0 /usr/local/sbin/maiatron_weekly_housekeeping.sh
+# Source of truth for that script lives in this repo:
+# /opt/warden/scripts/maiatron_weekly_housekeeping.sh

@@ -90,6 +90,29 @@ crontab -e
 # colar conteúdo de scripts/crontab.example
 ```
 
+## Host housekeeping (CleanTron)
+
+Este repo também versiona o housekeeping semanal conservador do host:
+
+- script versionado: `scripts/maiatron_weekly_housekeeping.sh`
+- script ativo em produção: `/usr/local/sbin/maiatron_weekly_housekeeping.sh`
+- documentação operacional: `docs/CleanTron.md`
+
+Princípios do script:
+- limpa apenas artefactos seguros e antigos
+- não apaga diretórios em `/tmp` nem ficheiros `*.lock`, `*.pid` ou `*.sock`
+- mantém MySQL como passo opt-in (`ENABLE_MYSQL_CLEANUP=1`)
+- não gere retenção de `/var/lib/systemd/coredump`, porque essa política já existe no sistema
+
+Validação/execução manual:
+
+```bash
+./scripts/maiatron_weekly_housekeeping.sh --dry-run
+sudo install -m 750 -o root -g root scripts/maiatron_weekly_housekeeping.sh /usr/local/sbin/maiatron_weekly_housekeeping.sh
+sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run
+sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh
+```
+
 ## Docker (pipeline-only, DB externa)
 
 Este repo inclui dockerização do pipeline (não frontend).
@@ -150,4 +173,5 @@ curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy | head
 
 - Não commitar `.env` nem segredos em `secrets/*.json` reais.
 - Não commitar artefactos gerados em `runtime/export`, `runtime/cache`, `runtime/archive`, `runtime/logs`.
+- O housekeeping semanal do host deve ser alterado apenas a partir de `scripts/maiatron_weekly_housekeeping.sh` e documentado em `docs/CleanTron.md`.
 - Commits devem conter apenas código, docs, scripts e templates (`*.example`).

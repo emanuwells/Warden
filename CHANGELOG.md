@@ -2,6 +2,18 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.0.1] - 2026-03-12
+
+### Adicionado
+- Script versionado de housekeeping semanal do host em `scripts/maiatron_weekly_housekeeping.sh`.
+- Documentação operacional dedicada do `CleanTron` em `docs/CleanTron.md`.
+- Limpeza conservadora de crash reports antigos em `/var/crash` (`*.crash`, `*.upload`, `*.uploaded` com mais de 30 dias).
+
+### Alterado
+- `README.md`: documentação do `Warden` passa a incluir o contrato operacional do `CleanTron` e o fluxo de instalação para `/usr/local/sbin`.
+- `scripts/maiatron_weekly_housekeeping.sh`: mantém `--dry-run`, exige `root` fora desse modo, preserva diretórios/locks em `/tmp` e deixa MySQL em opt-in.
+- O `Warden` torna-se o repo canónico para versionar este housekeeping do host, eliminando a cópia solta na raiz do MAIATRON.
+
 ## [2.0.0] - 2026-03-10
 
 ### Adicionado
