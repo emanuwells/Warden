@@ -1,4 +1,6 @@
-# Ambiente local UI/API (Nginx + PHP-FPM). Pipeline: docker-compose.pipeline.yml
+# Ambiente local: UI/API Warden (Nginx + PHP-FPM), estilo MAIATRON-HUB.
+# Uso: docker compose -f docker-compose.dev.yml up --build
+# UI: http://127.0.0.1:8080/MAIATRON/apps/warden/
 
 services:
   php:

@@ -2,7 +2,7 @@
 
 ![Stack](https://img.shields.io/badge/stack-Python%203.10%2B%20%7C%20MariaDB%20%7C%20Docker%20%7C%20systemd-3776ab)
 ![Status](https://img.shields.io/badge/status-produ%C3%A7%C3%A3o-2ecc71)
-![Version](https://img.shields.io/badge/version-2.0.6-blue)
+![Version](https://img.shields.io/badge/version-2.0.7-blue)
 ![License](https://img.shields.io/badge/license-A%20confirmar-lightgrey)
 
 Runtime de monitorização (collector + export + alertas) do ecossistema **MAIATRON**. Recolhe métricas de sistema e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para a API/UI e envia alertas Slack.
@@ -16,7 +16,8 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 - Alertas Slack (limiares de disco e digest diário).
 - Arquivo semanal agregado (`runtime/archive/weekly`).
 - Housekeeping conservador do host (**CleanTron**) versionado neste repo.
-- Scripts PowerShell para SSH, limpeza remota e arquivo de tabelas `d4maia` pré-2024 em BAZE2.
+- Pasta [`public/`](public/) com UI/API Warden (fatia MAIATRON-HUB), importável e publicável de forma controlada.
+- Scripts PowerShell: import/publicação de `public/`, SSH e limpeza remota em BAZE2.
 
 ## Stack tecnológica
 
@@ -27,7 +28,7 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 | Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
 | Deploy host | systemd + cron |
 | Deploy alternativo | Docker Compose (pipeline only; DB externa) |
-| Frontend/API | Fora deste repo — nginx `/MAIATRON/apps/warden` |
+| Frontend/API | Versionados em `public/`; em produção dentro de `MAIATRON-HUB` (URL `/MAIATRON/apps/warden/`) |
 | CI/CD | A confirmar |
 
 ## Arquitetura
@@ -46,7 +47,7 @@ flowchart LR
     cron --> slack
     export --> snapshots[runtime/export/*.json]
   end
-  subgraph maiatron [MAIATRON nginx]
+  subgraph hub [MAIATRON-HUB public]
     api[api.php]
     ui[index.html]
     api --> snapshots
@@ -75,14 +76,18 @@ Warden/
 ├── CHANGELOG.md                   # Histórico versionado
 ├── CHANGELOG_POLICY.md            # Política de changelog
 ├── README.md                      # Este ficheiro
+├── public/                        # UI/API Warden (publicável no HUB)
 ├── warden.py                      # CLI principal (collector)
 ├── requirements.txt
+├── docker-compose.yml             # Docker local UI/API (porta 8080)
+├── docker-compose.pipeline.yml    # Docker pipeline collector/scheduler
+├── docker-compose.dev.yml         # Alias explícito do stack web local
 ├── .env.example                   # Variáveis do collector (host)
 ├── .env.docker.example            # Variáveis Docker
 ├── Dockerfile
 ├── docker-compose.yml
 ├── src/                           # collector, DB, settings, alerts
-├── scripts/                       # export, janitor, Slack, CleanTron, SSH, arquivo d4maia
+├── scripts/                       # export, janitor, Slack, CleanTron, SSH, publish-public
 ├── systemd/warden.service
 ├── config/                        # exemplos auth local
 ├── secrets/                       # *.example — credenciais reais gitignored
@@ -174,9 +179,13 @@ Contrato operacional:
 | CleanTron (host) | `sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run` |
 | SSH remoto | `.\scripts\Invoke-WardenSsh.ps1` (PowerShell) |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
-| Arquivo d4maia | `.\scripts\archive-d4maia-pre2024.ps1 -Phase {inventory,dump,verify,drop}` |
+| Importar `public/` | `.\scripts\import-public-from-prod.ps1` |
+| Publicar `public/` | `.\scripts\publish-public.ps1 -DryRun` (depois sem dry-run, com OK explícito) |
+| Dev UI/API Docker | `.\scripts\start-warden-dev.ps1` |
 
-## API e frontend (MAIATRON)
+## API e frontend (MAIATRON-HUB)
+
+Código em [`public/`](public/); em produção sob `/usr/share/nginx/html/MAIATRON-HUB/frontend|backend/...`. URL pública nginx:
 
 | Recurso | URL típica |
 |---|---|
@@ -212,14 +221,20 @@ curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=full" | head
 
 ## Docker e deploy
 
-Docker cobre **apenas o pipeline** (não o frontend PHP).
+### UI/API local (Nginx + PHP-FPM)
+
+```powershell
+.\scripts\import-public-from-prod.ps1   # primeira vez
+.\scripts\start-warden-dev.ps1         # http://127.0.0.1:8080/MAIATRON/apps/warden/
+```
+
+Requer snapshots em `runtime/export/` (gerar com `warden.py --once` e `export_payload.py`).
+
+### Pipeline em Docker (sem PHP)
 
 ```bash
 cp .env.docker.example .env.docker
-docker compose up -d --build
-docker compose logs -f warden-collector
-docker compose restart warden-scheduler
-docker compose down
+docker compose -f docker-compose.pipeline.yml up -d --build
 ```
 
 | Serviço | Função |
@@ -227,22 +242,26 @@ docker compose down
 | `warden-collector` | `python warden.py` |
 | `warden-scheduler` | cron interno (export, janitor, slack, archive) |
 
-Host metrics em Docker: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `network_mode: host`.
+Host metrics: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `network_mode: host`.
 
-Deploy em produção (host): ver [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Producao_Step_by_Step.md).
+### Publicação do `public/` em produção
+
+Ver [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md). **Não altera** o pipeline em `/home/eferreira/MAIATRON/Warden` até pedido explícito.
+
+Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Producao_Step_by_Step.md).
 
 ## Produção (BAZE2) — operações
 
 | Runbook | Conteúdo |
 |---|---|
+| [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md) | `public/`, Docker dev, publish |
 | [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) | SSH, diagnóstico, Warden, CleanTron |
-| [`docs/Arquivo_d4maia_pre2024.md`](docs/Arquivo_d4maia_pre2024.md) | Dump e DROP tabelas `d4maia` 2020–2023 |
 | [`docs/CleanTron.md`](docs/CleanTron.md) | Housekeeping semanal |
 
 ```powershell
 .\scripts\setup-secrets-from-wells-api.ps1
 .\scripts\run-production-cleanup.ps1
-.\scripts\archive-d4maia-pre2024.ps1 -Phase verify   # antes de drop
+.\scripts\publish-public.ps1 -DryRun
 ```
 
 `WARDEN_SUDO_PASSWORD` apenas em `secrets/production.deploy.local.env` local (nunca commitar).
@@ -257,7 +276,8 @@ Deploy em produção (host): ver [`docs/Guia_Producao_Step_by_Step.md`](docs/Gui
 | Path legado `/opt/warden` | `crontab -l`, `systemctl cat warden` |
 | Export vazio | DB `Warden` acessível; `warden.py --once` |
 | Docker sem métricas de disco | `MONITOR_ROOT_PATH` e mount `/hostfs` |
-| DROP d4maia falso “já ausente” | Usar versão atual do script (`SHOW TABLES` completo, não `LIKE` com aspas) |
+| API 401 em Docker local | Auth MAIATRON; esperado sem sessão — validar UI estática e PHP a responder |
+| `public/` vazio | `.\scripts\import-public-from-prod.ps1` |
 
 ## Segurança e gestão de segredos
 

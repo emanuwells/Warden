@@ -1,0 +1,34 @@
+# Pipeline Warden (collector + scheduler) — não inclui UI/API PHP.
+# Uso: docker compose -f docker-compose.pipeline.yml up -d --build
+
+services:
+  warden-collector:
+    build: .
+    image: maiatron-warden:latest
+    container_name: warden-collector
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    command: ["python", "warden.py"]
+    network_mode: host
+    pid: host
+    volumes:
+      - ./runtime:/app/runtime
+      - ./secrets:/app/secrets:ro
+      - /:/hostfs:ro
+
+  warden-scheduler:
+    image: maiatron-warden:latest
+    container_name: warden-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    command: ["bash", "/app/scripts/docker-scheduler.sh"]
+    network_mode: host
+    pid: host
+    depends_on:
+      - warden-collector
+    volumes:
+      - ./runtime:/app/runtime
+      - ./secrets:/app/secrets:ro
+      - /:/hostfs:ro

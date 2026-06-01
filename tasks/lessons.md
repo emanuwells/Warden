@@ -13,7 +13,7 @@ Este ficheiro regista padrões de erro, correções e antipadrões a evitar.
 
 ### 2026-06-01 — DROP d4maia: falso SKIP por quoting SSH
 
-**Contexto:** Fase `drop` de `scripts/archive-d4maia-pre2024.ps1` após dumps validados.
+**Contexto:** Operação pontual de DROP MySQL após dumps validados (script já removido do repo).
 
 **Erro / Antipadrão:** `SHOW TABLES LIKE 'nome'` embutido em `mysql -e '...'` via SSH; aspas simples interiores quebram o SQL remoto. Saída vazia + exit ≠ 0 foi interpretada como “tabela ausente”.
 
@@ -21,7 +21,7 @@ Este ficheiro regista padrões de erro, correções e antipadrões a evitar.
 
 **Regra Para O Futuro:** Evitar `LIKE '...'` com aspas em comandos SSH one-liner; preferir listagem completa ou `SELECT COUNT(*)` sem aspas conflituosas no shell.
 
-**Refs:** `scripts/archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md`
+**Refs:** CHANGELOG 2.0.4 (histórico da operação)
 
 ---
 

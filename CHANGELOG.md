@@ -2,6 +2,21 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.0.7] - 2026-06-01
+
+### Adicionado
+- Pasta [`public/`](public/) com UI/API Warden (import de `MAIATRON-HUB`).
+- Docker dev: `docker-compose.dev.yml`, `Dockerfile.php`, `docker/nginx/`, `scripts/start-warden-dev.ps1`.
+- `docker-compose.pipeline.yml` (collector/scheduler, separado do web).
+- `scripts/import-public-from-prod.ps1`, `scripts/publish-public.ps1`, [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md).
+
+### Removido
+- `scripts/archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md` (operação d4maia concluída).
+
+### Alterado
+- README, PROJECT_CONTEXT, HANDOFF: paths MAIATRON-HUB; sem referências operacionais a d4maia.
+- `docker-compose.yml` passa a stack web local (pipeline em ficheiro dedicado).
+
 ## [2.0.6] - 2026-06-01
 
 ### Adicionado

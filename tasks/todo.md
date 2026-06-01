@@ -1,29 +1,18 @@
-# Tarefas — Arquivo d4maia + limpeza produção
+# Tarefas — Warden
 
 ## Estado
 
-**Concluído** — arquivo pré-2024 e DROP (2026-06-01).
+**Concluído** — estrutura `public/` + Docker dev + limpeza referências d4maia no repo (2026-06-01).
 
-## Checklist d4maia
+## Checklist public / Docker
 
-- [x] Inventário 16 tabelas (ano ≤2023)
-- [x] Dumps para `C:\Users\cmm1490\Downloads\d4maia\tables`
-- [x] Verificação gzip + manifest `dump_ok`
-- [x] DROP em produção (após correção deteção de tabelas)
-- [x] HANDOFF + CHANGELOG 2.0.4
+- [x] Inventário MAIATRON-HUB (SSH read-only)
+- [x] `public/` importado de produção
+- [x] `docker-compose.dev.yml` + `docker-compose.pipeline.yml`
+- [x] `import-public-from-prod.ps1`, `publish-public.ps1`, `start-warden-dev.ps1`
+- [x] Documentação `docs/Warden_Public_Deploy.md`
+- [ ] Validar stack dev local (`start-warden-dev.ps1`) no ambiente Windows
 
-## Checklist documentação (AGENTS.md)
+## Checklist anterior (produção)
 
-- [x] README com badges, Mermaid, estrutura, secções obrigatórias (2.0.6)
-- [x] PROJECT_CONTEXT + HANDOFF + lessons atualizados
-- [ ] Licença (`LICENSE`) — A confirmar
-- [ ] CI/CD — A confirmar
-
-## Checklist limpeza (anterior)
-
-- [x] Secrets SSH de WELLS_API
-- [x] CleanTron + Warden janitor
-
-## Resultado disco
-
-`/`: ~98% → **~89%** (~11 GB livres) após DROP das tabelas históricas.
+- [x] Limpeza disco + arquivo d4maia (operação pontual; artefactos locais em Downloads)

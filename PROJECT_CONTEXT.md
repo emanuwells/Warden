@@ -9,7 +9,7 @@ Deve ser lido em conjunto com `AGENTS.md`, `HANDOFF.md`, `SKILLS.md` e `CHANGELO
 | Campo | Valor |
 |---|---|
 | Nome | Warden |
-| Tipo | Runtime de monitorização (collector + export + alertas) |
+| Tipo | Runtime de monitorização (collector + export + alertas) + fatia UI/API no HUB |
 | Responsável | A confirmar |
 | Estado | Produção (path home documentado) |
 
@@ -24,24 +24,28 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 | Runtime | Python 3, venv local (`.venv`) |
 | Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
 | Deploy host | systemd (`warden.service`) + cron (exports, janitor, Slack, archive) |
-| Deploy alternativo | Docker Compose (pipeline-only, DB externa) |
-| Frontend/API | Fora deste repo — `/usr/share/nginx/html/MAIATRON/apps/warden` |
+| Deploy alternativo | Docker Compose pipeline (`docker-compose.pipeline.yml`) |
+| Frontend/API | PHP + estáticos em `public/` (HUB: `MAIATRON-HUB`) |
+| Docker dev web | Nginx + PHP-FPM (`docker-compose.dev.yml`, porta 8080) |
 | Testes | `python3 -m py_compile` (smoke manual documentado no README) |
 | CI/CD | A confirmar |
 
 ## Estrutura Do Repositório
 
 ```text
+public/                   # UI/API Warden (publicável no MAIATRON-HUB)
 warden.py                 # CLI principal (collector)
 src/                      # collector, db_writer, db_monitor, janitor, settings, alerts
-scripts/                  # export, janitor, slack, weekly_archive, CleanTron, SSH PS1, archive d4maia
-systemd/warden.service    # unidade systemd (ajustar User/Group ao host)
-config/                   # exemplos de auth local
+scripts/                  # export, janitor, slack, publish-public, import-public, SSH
+docker/                   # nginx para dev local
+systemd/warden.service
+config/
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
-docs/                     # produção, CleanTron, arquivo d4maia, guia step-by-step, adr/
-docker-compose.yml        # pipeline Docker opcional
-skills/                   # pacote Skills para agentes (AGENTS.md)
+docs/                     # produção, CleanTron, Warden_Public_Deploy, adr/
+docker-compose.yml        # stack web local (atalho)
+docker-compose.pipeline.yml
+skills/
 ```
 
 ## Paths Oficiais (Produção)
@@ -49,10 +53,13 @@ skills/                   # pacote Skills para agentes (AGENTS.md)
 | Componente | Path |
 |---|---|
 | Runtime/pipeline | `/home/eferreira/MAIATRON/Warden` |
-| Frontend/API | `/usr/share/nginx/html/MAIATRON/apps/warden` |
-| Snapshots export | `runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
+| HUB (nginx root) | `/usr/share/nginx/html/MAIATRON-HUB` |
+| Frontend Warden | `.../MAIATRON-HUB/frontend/apps/warden/` |
+| API Warden (canónica) | `.../MAIATRON-HUB/backend/apps/warden/api.php` |
+| URL pública UI/API | `/MAIATRON/apps/warden/` |
+| Snapshots export | `.../Warden/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
 | CleanTron instalado | `/usr/local/sbin/maiatron_weekly_housekeeping.sh` |
-| Legado templates | `/opt/warden` — apenas em exemplos antigos; não usar em produção nova |
+| Legado templates | `/opt/warden` — não usar em produção nova |
 
 ## Acesso SSH A Produção (BAZE2)
 
@@ -60,108 +67,73 @@ skills/                   # pacote Skills para agentes (AGENTS.md)
 |---|---|
 | Deploy SSH | `secrets/production.deploy.local.env` (ignorado pelo Git) |
 | Chave | `secrets/.ssh/id_ed25519` |
-| Modelo | `secrets/production.deploy.local.env.example` |
 | Copiar de WELLS_API | `scripts/setup-secrets-from-wells-api.ps1` |
 | Limpeza remota | `scripts/run-production-cleanup.ps1`, `scripts/Invoke-WardenSsh.ps1` |
-| Arquivo MySQL d4maia | `scripts/archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md` |
-
-Host/utilizador típicos (não versionar passwords): alinhados com `WELLS_API` — ver `secrets/production.deploy.local.env` local.
-
-CleanTron requer `sudo`; para automação sem TTY, definir `WARDEN_SUDO_PASSWORD` apenas no ficheiro local de deploy.
+| Import `public/` | `scripts/import-public-from-prod.ps1` |
+| Publish `public/` | `scripts/publish-public.ps1` |
 
 ## MCP Servers Do Projeto
 
-| MCP Server | Finalidade | Configuração | Obrigatório | Estado | Limitações / Riscos |
-|---|---|---|---:|---|---|
-| N/A | — | Sem `.cursor/mcp.json` no repo | Não | Não configurado | Usar shell/SSH para operações de host |
+| MCP Server | Finalidade | Configuração | Obrigatório | Estado |
+|---|---|---|---:|---|
+| N/A | — | Sem `.cursor/mcp.json` no repo | Não | Não configurado |
 
 ## Skills Do Projeto
-
-| Skill | Finalidade | Localização | Obrigatória | Quando Usar |
-|---|---|---|---:|---|
-| repo-onboarding | Leitura inicial de políticas | `skills/repo-onboarding/` | Sim (tarefas não triviais) | Início de trabalho |
-| documentation-keeper | Coerência de docs | `skills/documentation-keeper/` | Quando docs mudam | Alterações de documentação |
-| docker-coolify-deploy | Docker/deploy | `skills/docker-coolify-deploy/` | Não | Compose/Docker |
-| mysql-mariadb-dba | DB | `skills/mysql-mariadb-dba/` | Não | Migrations/DB |
-| safe-git-operator | Git seguro | `skills/safe-git-operator/` | Sim | Antes de Git |
 
 Inventário completo: `SKILLS.md`.
 
 ## Política De Git Do Projeto
 
-| Regra | Estado | Nota |
-|---|---|---|
-| Branch principal | A confirmar | — |
-| Commits automáticos por IA | Não | Só com pedido explícito |
-| Push automático por IA | Não | Só com pedido explícito |
-| Comandos destrutivos Git | Proibido por defeito | Requer autorização explícita |
+| Regra | Estado |
+|---|---|
+| Commits automáticos por IA | Não (só com pedido explícito) |
+| Comandos destrutivos Git | Proibido por defeito |
 
 ## Política De Segurança E Segredos
 
-- Não versionar `.env`, `.env.docker`, `secrets/database.json`, `secrets/slack.json`, `secrets/ssh_key`.
-- Usar `*.example` com valores fictícios.
-- SSH/host de produção: documentar placeholders em `docs/Producao_Acesso_e_Limpeza.md` — nunca commitar credenciais.
+- Não versionar `.env`, credenciais reais, `secrets/database.json`, chaves SSH.
+- `public/` importado: rever antes de commit (sem tokens/passwords).
 
 ## Comandos Principais
 
-| Ação | Comando | Estado |
-|---|---|---|
-| Setup DB | `.venv/bin/python warden.py --setup` | Documentado |
-| Recolha única | `.venv/bin/python warden.py --once` | Documentado |
-| Export fast/heavy/full | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` | Documentado |
-| Janitor | `.venv/bin/python scripts/janitor.py` | Documentado |
-| CleanTron dry-run | `sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run` | Documentado |
-| QA sintaxe | `python3 -m py_compile warden.py src/*.py scripts/*.py` | Documentado |
-| Arquivo d4maia | `.\scripts\archive-d4maia-pre2024.ps1 -Phase {inventory,dump,verify,drop}` | Documentado |
-
-## Variáveis De Ambiente
-
-| Variável | Obrigatória | Descrição | Exemplo seguro |
-|---|---:|---|---|
-| `DB_HOST` | Sim | Host MariaDB | `127.0.0.1` |
-| `DB_NAME` | Sim | Schema Warden | `Warden` |
-| `RETENTION_DAYS` | Sim | Retenção métricas | `7` |
-| `EXPORT_*_PATH` | Sim | Paths snapshots | `runtime/export/...` |
-| `MONITOR_ROOT_PATH` | Sim (Docker: `/hostfs`) | Raiz de monitorização de disco | `/` |
-| `WEEKLY_ARCHIVE_RETENTION_WEEKS` | Não | Arquivo semanal | `6` |
-
-Ver `.env.example` e `.env.docker.example`.
+| Ação | Comando |
+|---|---|
+| Setup DB | `.venv/bin/python warden.py --setup` |
+| Recolha única | `.venv/bin/python warden.py --once` |
+| Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
+| Dev Docker web | `.\scripts\start-warden-dev.ps1` |
+| Publish public | `.\scripts\publish-public.ps1 -DryRun` |
 
 ## Endpoints / Interfaces Importantes
 
-| Interface | Descrição | Estado |
-|---|---|---|
-| `api.php?action=ops_fast` | Snapshot leve | Host MAIATRON |
-| `api.php?action=ops_heavy` | Snapshot pesado | Host MAIATRON |
-| `api.php?action=full` | Payload completo | Host MAIATRON |
+| Interface | Descrição |
+|---|---|
+| `api.php?action=ops_fast` | Snapshot leve |
+| `api.php?action=ops_heavy` | Snapshot pesado |
+| `api.php?action=full` | Payload completo |
 
 ## ADRs Do Projeto
 
-| ADR | Decisão | Estado | Impacto |
-|---|---|---|---|
-| — | Template em `docs/adr/0000-template.md` | Sem ADRs aplicados ainda | — |
-
-## Critérios De Verificação Antes De Concluir Trabalho
-
-Ver checklist em `AGENTS.md` e skill `definition-of-done`.
+Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 
 ## Decisões Técnicas Atuais
 
-| Decisão | Motivo | Impacto | ADR |
-|---|---|---|---|
-| Path canónico em `/home/eferreira/MAIATRON/Warden` | Alinhamento com produção documentada | systemd/cron examples atualizados | A confirmar |
-| CleanTron versionado neste repo | Fonte única de housekeeping host | Script em `scripts/maiatron_weekly_housekeeping.sh` | — |
-| Retenção métricas 7 dias | Contrato operacional | Janitor diário | — |
+| Decisão | Motivo |
+|---|---|
+| `public/` espelha fatia Warden do HUB | Alinhamento com WELLS_API; deploy isolado da UI/API |
+| Pipeline permanece em `/home/eferreira/MAIATRON/Warden` | Não alterar produção até publish explícito do `public/` |
+| `docker-compose.pipeline.yml` separado do web | Evitar confundir collector com stack PHP |
 
 ## Riscos Conhecidos
 
-| Risco | Impacto | Mitigação |
-|---|---|---|
-| Disco cheio no host | Falha de exports/logs/DB | Runbook `docs/Producao_Acesso_e_Limpeza.md`, CleanTron |
-| Path legado `/opt/warden` em cron antigo | Jobs a falhar | Validar `crontab -l` e `systemctl cat warden` em produção |
-| Collector duplicado (user + system service) | Métricas duplicadas | Desativar `warden.service` user |
+| Risco | Mitigação |
+|---|---|
+| Disco cheio no host | Runbook limpeza, CleanTron |
+| Publish `public/` sem backup | `publish-public.ps1` com backup/rollback |
+| Auth MAIATRON em Docker local | Smoke aceita 401 sem sessão |
 
 ## Dívida Técnica / Pendências
 
-- Validar `User`/`Group` em `systemd/warden.service` vs utilizador real do host (`eferreira` vs `warden`).
-- Confirmar host SSH de produção fora do repositório.
+- Licença (`LICENSE`) A confirmar.
+- CI/CD A confirmar.
+- Validar `User`/`Group` em `systemd/warden.service`.
