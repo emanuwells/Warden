@@ -312,4 +312,4 @@ Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`CHANGEL
 ## Licença e versão
 
 - Versão canónica: [`VERSION`](VERSION) (SemVer; alinhar com `CHANGELOG.md` e badge acima).
-- Licença: [MIT](LICENSE), alinhada com [WELLS_API](https://github.com/emanuwells/WELLS_API).
+- Licença: [MIT](LICENSE)
