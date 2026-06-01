@@ -12,6 +12,13 @@
 - [x] DROP em produção (após correção deteção de tabelas)
 - [x] HANDOFF + CHANGELOG 2.0.4
 
+## Checklist documentação (AGENTS.md)
+
+- [x] README com badges, Mermaid, estrutura, secções obrigatórias (2.0.6)
+- [x] PROJECT_CONTEXT + HANDOFF + lessons atualizados
+- [ ] Licença (`LICENSE`) — A confirmar
+- [ ] CI/CD — A confirmar
+
 ## Checklist limpeza (anterior)
 
 - [x] Secrets SSH de WELLS_API

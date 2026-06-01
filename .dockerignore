@@ -1,0 +1,16 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.env.docker
+secrets/
+runtime/export/**
+runtime/logs/**
+runtime/cache/**
+runtime/archive/**
+!runtime/*/.gitkeep
+.DS_Store
+.idea
+.vscode

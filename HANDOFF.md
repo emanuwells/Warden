@@ -5,66 +5,83 @@
 | Campo | Valor |
 |---|---|
 | Última atualização | 2026-06-01 |
-| Estado | Arquivo d4maia pré-2024 concluído |
-| Última versão registada | 2.0.5 |
+| Objetivo atual | Manter repo e documentação alinhados com `AGENTS.md` |
+| Estado | Arquivo d4maia concluído; auditoria docs/README concluída |
+| Última versão registada | 2.0.6 |
+| Bloqueios | Nenhum |
+
+## Objetivo / estado
+
+| Área | Concluído | Em curso | Por fazer |
+|---|---|---|---|
+| d4maia pré-2024 | 16 dumps + verify + DROP | — | — |
+| Limpeza BAZE2 | Warden + CleanTron | — | Monitorizar `df` |
+| Documentação | README 2.0.6, PROJECT_CONTEXT, lessons | — | Licença (`LICENSE`) A confirmar; CI A confirmar |
 
 ## Produção BAZE2 — Arquivo d4maia (pré-2024)
 
 | Métrica | Antes | Depois |
 |---|---|---|
-| `/` uso | ~98% (~2 GB livres) | **~89% (~11 GB livres)** |
-| Tabelas `d4maia` com ano 2020–2023 | 16 | **0** |
-| Dumps locais | — | `C:\Users\cmm1490\Downloads\d4maia\tables\*.sql.gz` (16 ficheiros) |
+| `/` uso | ~98% (~2 GB livres) | **~89% (~11 GB livres)** |
+| Tabelas `d4maia` ano 2020–2023 | 16 | **0** |
+| Dumps locais | — | `C:\Users\cmm1490\Downloads\d4maia\tables\*.sql.gz` |
 
-### Executado
+Rollback: `gunzip -c tables/NOME.sql.gz | mysql -u USER -p d4maia` (ver `docs/Arquivo_d4maia_pre2024.md`).
 
-- Inventário via `SHOW TABLES` + tamanhos `.ibd` (sudo `du`).
-- Dump `mysqldump | gzip` por tabela (stream SSH → PC).
-- Verificação: gzip, SHA256, `COUNT(*)` remoto, `verify-report.txt` OK.
-- `DROP TABLE` nas 16 tabelas após dumps validados.
-- Correção no script: deteção de existência via `SHOW TABLES` completo (evitar `SHOW TABLES LIKE` com aspas no shell remoto).
+## Decisões técnicas
 
-### Tabelas removidas (exemplos)
+- Path canónico runtime: `/home/eferreira/MAIATRON/Warden`.
+- Deteção de tabela no DROP: lista `SHOW TABLES` completa (não `SHOW TABLES LIKE` via SSH com aspas).
+- MCP: não versionado no repo.
 
-`c15mta2021IP`, `c15mta2023IP`, `c15mta2022IP`, `c15mta2022IPold`, `c15mta2023PTD`, `c15mta2020IP`, … (16 no total; ver `manifest.json` local).
+## Abordagens falhadas (registo)
 
-### Mantidas (sem drop)
+- `SHOW TABLES LIKE 'tabela'` no comando SSH remoto → SQL mal formado → falso “tabela ausente” e SKIP indevido no DROP.
 
-Tabelas sem ano no nome (`Consumo15m`, `c15mta`, `ptd`, …) e tabelas **2024+** (`c15mta2024*`, etc.).
+## Riscos de segurança
 
-### Rollback
+- `secrets/*` e passwords só em ficheiros locais gitignored.
+- Não repetir credenciais em HANDOFF, README ou CHANGELOG.
 
-```bash
-gunzip -c tables/NOME.sql.gz | mysql -u USER -p d4maia
-```
+## Testes e validação
 
-## Produção BAZE2 — Limpeza 2026-06-01 (anterior)
+- d4maia: 16/16 `dump_ok`, verify-report OK, DROP confirmado (`SHOW TABLES` sem 2020–2023).
+- README: alinhado com checklist `AGENTS.md` (badges, Mermaid, estrutura, secções obrigatórias).
 
-- Janitor Warden + CleanTron: `/` passou de ~99% para ~98% antes do arquivo MySQL.
-- `WARDEN_SUDO_PASSWORD` em `secrets/production.deploy.local.env` (gitignored).
+## Ficheiros relevantes
 
-## Skills / MCP
+- `README.md`, `AGENTS.md`, `PROJECT_CONTEXT.md`
+- `scripts/archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md`
+- `scripts/run-production-cleanup.ps1`, `docs/Producao_Acesso_e_Limpeza.md`
 
-- Skills: `repo-onboarding`, `safe-git-operator`, `handoff-maintainer`, `changelog-semver`, `mysql-mariadb-dba`, `security-secrets-audit`.
-- MCP: N/A para esta tarefa.
-
-## Git
+## Estado Git
 
 - Branch: A confirmar no ambiente local.
-- Alterações versionáveis: script `archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md`, `HANDOFF.md`, `CHANGELOG.md`.
+- Alterações pendentes de commit: documentação e scripts versionados (não incluir `secrets/`).
+
+## Skills usadas (auditoria)
+
+- `repo-onboarding`, `documentation-keeper`, `handoff-maintainer`, `changelog-semver`, `definition-of-done`, `security-secrets-audit`.
+
+## MCP
+
+- N/A — sem configuração MCP versionada no repositório.
+
+## ADRs
+
+- Nenhum ADR aplicado; template em `docs/adr/0000-template.md`.
 
 ## Próximo passo
 
-- Monitorizar `df -h` semanalmente; cron CleanTron (domingo 03:20).
-- Opcional: `OPTIMIZE TABLE` em tabelas `d4maia` restantes se o espaço InnoDB não refletir totalmente no `df`.
-- Não commitar `secrets/*` nem passwords de chat.
+1. Definir licença (`LICENSE`) se o projeto for público.
+2. Monitorizar `df -h` semanalmente; cron CleanTron (domingo 03:20).
+3. Opcional: `OPTIMIZE TABLE` em `d4maia` se espaço InnoDB não refletir no `df`.
+4. Validar CI/CD e branch principal (marcados A confirmar).
 
 ## Scripts
 
 ```powershell
-.\scripts\archive-d4maia-pre2024.ps1 -Phase inventory
-.\scripts\archive-d4maia-pre2024.ps1 -Phase dump
 .\scripts\archive-d4maia-pre2024.ps1 -Phase verify
-.\scripts\archive-d4maia-pre2024.ps1 -Phase drop
 .\scripts\run-production-cleanup.ps1
+.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand "df -h /"
 ```

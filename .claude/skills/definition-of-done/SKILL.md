@@ -20,6 +20,8 @@ Executar esta classe de tarefa de forma repetível, segura e verificável, respe
 - Verificar se objetivo foi cumprido.
 - Executar testes/build/lint aplicáveis ou justificar N/A.
 - Confirmar docs atualizadas.
+- Confirmar que o README mantém badges, arquitetura e estrutura do projeto quando aplicável.
+- Confirmar que Docker foi avaliado, implementado ou justificado como `N/A — motivo`.
 - Confirmar CHANGELOG quando houve alteração versionável.
 - Confirmar HANDOFF atualizado em tarefa não trivial.
 - Confirmar MCP/Skills usados ou justificados.

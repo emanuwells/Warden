@@ -1,7 +1,12 @@
-# .claude/skills
+# Skills
 
-Esta pasta contém cópias das Skills em formato compatível com Claude Code.
+Esta pasta contém as Skills canónicas portáveis deste pacote.
 
-A fonte canónica portável também existe em `skills/`.
+Para Claude Code, existe uma cópia equivalente em `.claude/skills/`.
 
-Manter ambas sincronizadas quando uma Skill for alterada.
+Ao editar uma Skill, manter as duas localizações sincronizadas:
+
+- `skills/<skill>/SKILL.md`
+- `.claude/skills/<skill>/SKILL.md`
+
+A Skill `skill-authoring` deve ser usada para criar ou rever novas Skills.

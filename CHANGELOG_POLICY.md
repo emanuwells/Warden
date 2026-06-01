@@ -30,6 +30,7 @@ Garantir que o histórico permite responder:
 - alteração de Docker, CI/CD, variáveis de ambiente ou configuração;
 - alteração de dependências;
 - alteração de documentação;
+- alteração de badges, arquitetura, estrutura do projeto ou Docker no `README.md`;
 - alteração de regras em `AGENTS.md`;
 - alteração de `PROJECT_CONTEXT.md`;
 - alteração de `HANDOFF.md` quando representar mudança operacional relevante;

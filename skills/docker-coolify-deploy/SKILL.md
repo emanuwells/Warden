@@ -1,6 +1,6 @@
 ---
 name: docker-coolify-deploy
-description: Usar para Docker, Docker Compose, Coolify, VPS, Tailscale, Nginx, deploy, logs, portas, volumes, env vars e troubleshooting de serviços.
+description: Usar para avaliar, propor, criar ou corrigir Docker, Docker Compose, Coolify, VPS, Tailscale, Nginx, deploy, logs, portas, volumes, env vars e troubleshooting de serviços.
 ---
 
 # Docker Coolify Deploy
@@ -11,6 +11,7 @@ Executar esta classe de tarefa de forma repetível, segura e verificável, respe
 
 ## Quando Usar
 
+- Avaliar se Docker faz sentido no projeto.
 - Dockerfile, compose, Coolify ou deploy VPS.
 - Problemas 502/504, portas, volumes, reverse proxy.
 - Tailscale ou acesso privado a serviços.
@@ -18,6 +19,8 @@ Executar esta classe de tarefa de forma repetível, segura e verificável, respe
 ## Procedimento Obrigatório
 
 - Identificar app, portas, env vars e persistência.
+- Decidir se Docker reduz complexidade operacional ou se adiciona complexidade desnecessária.
+- Se Docker não fizer sentido, registar `Docker: N/A — motivo` no README/PROJECT_CONTEXT/HANDOFF.
 - Evitar segredos em imagens/compose.
 - Usar `.env.example` seguro.
 - Documentar build, up/down, logs e rollback.
@@ -26,7 +29,7 @@ Executar esta classe de tarefa de forma repetível, segura e verificável, respe
 
 ## Saída Esperada
 
-- Config Docker/Coolify simples e documentada.
+- Config Docker/Coolify simples e documentada, ou justificação objetiva para não usar Docker.
 - Comandos de validação e troubleshooting.
 
 ## Anti-Padrões A Evitar

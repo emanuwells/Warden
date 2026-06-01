@@ -34,12 +34,12 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 ```text
 warden.py                 # CLI principal (collector)
 src/                      # collector, db_writer, db_monitor, janitor, settings, alerts
-scripts/                  # export, janitor, slack, weekly_archive, CleanTron, crontab examples
+scripts/                  # export, janitor, slack, weekly_archive, CleanTron, SSH PS1, archive d4maia
 systemd/warden.service    # unidade systemd (ajustar User/Group ao host)
 config/                   # exemplos de auth local
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
-docs/                     # guias produção, CleanTron, runbook limpeza
+docs/                     # produção, CleanTron, arquivo d4maia, guia step-by-step, adr/
 docker-compose.yml        # pipeline Docker opcional
 skills/                   # pacote Skills para agentes (AGENTS.md)
 ```
@@ -63,6 +63,7 @@ skills/                   # pacote Skills para agentes (AGENTS.md)
 | Modelo | `secrets/production.deploy.local.env.example` |
 | Copiar de WELLS_API | `scripts/setup-secrets-from-wells-api.ps1` |
 | Limpeza remota | `scripts/run-production-cleanup.ps1`, `scripts/Invoke-WardenSsh.ps1` |
+| Arquivo MySQL d4maia | `scripts/archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md` |
 
 Host/utilizador típicos (não versionar passwords): alinhados com `WELLS_API` — ver `secrets/production.deploy.local.env` local.
 
@@ -111,6 +112,7 @@ Inventário completo: `SKILLS.md`.
 | Janitor | `.venv/bin/python scripts/janitor.py` | Documentado |
 | CleanTron dry-run | `sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run` | Documentado |
 | QA sintaxe | `python3 -m py_compile warden.py src/*.py scripts/*.py` | Documentado |
+| Arquivo d4maia | `.\scripts\archive-d4maia-pre2024.ps1 -Phase {inventory,dump,verify,drop}` | Documentado |
 
 ## Variáveis De Ambiente
 

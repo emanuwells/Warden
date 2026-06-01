@@ -2,6 +2,15 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.0.6] - 2026-06-01
+
+### Adicionado
+- `.dockerignore` para builds Docker do pipeline.
+
+### Alterado
+- `README.md`: reestruturado conforme `AGENTS.md` (badges, funcionalidades, stack, Mermaid, árvore, requisitos, troubleshooting, licença A confirmar).
+- `PROJECT_CONTEXT.md`, `HANDOFF.md`, `tasks/lessons.md`, `tasks/todo.md`: alinhamento pós-auditoria.
+
 ## [2.0.5] - 2026-06-01
 
 ### Alterado

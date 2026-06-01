@@ -12,14 +12,18 @@ Executar esta classe de tarefa de forma repetível, segura e verificável, respe
 ## Quando Usar
 
 - Alterações que mudem comportamento, instalação, configuração ou arquitetura.
-- README incompleto/desatualizado.
+- README incompleto/desatualizado, incluindo falta de badges, arquitetura, estrutura do projeto ou Docker/Deploy.
 - PROJECT_CONTEXT incompleto/desatualizado.
 - Comentários ou docstrings técnicos.
 
 ## Procedimento Obrigatório
 
 - Identificar docs afetadas.
-- Atualizar README quando o uso, instalação, comandos ou arquitetura mudarem.
+- Atualizar README quando o uso, instalação, comandos, arquitetura, Docker, deploy ou estrutura do projeto mudarem.
+- Garantir badges no topo quando houver stack, estado, licença ou versão confirmados.
+- Garantir secção `Arquitetura` com Mermaid ou imagem versionada.
+- Garantir secção `Estrutura do projeto` com árvore real.
+- Garantir secção `Docker / Deploy`, ou `N/A — motivo` quando Docker não fizer sentido.
 - Atualizar PROJECT_CONTEXT quando contexto real mudar.
 - Atualizar SKILLS.md quando Skills forem criadas/alteradas.
 - Atualizar docs técnicas ou ADRs quando aplicável.

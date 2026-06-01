@@ -1,68 +1,106 @@
 # Warden — Runtime Oficial do Pipeline
 
-Warden é o runtime de monitorização (collector + export + alertas) do ecossistema MAIATRON.
+![Stack](https://img.shields.io/badge/stack-Python%203.10%2B%20%7C%20MariaDB%20%7C%20Docker%20%7C%20systemd-3776ab)
+![Status](https://img.shields.io/badge/status-produ%C3%A7%C3%A3o-2ecc71)
+![Version](https://img.shields.io/badge/version-2.0.6-blue)
+![License](https://img.shields.io/badge/license-A%20confirmar-lightgrey)
 
-## Documentação do projeto
+Runtime de monitorização (collector + export + alertas) do ecossistema **MAIATRON**. Recolhe métricas de sistema e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para a API/UI e envia alertas Slack.
 
-| Documento | Conteúdo |
+## Funcionalidades principais
+
+- Recolha periódica de CPU, RAM, disco, rede, processos e top consumo de disco.
+- Monitorização de schemas MariaDB (tamanhos, crescimento).
+- Export de snapshots `fast`, `heavy` e `full` para consumo pela API PHP no host MAIATRON.
+- Janitor com retenção configurável (`RETENTION_DAYS`).
+- Alertas Slack (limiares de disco e digest diário).
+- Arquivo semanal agregado (`runtime/archive/weekly`).
+- Housekeeping conservador do host (**CleanTron**) versionado neste repo.
+- Scripts PowerShell para SSH, limpeza remota e arquivo de tabelas `d4maia` pré-2024 em BAZE2.
+
+## Stack tecnológica
+
+| Área | Tecnologia |
 |---|---|
-| [`AGENTS.md`](AGENTS.md) | Regras obrigatórias para agentes de IA |
-| [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, secrets, critérios de verificação |
-| [`HANDOFF.md`](HANDOFF.md) | Estado operacional atual (produção, bloqueios, próximos passos) |
-| [`SKILLS.md`](SKILLS.md) | Inventário de Skills (`skills/` e `.claude/skills/`) |
-| [`CHANGELOG.md`](CHANGELOG.md) / [`CHANGELOG_POLICY.md`](CHANGELOG_POLICY.md) | Histórico e política de versionamento |
-| [`tasks/todo.md`](tasks/todo.md) | Plano de execução em curso |
-
-### MCP
-
-Este repositório **não inclui** configuração MCP versionada (sem `.cursor/mcp.json` / `.mcp.json` na raiz). Configurar MCP no IDE do utilizador quando necessário; ver `PROJECT_CONTEXT.md` e skill `mcp-server-operator`.
-
-## Contrato operacional atual
-
-- Frontend oficial: `/usr/share/nginx/html/MAIATRON/apps/warden` (UI + `api.php`)
-- Runtime oficial deste repo: `/home/eferreira/MAIATRON/Warden` (path canónico em produção)
-- Templates antigos referiam `/opt/warden`; usar sempre o path home em instalações novas
-- Snapshots exportados para consumo da API:
-  - `runtime/export/warden_fast_snapshot.json`
-  - `runtime/export/warden_heavy_snapshot.json`
-  - `runtime/export/warden_payload.json`
-- Retenção operacional: `RETENTION_DAYS=7`
-- Histórico estendido: snapshot semanal agregado (`runtime/archive/weekly`)
-- Janelas operacionais suportadas no frontend: `1h`, `24h`, `7d`, `30d` (30d agregado)
+| Runtime | Python 3.10+, venv (`.venv`) |
+| Dependências | `psutil`, `PyMySQL`, `python-dotenv`, `requests`, … — ver [`requirements.txt`](requirements.txt) |
+| Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
+| Deploy host | systemd + cron |
+| Deploy alternativo | Docker Compose (pipeline only; DB externa) |
+| Frontend/API | Fora deste repo — nginx `/MAIATRON/apps/warden` |
+| CI/CD | A confirmar |
 
 ## Arquitetura
 
-1. `warden.py` recolhe métricas (CPU/RAM/Disco/Rede + processos/top disco).
-2. Dados entram na DB `Warden` (`warden_metrics`).
-3. `scripts/export_payload.py` gera snapshots `fast/heavy/full`.
-4. `apps/warden/api.php` (no MAIATRON, fora deste repo) lê snapshots e expõe ações HTTP.
-5. Jobs auxiliares:
-   - `scripts/janitor.py`
-   - `scripts/slack_alerts.py`
-   - `scripts/slack_daily_digest.py`
-   - `scripts/weekly_archive.py`
+```mermaid
+flowchart LR
+  subgraph host [Host Linux]
+    warden[warden.py collector]
+    cron[cron / systemd]
+    export[export_payload.py]
+    janitor[janitor.py]
+    slack[slack_alerts.py]
+    warden --> dbW[(MariaDB Warden)]
+    cron --> export
+    cron --> janitor
+    cron --> slack
+    export --> snapshots[runtime/export/*.json]
+  end
+  subgraph maiatron [MAIATRON nginx]
+    api[api.php]
+    ui[index.html]
+    api --> snapshots
+    ui --> api
+  end
+  snapshots --> api
+  slack --> slackExt[Slack webhooks]
+  warden --> monitor[Host filesystem]
+```
 
-## Métricas de crescimento (v2.x)
+Fluxo resumido:
 
-Além de CPU/RAM/Rede, o payload expõe crescimento por janela para Disco e DB:
+1. `warden.py` recolhe métricas e grava em `Warden.warden_metrics`.
+2. `scripts/export_payload.py` gera `warden_fast_snapshot.json`, `warden_heavy_snapshot.json`, `warden_payload.json`.
+3. `api.php` (no host MAIATRON) serve `ops_fast`, `ops_heavy`, `full`.
+4. Jobs auxiliares: janitor, Slack, arquivo semanal, CleanTron (host).
 
-- Histórico sistema (`history_*`):
-  - `disk_total_gb_avg`
-  - `disk_used_gb_avg`
-  - `disk_free_gb_avg`
-  - `disk_growth_gb_h_avg`
-- Histórico DB (`db.history.*`):
-  - `storage_total_gb_avg`
-  - `storage_growth_gb_h_avg`
+## Estrutura do projeto
 
-No frontend:
-- Tab `Disk`: gráfico dedicado `Disco usado (GB)` + `Crescimento/h (GB/h)`.
-- Tab `DB`: gráfico dedicado `Consumo DB (GB)` + `Crescimento/h (GB/h)` separado de throughput.
+```text
+Warden/
+├── AGENTS.md                      # Regras obrigatórias para IAs
+├── PROJECT_CONTEXT.md             # Contexto técnico do projeto
+├── HANDOFF.md                     # Estado operacional atual
+├── SKILLS.md                      # Inventário de Skills
+├── CHANGELOG.md                   # Histórico versionado
+├── CHANGELOG_POLICY.md            # Política de changelog
+├── README.md                      # Este ficheiro
+├── warden.py                      # CLI principal (collector)
+├── requirements.txt
+├── .env.example                   # Variáveis do collector (host)
+├── .env.docker.example            # Variáveis Docker
+├── Dockerfile
+├── docker-compose.yml
+├── src/                           # collector, DB, settings, alerts
+├── scripts/                       # export, janitor, Slack, CleanTron, SSH, arquivo d4maia
+├── systemd/warden.service
+├── config/                        # exemplos auth local
+├── secrets/                       # *.example — credenciais reais gitignored
+├── runtime/                       # export, cache, archive, logs (.gitkeep)
+├── docs/                          # runbooks produção, CleanTron, ADR template
+├── skills/                        # Skills canónicas para agentes
+├── .claude/skills/                # Cópia compatível Claude Code
+└── tasks/                         # todo.md, lessons.md
+```
 
-Fallback compatível com histórico antigo:
-- quando faltarem colunas GB antigas, o export deriva `disk_used_gb_avg` a partir de `disk_avg` e `disk_total_gb` atual.
+## Requisitos
 
-## Setup rápido (host)
+- **Host:** Linux com Python 3.10+, MariaDB acessível, systemd (opcional) e cron.
+- **Docker (opcional):** Docker Engine + Compose v2; DB MariaDB externa ao compose.
+- **Produção BAZE2 (ops):** SSH com chave em `secrets/.ssh/`; ver [`secrets/README.md`](secrets/README.md).
+- **Windows (ops):** PowerShell 5.1+ para scripts `*.ps1`.
+
+## Instalação (host)
 
 ```bash
 cd /home/eferreira/MAIATRON/Warden
@@ -71,15 +109,35 @@ python3 -m venv .venv
 pip install -r requirements.txt
 cp .env.example .env
 cp secrets/database.json.example secrets/database.json
-```
-
-Criar schema base:
-
-```bash
+# Editar .env e secrets/database.json com valores reais (não commitar)
 .venv/bin/python warden.py --setup
 ```
 
-Teste de recolha:
+Path canónico em produção: `/home/eferreira/MAIATRON/Warden`. Templates antigos usavam `/opt/warden` — não usar em instalações novas.
+
+## Configuração
+
+| Ficheiro | Função |
+|---|---|
+| `.env` | Host, DB, retenção, paths de export, alertas, Slack |
+| `secrets/database.json` | Credenciais MariaDB do collector |
+| `secrets/slack.json` | Webhooks Slack |
+| `secrets/production.deploy.local.env` | SSH produção (local, gitignored) |
+
+Variáveis principais (ver `.env.example`):
+
+| Variável | Descrição |
+|---|---|
+| `RETENTION_DAYS` | Retenção de métricas (ex.: `7`) |
+| `EXPORT_PATH`, `EXPORT_FAST_PATH`, `EXPORT_HEAVY_PATH` | Snapshots JSON |
+| `MONITOR_ROOT_PATH` | Raiz para métricas de disco (`/` ou `/hostfs` em Docker) |
+| `WEEKLY_ARCHIVE_RETENTION_WEEKS` | Retenção de arquivo semanal |
+| `ALERT_DISK_WARN`, `ALERT_DISK_CRITICAL` | Limiares de alerta |
+| `SLACK_WARNING_*`, `SLACK_CRITICAL_*` | Canais Slack |
+
+## Utilização
+
+Recolha única e export:
 
 ```bash
 .venv/bin/python warden.py --once
@@ -88,154 +146,60 @@ Teste de recolha:
 .venv/bin/python scripts/export_payload.py --mode full
 ```
 
-## Serviço + cron (host)
-
-- Serviço systemd: `systemd/warden.service`
-- Cron recomendado: `scripts/crontab.example`
-
-Passos típicos:
+Serviço systemd + cron:
 
 ```bash
 sudo cp systemd/warden.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now warden
-# Evitar collector duplicado via user service:
 systemctl --user stop warden.service || true
 systemctl --user disable warden.service || true
-crontab -e
-# colar conteúdo de scripts/crontab.example
+crontab -e   # colar scripts/crontab.example
 ```
+
+Contrato operacional:
+
+- Snapshots: `runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json`
+- Retenção: `RETENTION_DAYS=7`
+- Janelas UI: `1h`, `24h`, `7d`, `30d` (30d agregado)
+
+## Comandos principais
+
+| Ação | Comando |
+|---|---|
+| Setup schema | `.venv/bin/python warden.py --setup` |
+| Recolha única | `.venv/bin/python warden.py --once` |
+| Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
+| Janitor | `.venv/bin/python scripts/janitor.py` |
+| CleanTron (host) | `sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run` |
+| SSH remoto | `.\scripts\Invoke-WardenSsh.ps1` (PowerShell) |
+| Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
+| Arquivo d4maia | `.\scripts\archive-d4maia-pre2024.ps1 -Phase {inventory,dump,verify,drop}` |
 
 ## API e frontend (MAIATRON)
 
-O UI e a API vivem no host nginx, não neste repo:
-
-| Recurso | Path / URL típica |
+| Recurso | URL típica |
 |---|---|
 | UI | `http://127.0.0.1/MAIATRON/apps/warden/index.html` |
 | API | `http://127.0.0.1/MAIATRON/apps/warden/api.php` |
 
-Ações principais (`action=`):
-
-| Ação | Uso |
+| `action=` | Uso |
 |---|---|
-| `ops_fast` | Snapshot leve (métricas recentes) |
-| `ops_heavy` | Snapshot pesado (processos, top disco, etc.) |
-| `full` | Payload completo exportado |
+| `ops_fast` | Snapshot leve |
+| `ops_heavy` | Snapshot pesado |
+| `full` | Payload completo |
 
-Os ficheiros JSON em `runtime/export/` são a fonte que a API consome após `scripts/export_payload.py`.
+## Testes, lint e build
 
-## Produção (BAZE2) — SSH e operações
-
-Host alinhado com **WELLS_API** (ex.: BAZE2). Credenciais apenas em `secrets/` local (gitignored) — ver [`secrets/README.md`](secrets/README.md).
-
-### Configuração inicial (Windows / PowerShell)
-
-```powershell
-# Copiar secrets do repo WELLS_API (recomendado)
-.\scripts\setup-secrets-from-wells-api.ps1
-
-# Shell remoto genérico
-.\scripts\Invoke-WardenSsh.ps1
-```
-
-### Limpeza de disco no host
-
-Runbook: [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) (diagnóstico, janitor Warden, CleanTron, validação pós-limpeza).
-
-```powershell
-.\scripts\run-production-cleanup.ps1
-```
-
-CleanTron em produção pode exigir `WARDEN_SUDO_PASSWORD` no ficheiro local `secrets/production.deploy.local.env` (nunca commitar).
-
-### Arquivo MySQL `d4maia` (tabelas pré-2024)
-
-Runbook: [`docs/Arquivo_d4maia_pre2024.md`](docs/Arquivo_d4maia_pre2024.md).
-
-Arquivar tabelas do schema `d4maia` cujo nome contém **2020–2023**, com dump local e `DROP` só após verificação:
-
-```powershell
-.\scripts\archive-d4maia-pre2024.ps1 -Phase inventory
-.\scripts\archive-d4maia-pre2024.ps1 -Phase dump
-.\scripts\archive-d4maia-pre2024.ps1 -Phase verify
-.\scripts\archive-d4maia-pre2024.ps1 -Phase drop   # só após verify OK
-```
-
-Destino local predefinido: `C:\Users\<user>\Downloads\d4maia\` (`manifest.json`, `tables\*.sql.gz`).
-
-## Host housekeeping (CleanTron)
-
-Este repo também versiona o housekeeping semanal conservador do host:
-
-- script versionado: `scripts/maiatron_weekly_housekeeping.sh`
-- script ativo em produção: `/usr/local/sbin/maiatron_weekly_housekeeping.sh`
-- documentação operacional: `docs/CleanTron.md`
-
-Princípios do script:
-- limpa apenas artefactos seguros e antigos
-- não apaga diretórios em `/tmp` nem ficheiros `*.lock`, `*.pid` ou `*.sock`
-- mantém MySQL como passo opt-in (`ENABLE_MYSQL_CLEANUP=1`)
-- não gere retenção de `/var/lib/systemd/coredump`, porque essa política já existe no sistema
-
-Validação/execução manual:
+Não há suite de testes automatizada versionada. Validação documentada:
 
 ```bash
-./scripts/maiatron_weekly_housekeeping.sh --dry-run
-sudo install -m 750 -o root -g root scripts/maiatron_weekly_housekeeping.sh /usr/local/sbin/maiatron_weekly_housekeeping.sh
-sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run
-sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh
+python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py \
+  scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py \
+  scripts/janitor.py scripts/weekly_archive.py
 ```
 
-## Docker (pipeline-only, DB externa)
-
-Este repo inclui dockerização do pipeline (não frontend).
-
-Ficheiros:
-- `Dockerfile`
-- `docker-compose.yml`
-- `.env.docker.example`
-- `scripts/docker.crontab`
-- `scripts/docker-scheduler.sh`
-
-Arranque:
-
-```bash
-cp .env.docker.example .env.docker
-docker compose up -d --build
-```
-
-Serviços:
-- `warden-collector`: corre `python warden.py`
-- `warden-scheduler`: corre cron para export/janitor/slack/archive
-
-### Host metrics em Docker
-
-Para recolher métricas da máquina anfitriã:
-
-- `MONITOR_ROOT_PATH=/hostfs` (env)
-- mount host root read-only: `/:/hostfs:ro`
-- `pid: host`
-- `network_mode: host`
-
-Isto mantém o comportamento de monitorização de disco/processos coerente com host.
-
-## Variáveis-chave
-
-- `RETENTION_DAYS=7`
-- `WEEKLY_ARCHIVE_RETENTION_WEEKS=6`
-- `EXPORT_PATH`, `EXPORT_FAST_PATH`, `EXPORT_HEAVY_PATH`
-- `MONITOR_ROOT_PATH` (novo)
-- `ALERT_DISK_WARN=95`, `ALERT_DISK_CRITICAL=98`
-- `SLACK_WARNING_*` e `SLACK_CRITICAL_*`
-
-## QA rápido
-
-```bash
-python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py
-```
-
-Smoke API (no host MAIATRON — ver secção [API e frontend](#api-e-frontend-maiatron)):
+Smoke API (no host MAIATRON):
 
 ```bash
 curl -I http://127.0.0.1/MAIATRON/apps/warden/index.html
@@ -244,9 +208,89 @@ curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy" | head
 curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=full" | head
 ```
 
-## Git readiness checklist
+**Lint / CI:** A confirmar.
 
-- Não commitar `.env` nem segredos em `secrets/*.json` reais.
-- Não commitar artefactos gerados em `runtime/export`, `runtime/cache`, `runtime/archive`, `runtime/logs`.
-- O housekeeping semanal do host deve ser alterado apenas a partir de `scripts/maiatron_weekly_housekeeping.sh` e documentado em `docs/CleanTron.md`.
-- Commits devem conter apenas código, docs, scripts e templates (`*.example`).
+## Docker e deploy
+
+Docker cobre **apenas o pipeline** (não o frontend PHP).
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up -d --build
+docker compose logs -f warden-collector
+docker compose restart warden-scheduler
+docker compose down
+```
+
+| Serviço | Função |
+|---|---|
+| `warden-collector` | `python warden.py` |
+| `warden-scheduler` | cron interno (export, janitor, slack, archive) |
+
+Host metrics em Docker: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `network_mode: host`.
+
+Deploy em produção (host): ver [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Producao_Step_by_Step.md).
+
+## Produção (BAZE2) — operações
+
+| Runbook | Conteúdo |
+|---|---|
+| [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) | SSH, diagnóstico, Warden, CleanTron |
+| [`docs/Arquivo_d4maia_pre2024.md`](docs/Arquivo_d4maia_pre2024.md) | Dump e DROP tabelas `d4maia` 2020–2023 |
+| [`docs/CleanTron.md`](docs/CleanTron.md) | Housekeeping semanal |
+
+```powershell
+.\scripts\setup-secrets-from-wells-api.ps1
+.\scripts\run-production-cleanup.ps1
+.\scripts\archive-d4maia-pre2024.ps1 -Phase verify   # antes de drop
+```
+
+`WARDEN_SUDO_PASSWORD` apenas em `secrets/production.deploy.local.env` local (nunca commitar).
+
+## Troubleshooting
+
+| Sintoma | Verificar |
+|---|---|
+| API 404 em `ops_fast` | vhost/nginx; path `apps/warden`; snapshots em `runtime/export/` |
+| Disco cheio | `df -h`; CleanTron; janitor; runbook produção |
+| Collector duplicado | `systemctl --user` vs `systemctl` — desativar user service |
+| Path legado `/opt/warden` | `crontab -l`, `systemctl cat warden` |
+| Export vazio | DB `Warden` acessível; `warden.py --once` |
+| Docker sem métricas de disco | `MONITOR_ROOT_PATH` e mount `/hostfs` |
+| DROP d4maia falso “já ausente” | Usar versão atual do script (`SHOW TABLES` completo, não `LIKE` com aspas) |
+
+## Segurança e gestão de segredos
+
+- Não commitar `.env`, `.env.docker`, `secrets/database.json`, `secrets/slack.json`, chaves SSH nem `production.deploy.local.env`.
+- Usar apenas ficheiros `*.example` no Git.
+- Não versionar `runtime/export`, `runtime/logs`, `runtime/cache`, `runtime/archive` (exceto `.gitkeep`).
+- Alterar CleanTron só via `scripts/maiatron_weekly_housekeeping.sh` + doc em `docs/CleanTron.md`.
+
+## MCP servers e Skills
+
+| Item | Estado |
+|---|---|
+| MCP no repo | **N/A** — sem `.cursor/mcp.json` / `.mcp.json` versionado; configurar no IDE se necessário |
+| Skills | Pacote em `skills/` e `.claude/skills/` — inventário em [`SKILLS.md`](SKILLS.md) |
+| Regras para IAs | [`AGENTS.md`](AGENTS.md) |
+
+Documentação de governança:
+
+| Documento | Uso |
+|---|---|
+| [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, comandos, riscos |
+| [`HANDOFF.md`](HANDOFF.md) | Estado operacional e próximos passos |
+| [`tasks/todo.md`](tasks/todo.md) | Plano em curso |
+| [`tasks/lessons.md`](tasks/lessons.md) | Lições aprendidas |
+
+## Métricas de crescimento (v2.x)
+
+O payload expõe crescimento por janela para disco e DB (`disk_*_gb_avg`, `disk_growth_gb_h_avg`, `db.history.*`). No frontend: tabs **Disk** e **DB** com gráficos dedicados. Fallback: deriva `disk_used_gb_avg` a partir de `disk_avg` quando faltarem colunas antigas.
+
+## Changelog
+
+Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`CHANGELOG_POLICY.md`](CHANGELOG_POLICY.md)).
+
+## Licença
+
+**A confirmar** — não existe ficheiro `LICENSE` na raiz do repositório.
