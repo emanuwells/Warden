@@ -6,7 +6,7 @@
 |---|---|
 | Última atualização | 2026-06-01 |
 | Estado | Arquivo d4maia pré-2024 concluído |
-| Última versão registada | 2.0.4 |
+| Última versão registada | 2.0.5 |
 
 ## Produção BAZE2 — Arquivo d4maia (pré-2024)
 

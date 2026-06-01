@@ -2,6 +2,11 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.0.5] - 2026-06-01
+
+### Alterado
+- `README.md`: documentação de governança (AGENTS, Skills, HANDOFF), MCP, API MAIATRON, operações BAZE2 (arquivo `d4maia`, SSH).
+
 ## [2.0.4] - 2026-06-01
 
 ### Adicionado

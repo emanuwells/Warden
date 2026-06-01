@@ -2,6 +2,21 @@
 
 Warden é o runtime de monitorização (collector + export + alertas) do ecossistema MAIATRON.
 
+## Documentação do projeto
+
+| Documento | Conteúdo |
+|---|---|
+| [`AGENTS.md`](AGENTS.md) | Regras obrigatórias para agentes de IA |
+| [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, secrets, critérios de verificação |
+| [`HANDOFF.md`](HANDOFF.md) | Estado operacional atual (produção, bloqueios, próximos passos) |
+| [`SKILLS.md`](SKILLS.md) | Inventário de Skills (`skills/` e `.claude/skills/`) |
+| [`CHANGELOG.md`](CHANGELOG.md) / [`CHANGELOG_POLICY.md`](CHANGELOG_POLICY.md) | Histórico e política de versionamento |
+| [`tasks/todo.md`](tasks/todo.md) | Plano de execução em curso |
+
+### MCP
+
+Este repositório **não inclui** configuração MCP versionada (sem `.cursor/mcp.json` / `.mcp.json` na raiz). Configurar MCP no IDE do utilizador quando necessário; ver `PROJECT_CONTEXT.md` e skill `mcp-server-operator`.
+
 ## Contrato operacional atual
 
 - Frontend oficial: `/usr/share/nginx/html/MAIATRON/apps/warden` (UI + `api.php`)
@@ -20,7 +35,7 @@ Warden é o runtime de monitorização (collector + export + alertas) do ecossis
 1. `warden.py` recolhe métricas (CPU/RAM/Disco/Rede + processos/top disco).
 2. Dados entram na DB `Warden` (`warden_metrics`).
 3. `scripts/export_payload.py` gera snapshots `fast/heavy/full`.
-4. `apps/warden/api.php` (no MAIATRON) lê snapshots e serve `ops_fast/ops_heavy/full`.
+4. `apps/warden/api.php` (no MAIATRON, fora deste repo) lê snapshots e expõe ações HTTP.
 5. Jobs auxiliares:
    - `scripts/janitor.py`
    - `scripts/slack_alerts.py`
@@ -91,21 +106,63 @@ crontab -e
 # colar conteúdo de scripts/crontab.example
 ```
 
-## Produção — acesso SSH e limpeza de disco
+## API e frontend (MAIATRON)
 
-Runbook: [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) (diagnóstico, Warden, CleanTron, validação pós-limpeza).
+O UI e a API vivem no host nginx, não neste repo:
 
-Configuração SSH (mesmo host que WELLS_API / BAZE2):
+| Recurso | Path / URL típica |
+|---|---|
+| UI | `http://127.0.0.1/MAIATRON/apps/warden/index.html` |
+| API | `http://127.0.0.1/MAIATRON/apps/warden/api.php` |
+
+Ações principais (`action=`):
+
+| Ação | Uso |
+|---|---|
+| `ops_fast` | Snapshot leve (métricas recentes) |
+| `ops_heavy` | Snapshot pesado (processos, top disco, etc.) |
+| `full` | Payload completo exportado |
+
+Os ficheiros JSON em `runtime/export/` são a fonte que a API consome após `scripts/export_payload.py`.
+
+## Produção (BAZE2) — SSH e operações
+
+Host alinhado com **WELLS_API** (ex.: BAZE2). Credenciais apenas em `secrets/` local (gitignored) — ver [`secrets/README.md`](secrets/README.md).
+
+### Configuração inicial (Windows / PowerShell)
 
 ```powershell
 # Copiar secrets do repo WELLS_API (recomendado)
 .\scripts\setup-secrets-from-wells-api.ps1
 
-# Limpeza remota
+# Shell remoto genérico
+.\scripts\Invoke-WardenSsh.ps1
+```
+
+### Limpeza de disco no host
+
+Runbook: [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) (diagnóstico, janitor Warden, CleanTron, validação pós-limpeza).
+
+```powershell
 .\scripts\run-production-cleanup.ps1
 ```
 
-Ver [`secrets/README.md`](secrets/README.md).
+CleanTron em produção pode exigir `WARDEN_SUDO_PASSWORD` no ficheiro local `secrets/production.deploy.local.env` (nunca commitar).
+
+### Arquivo MySQL `d4maia` (tabelas pré-2024)
+
+Runbook: [`docs/Arquivo_d4maia_pre2024.md`](docs/Arquivo_d4maia_pre2024.md).
+
+Arquivar tabelas do schema `d4maia` cujo nome contém **2020–2023**, com dump local e `DROP` só após verificação:
+
+```powershell
+.\scripts\archive-d4maia-pre2024.ps1 -Phase inventory
+.\scripts\archive-d4maia-pre2024.ps1 -Phase dump
+.\scripts\archive-d4maia-pre2024.ps1 -Phase verify
+.\scripts\archive-d4maia-pre2024.ps1 -Phase drop   # só após verify OK
+```
+
+Destino local predefinido: `C:\Users\<user>\Downloads\d4maia\` (`manifest.json`, `tables\*.sql.gz`).
 
 ## Host housekeeping (CleanTron)
 
@@ -178,12 +235,13 @@ Isto mantém o comportamento de monitorização de disco/processos coerente com 
 python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py
 ```
 
-Smoke API (no host MAIATRON):
+Smoke API (no host MAIATRON — ver secção [API e frontend](#api-e-frontend-maiatron)):
 
 ```bash
 curl -I http://127.0.0.1/MAIATRON/apps/warden/index.html
-curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast | head
-curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy | head
+curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast" | head
+curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy" | head
+curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=full" | head
 ```
 
 ## Git readiness checklist
