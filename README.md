@@ -5,7 +5,8 @@ Warden é o runtime de monitorização (collector + export + alertas) do ecossis
 ## Contrato operacional atual
 
 - Frontend oficial: `/usr/share/nginx/html/MAIATRON/apps/warden` (UI + `api.php`)
-- Runtime oficial deste repo: `/home/eferreira/MAIATRON/Warden`
+- Runtime oficial deste repo: `/home/eferreira/MAIATRON/Warden` (path canónico em produção)
+- Templates antigos referiam `/opt/warden`; usar sempre o path home em instalações novas
 - Snapshots exportados para consumo da API:
   - `runtime/export/warden_fast_snapshot.json`
   - `runtime/export/warden_heavy_snapshot.json`
@@ -89,6 +90,22 @@ systemctl --user disable warden.service || true
 crontab -e
 # colar conteúdo de scripts/crontab.example
 ```
+
+## Produção — acesso SSH e limpeza de disco
+
+Runbook: [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) (diagnóstico, Warden, CleanTron, validação pós-limpeza).
+
+Configuração SSH (mesmo host que WELLS_API / BAZE2):
+
+```powershell
+# Copiar secrets do repo WELLS_API (recomendado)
+.\scripts\setup-secrets-from-wells-api.ps1
+
+# Limpeza remota
+.\scripts\run-production-cleanup.ps1
+```
+
+Ver [`secrets/README.md`](secrets/README.md).
 
 ## Host housekeeping (CleanTron)
 

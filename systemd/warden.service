@@ -7,8 +7,8 @@ After=network.target mariadb.service
 Type=simple
 User=warden
 Group=warden
-WorkingDirectory=/opt/warden
-ExecStart=/usr/bin/python3 /opt/warden/warden.py
+WorkingDirectory=/home/eferreira/MAIATRON/Warden
+ExecStart=/usr/bin/python3 /home/eferreira/MAIATRON/Warden/warden.py
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -18,10 +18,10 @@ SyslogIdentifier=warden
 # Hardening
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/opt/warden/runtime
+ReadWritePaths=/home/eferreira/MAIATRON/Warden/runtime
 
 # Environment
-EnvironmentFile=/opt/warden/.env
+EnvironmentFile=/home/eferreira/MAIATRON/Warden/.env
 
 [Install]
 WantedBy=multi-user.target

@@ -2,7 +2,8 @@
 
 ## 1) Contexto e paths oficiais
 
-- Runtime/pipeline oficial: `/home/eferreira/MAIATRON/Warden`
+- Runtime/pipeline oficial: `/home/eferreira/MAIATRON/Warden` (canónico; `/opt/warden` é legado de templates)
+- Limpeza de disco / SSH: [`Producao_Acesso_e_Limpeza.md`](Producao_Acesso_e_Limpeza.md)
 - Frontend/API oficial: `/usr/share/nginx/html/MAIATRON/apps/warden`
 - Fonte de snapshots consumidos pela API:
   - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_fast_snapshot.json`

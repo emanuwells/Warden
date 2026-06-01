@@ -2,6 +2,36 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.0.4] - 2026-06-01
+
+### Adicionado
+- Script [`scripts/archive-d4maia-pre2024.ps1`](scripts/archive-d4maia-pre2024.ps1): inventário, dump comprimido via SSH, verificação gzip/SHA256 e `DROP TABLE` para tabelas `d4maia` com ano 2020–2023 no nome.
+- Runbook [`docs/Arquivo_d4maia_pre2024.md`](docs/Arquivo_d4maia_pre2024.md).
+
+### Alterado
+- Operação em produção BAZE2: 16 tabelas arquivadas em `Downloads/d4maia`, removidas após verificação; disco `/` ~98% → **~89%** (~11 GB livres).
+
+## [2.0.3] - 2026-06-01
+
+### Adicionado
+- Acesso SSH a produção alinhado com WELLS_API: `secrets/production.deploy.local.env.example`, `secrets/environments.local.json.example`, `secrets/README.md`.
+- Scripts `scripts/Invoke-WardenSsh.ps1`, `scripts/run-production-cleanup.ps1`, `scripts/setup-secrets-from-wells-api.ps1`.
+
+### Alterado
+- `.gitignore`: ignora `secrets/` exceto `README.md` e `*.example`.
+- `docs/Producao_Acesso_e_Limpeza.md` e `README.md`: fluxo PowerShell com chave em `secrets/.ssh/`.
+
+## [2.0.2] - 2026-06-01
+
+### Adicionado
+- `PROJECT_CONTEXT.md` com stack, paths oficiais e políticas do projeto.
+- Estrutura `runtime/{cache,export,archive,logs}/.gitkeep` no repositório.
+- Runbook [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) para diagnóstico SSH e limpeza segura de disco.
+
+### Alterado
+- `systemd/warden.service` e `scripts/crontab.example`: path canónico `/home/eferreira/MAIATRON/Warden` (variável `WARDEN_ROOT` no cron).
+- `README.md`, `docs/CleanTron.md`, `docs/Guia_Producao_Step_by_Step.md`: ligações ao runbook e nota sobre legado `/opt/warden`.
+
 ## [2.0.1] - 2026-03-12
 
 ### Adicionado

@@ -6,10 +6,17 @@ venv/
 __pycache__/
 *.pyc
 
-# Secrets (real credentials)
+# Secrets (real credentials) — ver secrets/README.md
+secrets/*
+!secrets/README.md
+!secrets/*.example
 secrets/database.json
 secrets/slack.json
 secrets/ssh_key
+secrets/.ssh/
+secrets/production.deploy.local.env
+secrets/maiatron.deploy.local.env
+secrets/environments.local.json
 
 # Runtime
 runtime/*.json
