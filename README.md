@@ -2,8 +2,8 @@
 
 ![Stack](https://img.shields.io/badge/stack-Python%203.10%2B%20%7C%20MariaDB%20%7C%20Docker%20%7C%20systemd-3776ab)
 ![Status](https://img.shields.io/badge/status-produ%C3%A7%C3%A3o-2ecc71)
-![Version](https://img.shields.io/badge/version-2.0.7-blue)
-![License](https://img.shields.io/badge/license-A%20confirmar-lightgrey)
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
+![License](https://img.shields.io/badge/license-MIT-2ecc71)
 
 Runtime de monitorização (collector + export + alertas) do ecossistema **MAIATRON**. Recolhe métricas de sistema e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para a API/UI e envia alertas Slack.
 
@@ -69,33 +69,22 @@ Fluxo resumido:
 
 ```text
 Warden/
-├── AGENTS.md                      # Regras obrigatórias para IAs
-├── PROJECT_CONTEXT.md             # Contexto técnico do projeto
-├── HANDOFF.md                     # Estado operacional atual
-├── SKILLS.md                      # Inventário de Skills
-├── CHANGELOG.md                   # Histórico versionado
-├── CHANGELOG_POLICY.md            # Política de changelog
-├── README.md                      # Este ficheiro
-├── public/                        # UI/API Warden (publicável no HUB)
-├── warden.py                      # CLI principal (collector)
-├── requirements.txt
-├── docker-compose.yml             # Docker local UI/API (porta 8080)
-├── docker-compose.pipeline.yml    # Docker pipeline collector/scheduler
-├── docker-compose.dev.yml         # Alias explícito do stack web local
-├── .env.example                   # Variáveis do collector (host)
-├── .env.docker.example            # Variáveis Docker
-├── Dockerfile
-├── docker-compose.yml
-├── src/                           # collector, DB, settings, alerts
-├── scripts/                       # export, janitor, Slack, CleanTron, SSH, publish-public
-├── systemd/warden.service
-├── config/                        # exemplos auth local
-├── secrets/                       # *.example — credenciais reais gitignored
-├── runtime/                       # export, cache, archive, logs (.gitkeep)
-├── docs/                          # runbooks produção, CleanTron, ADR template
-├── skills/                        # Skills canónicas para agentes
-├── .claude/skills/                # Cópia compatível Claude Code
-└── tasks/                         # todo.md, lessons.md
+├── VERSION                        # Versão SemVer canónica (fonte para releases)
+├── LICENSE                        # MIT
+├── AGENTS.md, PROJECT_CONTEXT.md, HANDOFF.md, SKILLS.md
+├── CHANGELOG.md, CHANGELOG_POLICY.md
+├── README.md
+├── public/www/                    # UI/API local (Docker :8080)
+├── public/backend/                # API PHP canónica + auth MAIATRON
+├── deploy/hub/                    # Fatia para publicação no MAIATRON-HUB
+├── warden.py, src/, scripts/, requirements.txt
+├── docker-compose.yml             # Stack web local (include → docker-compose.dev.yml)
+├── docker-compose.dev.yml
+├── docker-compose.pipeline.yml    # Collector + scheduler
+├── docker-compose.sync.yml        # SCP snapshots de produção
+├── Dockerfile, Dockerfile.php, Dockerfile.sync
+├── secrets/, runtime/, docs/, skills/, tasks/
+└── .claude/skills/                # Cópia Skills (ver skills/)
 ```
 
 ## Requisitos
@@ -189,8 +178,9 @@ Código em [`public/`](public/); em produção sob `/usr/share/nginx/html/MAIATR
 
 | Recurso | URL típica |
 |---|---|
-| UI | `http://127.0.0.1/MAIATRON/apps/warden/index.html` |
-| API | `http://127.0.0.1/MAIATRON/apps/warden/api.php` |
+| UI (local Docker) | `http://127.0.0.1:8080/` |
+| API (local Docker) | `http://127.0.0.1:8080/api.php` |
+| UI (produção HUB) | `/MAIATRON/apps/warden/` (nginx) |
 
 | `action=` | Uso |
 |---|---|
@@ -208,13 +198,18 @@ python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.
   scripts/janitor.py scripts/weekly_archive.py
 ```
 
-Smoke API (no host MAIATRON):
+Smoke local (Docker):
+
+```bash
+curl -I http://127.0.0.1:8080/
+curl -s "http://127.0.0.1:8080/api.php?action=ops_fast" | head
+```
+
+Smoke em produção (host BAZE, com auth MAIATRON):
 
 ```bash
 curl -I http://127.0.0.1/MAIATRON/apps/warden/index.html
 curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast" | head
-curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy" | head
-curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=full" | head
 ```
 
 **Lint / CI:** A confirmar.
@@ -224,11 +219,12 @@ curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=full" | head
 ### UI/API local (Nginx + PHP-FPM)
 
 ```powershell
-.\scripts\import-public-from-prod.ps1   # primeira vez
-.\scripts\start-warden-dev.ps1         # http://127.0.0.1:8080/MAIATRON/apps/warden/
+.\scripts\import-public-from-prod.ps1   # primeira vez (UI do HUB)
+.\scripts\sync-prod-snapshots.ps1       # snapshots JSON de prod (SCP read-only)
+.\scripts\start-warden-dev.ps1         # http://127.0.0.1:8080/
 ```
 
-Requer snapshots em `runtime/export/` (gerar com `warden.py --once` e `export_payload.py`).
+Snapshots em `runtime/export/`: copiar de produção com `sync-prod-snapshots.ps1`, ou gerar localmente com `warden.py --once` e `export_payload.py`.
 
 ### Pipeline em Docker (sem PHP)
 
@@ -278,6 +274,8 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 | Docker sem métricas de disco | `MONITOR_ROOT_PATH` e mount `/hostfs` |
 | API 401 em Docker local | Auth MAIATRON; esperado sem sessão — validar UI estática e PHP a responder |
 | `public/` vazio | `.\scripts\import-public-from-prod.ps1` |
+| `snapshot_unavailable` em dev | `.\scripts\sync-prod-snapshots.ps1` ou gerar JSON localmente |
+| SCP sync: bad permissions | `icacls` na chave em `secrets/.ssh/id_ed25519` (ver `docs/Warden_Public_Deploy.md`) |
 
 ## Segurança e gestão de segredos
 
@@ -311,6 +309,7 @@ O payload expõe crescimento por janela para disco e DB (`disk_*_gb_avg`, `disk_
 
 Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`CHANGELOG_POLICY.md`](CHANGELOG_POLICY.md)).
 
-## Licença
+## Licença e versão
 
-**A confirmar** — não existe ficheiro `LICENSE` na raiz do repositório.
+- Versão canónica: [`VERSION`](VERSION) (SemVer; alinhar com `CHANGELOG.md` e badge acima).
+- Licença: [MIT](LICENSE), alinhada com [WELLS_API](https://github.com/emanuwells/WELLS_API).

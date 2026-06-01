@@ -5,47 +5,35 @@
 | Campo | Valor |
 |---|---|
 | Última atualização | 2026-06-01 |
-| Objetivo atual | Repo alinhado com WELLS_API (`public/` + Docker dev) |
-| Estado | `public/` importado; scripts publish/import; d4maia removido do repo |
-| Última versão registada | 2.0.7 |
-| Bloqueios | Nenhum |
+| Objetivo atual | Warden genérico em `public/www/`; produção via `deploy/hub/` |
+| Estado | Dev local sem login; UI em `http://127.0.0.1:8080/` |
+| Última versão registada | 2.1.0 (`VERSION`) |
 
-## Objetivo / estado
+## Local genérico (Docker)
 
-| Área | Concluído | Por fazer |
-|---|---|---|
-| `public/` + Docker dev | Import, compose, start-warden-dev, publish-public (dry-run) | Testar `docker compose` no host do utilizador |
-| Pipeline produção | Inalterado em `/home/eferreira/MAIATRON/Warden` | Publish `public/` só com OK explícito |
-| Disco BAZE2 | ~89% após limpeza + arquivo d4maia (op. passada) | Monitorizar `df` |
+| Item | Valor |
+|---|---|
+| URL UI | `http://127.0.0.1:8080/` |
+| URL API | `http://127.0.0.1:8080/api.php` |
+| Login | Desligado (`WARDEN_DEV_SKIP_AUTH`, `dev-auth-stub.js`, `data-warden-dev`) |
+| Snapshots | `runtime/export/` — sync SCP de prod ou pipeline local |
 
-## Decisões técnicas
+```powershell
+.\scripts\sync-prod-snapshots.ps1   # JSON reais de BAZE2 (read-only)
+.\scripts\start-warden-dev.ps1
+```
 
-- UI/API versionadas em `public/` (MAIATRON-HUB), não em `/MAIATRON/apps/warden` no filesystem.
-- `backend/core/shared/` no repo só para Docker local; não incluir em `publish-public.ps1`.
+## Produção BAZE
 
-## Skills usadas
-
-`repo-onboarding`, `documentation-keeper`, `handoff-maintainer`, `changelog-semver`, `docker-coolify-deploy`.
-
-## MCP
-
-N/A — sem MCP versionado no repo.
-
-## Estado Git
-
-Branch: A confirmar. Incluir `public/` após revisão (sem segredos).
+- Pipeline: `/home/eferreira/MAIATRON/Warden` (inalterado)
+- HUB: `/usr/share/nginx/html/MAIATRON-HUB` — publicar só `deploy/hub/` com `publish-public.ps1`
 
 ## Próximo passo
 
-1. `.\scripts\start-warden-dev.ps1` com snapshots em `runtime/export/`.
-2. Quando validado localmente: `.\scripts\publish-public.ps1` (sem `-DryRun`) com aprovação explícita.
-3. Definir `LICENSE` se necessário.
+1. `sync-prod-snapshots.ps1` + validar UI em `http://127.0.0.1:8080/`.
+2. `publish-public.ps1` só após validação e OK explícito.
 
-## Scripts
+## Skills / MCP (esta entrega)
 
-```powershell
-.\scripts\import-public-from-prod.ps1
-.\scripts\start-warden-dev.ps1
-.\scripts\publish-public.ps1 -DryRun
-.\scripts\run-production-cleanup.ps1
-```
+- Skills: `docker-coolify-deploy`, `documentation-keeper`, `changelog-semver`, `security-secrets-audit`
+- MCP: N/A

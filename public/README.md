@@ -1,13 +1,10 @@
-# public/ — fatia Warden do MAIATRON-HUB
+# public/
 
-Conteúdo publicável da app Warden (frontend + API), importado de produção.
+Estrutura local (desenvolvimento Docker em `http://127.0.0.1:8080/`):
 
-| Path local | Destino em produção |
+| Pasta | Função |
 |---|---|
-| `frontend/apps/warden/` | `/usr/share/nginx/html/MAIATRON-HUB/frontend/apps/warden/` |
-| `backend/apps/warden/` | `.../backend/apps/warden/` |
-| `backend/public/apps/warden/` | `.../backend/public/apps/warden/` |
+| [`www/`](www/) | Web root: `index.html`, `warden.js`, `api.php` (entrada HTTP) |
+| [`backend/`](backend/) | API canónica (`apps/warden/api.php`) e auth MAIATRON (`core/shared/`) |
 
-`backend/core/shared/` existe apenas para builds Docker locais; **não** publicar com `publish-public.ps1` (partilhado pelo HUB).
-
-Ver [`docs/Warden_Public_Deploy.md`](../docs/Warden_Public_Deploy.md).
+Produção (MAIATRON-HUB): ver [`deploy/hub/`](../deploy/hub/) e [`docs/Warden_Public_Deploy.md`](../docs/Warden_Public_Deploy.md).

@@ -53,6 +53,14 @@ Usar SemVer: `MAJOR.MINOR.PATCH`.
 
 Usar o menor incremento que represente corretamente o impacto.
 
+## Ficheiro VERSION
+
+Manter [`VERSION`](VERSION) na raiz com uma linha SemVer (`MAJOR.MINOR.PATCH`). Em cada release:
+
+1. Atualizar `VERSION`.
+2. Criar entrada no topo de `CHANGELOG.md`.
+3. Alinhar badge de versão no `README.md` e valores por defeito em `.env.example` / `.env.dev.example` / `docker-compose.dev.yml` quando aplicável.
+
 ## Data E Hora
 
 Cada entrada deve usar ISO 8601 com timezone Europe/Lisbon.

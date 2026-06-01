@@ -1,0 +1,23 @@
+# One-shot: venv + SCP de snapshots de produção para runtime/export (dev local).
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TZ=Europe/Lisbon
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        openssh-client \
+        ca-certificates \
+        tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt /app/requirements.txt
+COPY scripts/docker-sync-prod-entry.sh /app/scripts/docker-sync-prod-entry.sh
+
+RUN chmod +x /app/scripts/docker-sync-prod-entry.sh \
+    && mkdir -p /app/runtime/export
+
+ENTRYPOINT ["/app/scripts/docker-sync-prod-entry.sh"]

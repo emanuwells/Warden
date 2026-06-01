@@ -1,6 +1,6 @@
-# Ambiente local: UI/API Warden (Nginx + PHP-FPM), estilo MAIATRON-HUB.
+# Ambiente local genérico: UI/API Warden (Nginx + PHP-FPM), sem login.
 # Uso: docker compose -f docker-compose.dev.yml up --build
-# UI: http://127.0.0.1:8080/MAIATRON/apps/warden/
+# UI: http://127.0.0.1:8080/
 
 services:
   php:
@@ -8,6 +8,8 @@ services:
       context: .
       dockerfile: Dockerfile.php
     environment:
+      WARDEN_DEV_SKIP_AUTH: "1"
+      WARDEN_VERSION: ${WARDEN_VERSION:-2.1.0}
       WARDEN_SOURCE_PATH: /warden-exports/warden_payload.json
       WARDEN_FAST_SOURCE_PATH: /warden-exports/warden_fast_snapshot.json
       WARDEN_HEAVY_SOURCE_PATH: /warden-exports/warden_heavy_snapshot.json

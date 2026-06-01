@@ -2,6 +2,38 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [2.1.0] - 2026-06-01
+
+### Adicionado
+- `LICENSE` (MIT) e `VERSION` na raiz — padrão alinhado com WELLS_API.
+- Campo `app_version` nas respostas JSON da API (`WARDEN_VERSION` / ficheiro `VERSION`).
+
+### Alterado
+- Estrutura `public/`: removido wrapper legado `public/backend/public/`; dev local só `public/www/` + `public/backend/`.
+- `docker-compose.yml` passa a incluir `docker-compose.dev.yml` (um comando `docker compose up`).
+- Documentação e badges atualizados para 2.1.0.
+
+## [2.0.9] - 2026-06-01
+
+### Adicionado
+- `docker-compose.sync.yml`, `Dockerfile.sync`, `scripts/docker-sync-prod-entry.sh` — serviço one-shot com venv, pip e SCP read-only dos snapshots de produção para `runtime/export/`.
+- `scripts/sync-prod-snapshots.ps1`, `.env.prod-sync.example` — orquestração Windows para validar UI local com JSON reais.
+
+### Alterado
+- `scripts/start-warden-dev.ps1` — aviso a sugerir `sync-prod-snapshots.ps1` quando snapshots em falta.
+- Documentação: `README.md`, `PROJECT_CONTEXT.md`, `HANDOFF.md`, `docs/Warden_Public_Deploy.md`.
+
+## [2.0.8] - 2026-06-01
+
+### Adicionado
+- `public/www/` — UI/API genérica em `http://127.0.0.1:8080/` (sem path MAIATRON, sem login em dev).
+- `deploy/hub/` — fatia para publicação no MAIATRON-HUB (produção BAZE).
+- `public/www/dev-auth-stub.js`, `WARDEN_DEV_SKIP_AUTH` na API.
+
+### Alterado
+- Docker nginx: web root `public/www`; URLs e documentação alinhadas.
+- `import-public-from-prod.ps1` / `publish-public.ps1` usam `deploy/hub/`.
+
 ## [2.0.7] - 2026-06-01
 
 ### Adicionado

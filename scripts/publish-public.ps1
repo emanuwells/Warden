@@ -64,8 +64,8 @@ function Invoke-Remote {
 function Test-PhpSyntax {
     param([string]$RepoRoot)
     $phpFiles = @(
-        (Join-Path $RepoRoot 'public\backend\apps\warden\api.php'),
-        (Join-Path $RepoRoot 'public\backend\public\apps\warden\api.php')
+        (Join-Path $RepoRoot 'deploy\hub\backend\apps\warden\api.php'),
+        (Join-Path $RepoRoot 'deploy\hub\backend\public\apps\warden\api.php')
     )
     foreach ($f in $phpFiles) {
         if (-not (Test-Path -LiteralPath $f)) { throw "Ficheiro em falta: $f" }
@@ -76,7 +76,7 @@ function Test-PhpSyntax {
 }
 
 $repoRoot = Get-RepoRoot
-$publicRoot = Join-Path $repoRoot 'public'
+$hubRoot = Join-Path $repoRoot 'deploy\hub'
 $deployEnv = Resolve-RepoPath -Path $DeployEnvPath
 $envValues = Read-EnvFile -Path $deployEnv
 $hostName = Get-EnvValue -Values $envValues -Keys @('WARDEN_DEPLOY_SSH_HOST', 'WELLS_API_DEPLOY_SSH_HOST')
@@ -110,21 +110,20 @@ if ($Rollback) {
     exit 0
 }
 
-if (-not (Test-Path -LiteralPath $publicRoot)) {
-    throw "public/ nao encontrado. Executar import-public-from-prod.ps1"
+if (-not (Test-Path -LiteralPath $hubRoot)) {
+    throw "deploy/hub/ nao encontrado. Executar import-public-from-prod.ps1"
 }
 
 if (-not $SkipValidation) {
-    $phpCmd = Get-Command php -ErrorAction SilentlyContinue
-    if ($phpCmd) {
+    if (Get-Command php -ErrorAction SilentlyContinue) {
         Test-PhpSyntax -RepoRoot $repoRoot
     } else {
-        Write-Warning 'php CLI nao encontrado; validacao de sintaxe omitida.'
+        Write-Warning 'php CLI nao encontrado; validacao omitida.'
     }
 }
 
 foreach ($map in $publishMaps) {
-    $localDir = Join-Path $publicRoot $map.Local
+    $localDir = Join-Path $hubRoot $map.Local
     $remote = $map.Remote
     $remoteBackup = "${remote}.bak_${timestamp}"
     if (-not (Test-Path -LiteralPath $localDir)) { throw "Local em falta: $localDir" }
@@ -144,4 +143,4 @@ if [ -d '$remote' ]; then cp -a '$remote' '$remoteBackup'; else mkdir -p '$remot
     if ($LASTEXITCODE -ne 0) { throw "scp falhou para $remote" }
 }
 
-Write-Host 'Publicacao concluida. Validar UI/API em producao manualmente.'
+Write-Host 'Publicacao HUB concluida (nao altera public/www local generico).'

@@ -20,17 +20,18 @@ $required = @(
 $missing = @($required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $exportDir $_)) })
 if ($missing.Count -gt 0) {
     Write-Warning "Snapshots em falta em runtime/export: $($missing -join ', ')"
-    Write-Warning "Gerar antes: warden.py --once e export_payload.py --mode fast|heavy|full"
+    Write-Warning "De producao (read-only): .\scripts\sync-prod-snapshots.ps1"
+    Write-Warning "Ou localmente: warden.py --once e export_payload.py --mode fast|heavy|full"
 }
 
-$publicWarden = Join-Path $repoRoot 'public\frontend\apps\warden\index.html'
+$publicWarden = Join-Path $repoRoot 'public\www\index.html'
 if (-not (Test-Path -LiteralPath $publicWarden)) {
-    throw "public/ nao importado. Executar: .\scripts\import-public-from-prod.ps1"
+    throw "public/www/ em falta. Copiar UI de deploy/hub ou import-public-from-prod.ps1"
 }
 
 Push-Location $repoRoot
 try {
-    $composeArgs = @('-f', 'docker-compose.dev.yml', 'up')
+    $composeArgs = @('-f', 'docker-compose.yml', 'up')
     if (-not $SkipBuild) { $composeArgs += '--build' }
     $composeArgs += '-d'
     & docker compose @composeArgs
@@ -39,8 +40,8 @@ try {
     if (-not $SkipSmoke) {
         Start-Sleep -Seconds 3
         $base = 'http://127.0.0.1:8080'
-        $ui = "$base/MAIATRON/apps/warden/index.html"
-        $api = "$base/MAIATRON/apps/warden/api.php?action=ops_fast"
+        $ui = "$base/"
+        $api = "$base/api.php?action=ops_fast"
         try {
             $r1 = Invoke-WebRequest -Uri $ui -UseBasicParsing -TimeoutSec 30
             Write-Host "Smoke UI: HTTP $($r1.StatusCode) $ui"
@@ -54,14 +55,14 @@ try {
             $code = 0
             if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode.value__ }
             if ($code -eq 401 -or $code -eq 403) {
-                Write-Host "Smoke API: HTTP $code (auth MAIATRON esperada sem sessao)"
+                Write-Host "Smoke API: HTTP $code (inesperado em dev; verificar WARDEN_DEV_SKIP_AUTH)"
             } else {
                 Write-Warning "Smoke API: HTTP $code - $($_.Exception.Message)"
             }
         }
     }
 
-    Write-Host 'Dev stack ativo. Parar: docker compose -f docker-compose.dev.yml down'
+    Write-Host 'Dev stack ativo. Parar: docker compose -f docker-compose.yml down'
 } finally {
     Pop-Location
 }

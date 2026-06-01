@@ -11,6 +11,8 @@ Deve ser lido em conjunto com `AGENTS.md`, `HANDOFF.md`, `SKILLS.md` e `CHANGELO
 | Nome | Warden |
 | Tipo | Runtime de monitorização (collector + export + alertas) + fatia UI/API no HUB |
 | Responsável | A confirmar |
+| Versão repo | `VERSION` — 2.1.0 |
+| Licença | MIT (`LICENSE`) |
 | Estado | Produção (path home documentado) |
 
 ## Objetivo
@@ -33,7 +35,9 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 ## Estrutura Do Repositório
 
 ```text
-public/                   # UI/API Warden (publicável no MAIATRON-HUB)
+VERSION, LICENSE          # Versão SemVer e licença MIT
+public/www/, public/backend/
+deploy/hub/               # Publicação MAIATRON-HUB
 warden.py                 # CLI principal (collector)
 src/                      # collector, db_writer, db_monitor, janitor, settings, alerts
 scripts/                  # export, janitor, slack, publish-public, import-public, SSH
@@ -43,8 +47,9 @@ config/
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
 docs/                     # produção, CleanTron, Warden_Public_Deploy, adr/
-docker-compose.yml        # stack web local (atalho)
+docker-compose.yml        # stack web local (include dev)
 docker-compose.pipeline.yml
+docker-compose.sync.yml
 skills/
 ```
 
@@ -70,6 +75,7 @@ skills/
 | Copiar de WELLS_API | `scripts/setup-secrets-from-wells-api.ps1` |
 | Limpeza remota | `scripts/run-production-cleanup.ps1`, `scripts/Invoke-WardenSsh.ps1` |
 | Import `public/` | `scripts/import-public-from-prod.ps1` |
+| Sync snapshots prod → local | `scripts/sync-prod-snapshots.ps1` (`docker-compose.sync.yml`, SCP read-only) |
 | Publish `public/` | `scripts/publish-public.ps1` |
 
 ## MCP Servers Do Projeto
@@ -102,6 +108,7 @@ Inventário completo: `SKILLS.md`.
 | Recolha única | `.venv/bin/python warden.py --once` |
 | Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
 | Dev Docker web | `.\scripts\start-warden-dev.ps1` |
+| Sync snapshots (prod) | `.\scripts\sync-prod-snapshots.ps1` |
 | Publish public | `.\scripts\publish-public.ps1 -DryRun` |
 
 ## Endpoints / Interfaces Importantes
@@ -134,6 +141,5 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 
 ## Dívida Técnica / Pendências
 
-- Licença (`LICENSE`) A confirmar.
 - CI/CD A confirmar.
 - Validar `User`/`Group` em `systemd/warden.service`.

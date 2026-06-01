@@ -57,16 +57,15 @@ icacls $tempKey /inheritance:r | Out-Null
 icacls $tempKey /grant:r "$($env:USERNAME):(R)" | Out-Null
 
 $target = "${userName}@${hostName}"
-$publicRoot = Join-Path $repoRoot 'public'
+$hubRoot = Join-Path $repoRoot 'deploy\hub'
 $remotePairs = @(
     @{ Local = 'frontend\apps\warden'; Remote = "$RemoteHubRoot/frontend/apps/warden" },
     @{ Local = 'backend\apps\warden'; Remote = "$RemoteHubRoot/backend/apps/warden" },
-    @{ Local = 'backend\public\apps\warden'; Remote = "$RemoteHubRoot/backend/public/apps/warden" },
-    @{ Local = 'backend\core\shared'; Remote = "$RemoteHubRoot/backend/core/shared" }
+    @{ Local = 'backend\public\apps\warden'; Remote = "$RemoteHubRoot/backend/public/apps/warden" }
 )
 
 foreach ($pair in $remotePairs) {
-    $localDir = Join-Path $publicRoot $pair.Local
+    $localDir = Join-Path $hubRoot $pair.Local
     if (-not (Test-Path -LiteralPath $localDir)) {
         New-Item -ItemType Directory -Force -Path $localDir | Out-Null
     }
@@ -82,4 +81,4 @@ foreach ($pair in $remotePairs) {
     }
 }
 
-Write-Host '[import] Concluido. Rever public/ antes de commit (sem segredos).'
+Write-Host '[import] Concluido em deploy/hub/. Dev local: public/www/ (manter api.php e dev-auth-stub.js); assets UI podem copiar-se de deploy/hub/frontend/apps/warden/.'
