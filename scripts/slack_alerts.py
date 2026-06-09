@@ -30,7 +30,8 @@ logging.basicConfig(
     format="%(asctime)s  [%(levelname)-7s]  %(message)s",
 )
 logger = logging.getLogger("warden.slack_alerts")
-SEND_WARNINGS_TO_SLACK = True
+SEND_WARNINGS_TO_SLACK = False
+IMMEDIATE_SLACK_ENABLED = os.getenv("WARDEN_SLACK_IMMEDIATE", "0").strip().lower() in {"1", "true", "yes", "on"}
 ALERT_MENTION = "<!channel>"
 
 
@@ -216,6 +217,10 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
     if not payload:
         logger.error("Payload not found or invalid.")
         return 1
+
+    if not IMMEDIATE_SLACK_ENABLED:
+        logger.info("Immediate Warden Slack alerts disabled; digest-only mode.")
+        return 0
 
     notifier = SlackNotifier()
     if not notifier.enabled and not dry_run:

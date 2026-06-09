@@ -273,7 +273,7 @@ def run(target_date: date, top_n: int = 5, dry_run: bool = False) -> int:
         print(message)
         return 0
 
-    if not notifier.send(message, channel_override=notifier.channel or "#warden"):
+    if not notifier.send(message, channel_override=notifier.channel or "#overseer"):
         logger.error("Failed to send daily digest to Slack.")
         return 2
     logger.info("Daily digest sent to Slack.")
