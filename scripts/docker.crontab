@@ -39,7 +39,7 @@ BASH_ENV=/app/runtime/.cron_env
 
 # Slack alerts + digest
 */2 * * * * flock -n /tmp/warden_slack_alerts.lock -c 'cd /app && python scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log'
-0 8 * * * cd /app && python scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
+30 8 * * * cd /app && python scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
 
 # Retention + weekly archive
 0 3 * * * flock -n /tmp/warden_janitor.lock -c 'cd /app && python scripts/janitor.py >> runtime/logs/janitor.log 2>&1'

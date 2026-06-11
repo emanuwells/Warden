@@ -162,7 +162,7 @@ ssh USER@HOST 'df -h; systemctl is-active warden; \
   curl -sf "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast" | head -c 200'
 ```
 
-Registar em `HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
+Registar em `.agents/ops/HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
 
 ## 6. Instalar ou atualizar CleanTron a partir do repo
 

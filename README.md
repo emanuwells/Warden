@@ -71,9 +71,10 @@ Fluxo resumido:
 Warden/
 ├── VERSION                        # Versão SemVer canónica (fonte para releases)
 ├── LICENSE                        # MIT
-├── AGENTS.md, PROJECT_CONTEXT.md, HANDOFF.md, SKILLS.md
-├── CHANGELOG.md, CHANGELOG_POLICY.md
+├── AGENTS.md, PROJECT_CONTEXT.md, COMMANDS.md, SKILLS.md
+├── CHANGELOG.md
 ├── README.md
+├── .agents/                       # Políticas, runbook, handoff, MCP, templates e Skills
 ├── public/www/                    # UI/API local (Docker :8080)
 ├── public/backend/                # API PHP canónica + auth MAIATRON
 ├── deploy/hub/                    # Fatia para publicação no MAIATRON-HUB
@@ -83,8 +84,8 @@ Warden/
 ├── docker-compose.pipeline.yml    # Collector + scheduler
 ├── docker-compose.sync.yml        # SCP snapshots de produção
 ├── Dockerfile, Dockerfile.php, Dockerfile.sync
-├── secrets/, runtime/, docs/, skills/, tasks/
-└── .claude/skills/                # Cópia Skills (ver skills/)
+├── secrets/, runtime/, docs/, tasks/
+└── .claude/skills/                # Compatibilidade Claude Code
 ```
 
 ## Requisitos
@@ -128,6 +129,7 @@ Variáveis principais (ver `.env.example`):
 | `WEEKLY_ARCHIVE_RETENTION_WEEKS` | Retenção de arquivo semanal |
 | `ALERT_DISK_WARN`, `ALERT_DISK_CRITICAL` | Limiares de alerta |
 | `SLACK_WARNING_*`, `SLACK_CRITICAL_*` | Canais Slack |
+| `SLACK_DIGEST_HOUR_UTC`, `SLACK_DIGEST_MINUTE_UTC` | Hora do digest diário Slack (`08:30` por defeito) |
 
 ## Utilização
 
@@ -289,7 +291,7 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 | Item | Estado |
 |---|---|
 | MCP no repo | **N/A** — sem `.cursor/mcp.json` / `.mcp.json` versionado; configurar no IDE se necessário |
-| Skills | Pacote em `skills/` e `.claude/skills/` — inventário em [`SKILLS.md`](SKILLS.md) |
+| Skills | Pacote canónico em `.agents/skills/`; compatibilidade Claude Code em `.claude/skills/` — inventário em [`SKILLS.md`](SKILLS.md) |
 | Regras para IAs | [`AGENTS.md`](AGENTS.md) |
 
 Documentação de governança:
@@ -297,7 +299,7 @@ Documentação de governança:
 | Documento | Uso |
 |---|---|
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, comandos, riscos |
-| [`HANDOFF.md`](HANDOFF.md) | Estado operacional e próximos passos |
+| [`.agents/ops/HANDOFF.md`](.agents/ops/HANDOFF.md) | Estado operacional e próximos passos |
 | [`tasks/todo.md`](tasks/todo.md) | Plano em curso |
 | [`tasks/lessons.md`](tasks/lessons.md) | Lições aprendidas |
 
@@ -307,7 +309,7 @@ O payload expõe crescimento por janela para disco e DB (`disk_*_gb_avg`, `disk_
 
 ## Changelog
 
-Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`CHANGELOG_POLICY.md`](CHANGELOG_POLICY.md)).
+Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`.agents/policies/CHANGELOG_POLICY.md`](.agents/policies/CHANGELOG_POLICY.md)).
 
 ## Licença e versão
 

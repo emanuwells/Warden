@@ -2,6 +2,16 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-06-11
+
+### Alterado
+- Slack digest diário ajustado para `08:30` nos exemplos de cron, scheduler Docker e defaults de configuração.
+- Estrutura de agentes consolidada em `.agents/`, com documentação a apontar para o handoff, políticas e Skills canónicas.
+- Crontab real em BAZE2 atualizado para executar `scripts/slack_daily_digest.py` às `08:30`, com backup remoto antes da alteração.
+
+### Removido
+- Duplicação de documentação operacional auxiliar na raiz, mantendo a raiz focada em ficheiros de entrada do projeto.
+
 ## [2.1.0] - 2026-06-01
 
 ### Adicionado

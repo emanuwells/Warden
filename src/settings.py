@@ -108,7 +108,7 @@ class Settings:
     slack_critical_sustain_minutes: int = 2
     slack_critical_cooldown_minutes: int = 15
     slack_digest_hour_utc: int = 8
-    slack_digest_minute_utc: int = 0
+    slack_digest_minute_utc: int = 30
 
     # Alert thresholds
     alert_cpu_warn: float = 85.0
@@ -172,7 +172,7 @@ class Settings:
                 os.getenv("SLACK_CRITICAL_COOLDOWN_MINUTES", str(legacy_alert_cooldown))
             ),
             slack_digest_hour_utc=int(os.getenv("SLACK_DIGEST_HOUR_UTC", "8")),
-            slack_digest_minute_utc=int(os.getenv("SLACK_DIGEST_MINUTE_UTC", "0")),
+            slack_digest_minute_utc=int(os.getenv("SLACK_DIGEST_MINUTE_UTC", "30")),
             alert_cpu_warn=float(os.getenv("ALERT_CPU_WARN", "85")),
             alert_ram_warn=float(os.getenv("ALERT_RAM_WARN", "90")),
             alert_disk_warn=float(os.getenv("ALERT_DISK_WARN", "95")),

@@ -2,7 +2,7 @@
 
 Este ficheiro descreve o contexto específico do projeto Warden (runtime MAIATRON).
 
-Deve ser lido em conjunto com `AGENTS.md`, `HANDOFF.md`, `SKILLS.md` e `CHANGELOG_POLICY.md`.
+Deve ser lido em conjunto com `AGENTS.md`, `.agents/ops/HANDOFF.md`, `SKILLS.md` e `.agents/policies/CHANGELOG_POLICY.md`.
 
 ## Identidade Do Projeto
 
@@ -47,10 +47,10 @@ config/
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
 docs/                     # produção, CleanTron, Warden_Public_Deploy, adr/
+.agents/                  # policies, ops, mcp, templates e skills canónicas
 docker-compose.yml        # stack web local (include dev)
 docker-compose.pipeline.yml
 docker-compose.sync.yml
-skills/
 ```
 
 ## Paths Oficiais (Produção)

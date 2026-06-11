@@ -44,8 +44,8 @@ WARDEN_ROOT=/home/eferreira/MAIATRON/Warden
 # Slack alerts (threshold warnings/criticals) every 2 minutes
 */2 * * * * cd $WARDEN_ROOT && /usr/bin/python3 scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log
 
-# Daily Slack digest at 08:00 (server local time)
-0 8 * * * cd $WARDEN_ROOT && /usr/bin/python3 scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
+# Daily Slack digest at 08:30 (server local time)
+30 8 * * * cd $WARDEN_ROOT && /usr/bin/python3 scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
 
 # Daily janitor at 03:00
 0 3 * * * flock -n /tmp/warden_janitor.lock -c 'cd $WARDEN_ROOT && /usr/bin/python3 scripts/janitor.py >> runtime/logs/janitor.log 2>&1'
