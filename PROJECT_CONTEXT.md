@@ -2,7 +2,7 @@
 
 Este ficheiro descreve o contexto específico do projeto Warden (runtime MAIATRON).
 
-Deve ser lido em conjunto com `AGENTS.md`, `.agents/ops/HANDOFF.md`, `SKILLS.md` e `.agents/policies/CHANGELOG_POLICY.md`.
+Deve ser lido em conjunto com `AGENTS.md`, `.agents/ops/HANDOFF.md`, `.agents/skills/README.md` e `.agents/policies/CHANGELOG_POLICY.md`.
 
 ## Identidade Do Projeto
 
@@ -30,7 +30,7 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 | Frontend/API | PHP + estáticos em `public/` (HUB: `MAIATRON-HUB`) |
 | Docker dev web | Nginx + PHP-FPM (`docker-compose.dev.yml`, porta 8080) |
 | Testes | `python3 -m py_compile` (smoke manual documentado no README) |
-| CI/CD | A confirmar |
+| CI/CD | Não configurado no repositório |
 
 ## Estrutura Do Repositório
 
@@ -86,7 +86,7 @@ docker-compose.sync.yml
 
 ## Skills Do Projeto
 
-Inventário completo: `SKILLS.md`.
+Inventário completo: `.agents/skills/README.md`.
 
 ## Política De Git Do Projeto
 
@@ -141,5 +141,5 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 
 ## Dívida Técnica / Pendências
 
-- CI/CD A confirmar.
+- CI/CD não configurado; avaliar pipeline leve quando houver necessidade de gates automáticos.
 - Validar `User`/`Group` em `systemd/warden.service`.

@@ -26,9 +26,8 @@ Inventário das Skills incluídas.
 | `docker-deploy` | Gere Docker, Compose, volumes, healthchecks e deploy. |
 | `cicd-pipeline-guardian` | Protege pipelines, secrets, gates e deploy automático. |
 | `powerquery-powerbi` | Apoia Power Query M, DAX e modelos Power BI. |
+| `mcp-server-operator` | Verifica, seleciona e usa MCP servers de forma segura e proporcional. |
 
 Local canónico: `.agents/skills/`.
 
 Compatibilidade Claude Code: `.claude/skills/`.
-
-| `mcp-server-operator` | Verifica, seleciona e usa MCP servers de forma segura e proporcional. |

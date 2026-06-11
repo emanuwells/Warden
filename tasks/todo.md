@@ -1,3 +1,0 @@
-# Todo
-
-- [ ] A confirmar.

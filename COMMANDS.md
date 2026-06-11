@@ -1,67 +1,89 @@
 # COMMANDS.md
 
-Comandos rápidos do projeto.
-
-Este ficheiro é referência operacional. Não substitui o README.
+Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `.agents/ops/HANDOFF.md`.
 
 ## Ambiente
 
 | Ação | Comando |
 |---|---|
-| Instalar dependências | `A confirmar` |
-| Configurar ambiente | `cp .env.example .env` |
-| Desenvolvimento | `A confirmar` |
+| Criar venv | `python3 -m venv .venv` |
+| Ativar venv Linux | `. .venv/bin/activate` |
+| Instalar dependências | `pip install -r requirements.txt` |
+| Criar `.env` local | `cp .env.example .env` |
+| Criar config DB local | `cp secrets/database.json.example secrets/database.json` |
+| Setup schema | `.venv/bin/python warden.py --setup` |
 
-## Testes, Lint E Build
+## Runtime E Jobs
 
 | Ação | Comando |
 |---|---|
-| Testes | `A confirmar` |
-| Lint | `A confirmar` |
-| Typecheck | `A confirmar` |
-| Build | `A confirmar` |
+| Recolha única | `.venv/bin/python warden.py --once` |
+| Export fast | `.venv/bin/python scripts/export_payload.py --mode fast` |
+| Export heavy | `.venv/bin/python scripts/export_payload.py --mode heavy` |
+| Export full | `.venv/bin/python scripts/export_payload.py --mode full` |
+| Janitor | `.venv/bin/python scripts/janitor.py` |
+| Slack alerts dry-run | `.venv/bin/python scripts/slack_alerts.py --dry-run` |
+| Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
 
-## Dependências
+## Validação
 
-| Ecossistema | Comando |
+| Ação | Comando |
 |---|---|
-| Python | `pip install -r requirements.txt` |
-| Node.js | `npm install` |
-| PHP | `composer install` |
-| Docker | `docker compose build` |
+| Python compile | `python -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py` |
+| PHP API local | `php -l public/www/api.php` |
+| PHP API canónica | `php -l public/backend/apps/warden/api.php` |
+| Compose web | `docker compose config` |
+| Compose pipeline | `docker compose -f docker-compose.pipeline.yml config` |
 
 ## Docker
 
 | Ação | Comando |
 |---|---|
-| Subir | `docker compose up -d` |
-| Logs | `docker compose logs -f` |
-| Parar | `docker compose down` |
-| Entrar | `docker compose exec <servico> sh` |
+| UI/API local | `.\scripts\start-warden-dev.ps1` |
+| Subir web local | `docker compose up -d --build` |
+| Logs web local | `docker compose logs -f` |
+| Subir pipeline | `docker compose -f docker-compose.pipeline.yml up -d --build` |
+| Logs pipeline | `docker compose -f docker-compose.pipeline.yml logs -f` |
+| Sync snapshots prod | `.\scripts\sync-prod-snapshots.ps1` |
+
+## Produção BAZE2
+
+| Ação | Comando |
+|---|---|
+| Configurar secrets locais | `.\scripts\setup-secrets-from-wells-api.ps1` |
+| SSH wrapper | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand '<comando>'` |
+| Ver estado remoto | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd /home/eferreira/MAIATRON/Warden && git status --short --branch'` |
+| Pull remoto seguro | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd /home/eferreira/MAIATRON/Warden && git pull --ff-only origin main'` |
+| Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
+| Publicar `public/` dry-run | `.\scripts\publish-public.ps1 -DryRun` |
 
 ## Git
 
 | Ação | Comando |
 |---|---|
-| Estado | `git status --short` |
+| Estado | `git status --short --branch` |
 | Branch | `git branch --show-current` |
 | Remotes | `git remote -v` |
 | Fetch | `git fetch origin` |
-| Pull | `git pull origin <branch>` |
-
-## GitHub Via SSH
-
-| Ação | Comando |
-|---|---|
-| Testar ligação | `ssh -T git@github.com` |
-| Ver remotes | `git remote -v` |
+| Pull local seguro | `git pull --ff-only origin main` |
+| Push | `git push origin main` |
 
 ## Higiene
 
 | Ação | Comando |
 |---|---|
-| Ver não rastreados | `git status --short` |
-| Procurar temporários | `find . -name "*.tmp" -o -name "*.bak" -o -name "*.old"` |
+| Ver ficheiros não rastreados | `git status --short` |
+| Validar diff | `git diff --check` |
+| Procurar temporários PowerShell | `Get-ChildItem -Recurse -Force -Include *.tmp,*.bak,*.old` |
+| Procurar configs MCP reais | `Get-ChildItem -Recurse -Force -Include *mcp*.json,.mcp.json` |
+
+## MCP
+
+| Ação | Comando |
+|---|---|
+| Ver política MCP | `Get-Content .agents/mcp/MCP_POLICY.md` |
+| Ver exemplos MCP | `Get-ChildItem .agents/mcp` |
+| Ver inventário de Skills | `Get-Content .agents/skills/README.md` |
 
 ## Comandos Proibidos Sem Confirmação
 
@@ -76,27 +98,3 @@ TRUNCATE TABLE
 systemctl restart
 reboot
 ```
-
-
-## MCP
-
-| Ação | Comando |
-|---|---|
-| Ver exemplos MCP | `ls .agents/mcp` |
-| Ver política MCP | `cat .agents/mcp/MCP_POLICY.md` |
-| Ver config genérica | `cat .agents/mcp/mcp.example.json` |
-| Ver config Cursor | `cat .agents/mcp/cursor.mcp.example.json` |
-| Ver config VS Code | `cat .agents/mcp/vscode.mcp.example.json` |
-| Ver config Claude | `cat .agents/mcp/claude.mcp.example.json` |
-
-Não imprimir configs reais se tiverem tokens, paths sensíveis ou credenciais.
-
-## Gestão MCP
-
-| Ação | Comando |
-|---|---|
-| Rever política MCP evolutiva | `cat .agents/mcp/MCP_POLICY.md` |
-| Ver exemplos MCP | `find .agents/mcp -maxdepth 2 -type f` |
-| Procurar configs MCP reais | `find . -name "*mcp*.json" -o -name ".mcp.json"` |
-
-Não imprimir configs reais se tiverem tokens, paths sensíveis ou credenciais.

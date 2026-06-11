@@ -8,9 +8,12 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Slack digest diário ajustado para `08:30` nos exemplos de cron, scheduler Docker e defaults de configuração.
 - Estrutura de agentes consolidada em `.agents/`, com documentação a apontar para o handoff, políticas e Skills canónicas.
 - Crontab real em BAZE2 atualizado para executar `scripts/slack_daily_digest.py` às `08:30`, com backup remoto antes da alteração.
+- `COMMANDS.md` reescrito com comandos reais do Warden, removendo placeholders genéricos.
+- Inventário de Skills consolidado em `.agents/skills/README.md`.
 
 ### Removido
 - Duplicação de documentação operacional auxiliar na raiz, mantendo a raiz focada em ficheiros de entrada do projeto.
+- `SKILLS.md` e placeholders vazios em `tasks/`, por duplicarem informação sem valor operacional.
 
 ## [2.1.0] - 2026-06-01
 

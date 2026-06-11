@@ -29,7 +29,7 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 | Deploy host | systemd + cron |
 | Deploy alternativo | Docker Compose (pipeline only; DB externa) |
 | Frontend/API | Versionados em `public/`; em produção dentro de `MAIATRON-HUB` (URL `/MAIATRON/apps/warden/`) |
-| CI/CD | A confirmar |
+| CI/CD | Não configurado no repositório |
 
 ## Arquitetura
 
@@ -71,7 +71,7 @@ Fluxo resumido:
 Warden/
 ├── VERSION                        # Versão SemVer canónica (fonte para releases)
 ├── LICENSE                        # MIT
-├── AGENTS.md, PROJECT_CONTEXT.md, COMMANDS.md, SKILLS.md
+├── AGENTS.md, PROJECT_CONTEXT.md, COMMANDS.md
 ├── CHANGELOG.md
 ├── README.md
 ├── .agents/                       # Políticas, runbook, handoff, MCP, templates e Skills
@@ -84,7 +84,7 @@ Warden/
 ├── docker-compose.pipeline.yml    # Collector + scheduler
 ├── docker-compose.sync.yml        # SCP snapshots de produção
 ├── Dockerfile, Dockerfile.php, Dockerfile.sync
-├── secrets/, runtime/, docs/, tasks/
+├── secrets/, runtime/, docs/
 └── .claude/skills/                # Compatibilidade Claude Code
 ```
 
@@ -214,7 +214,7 @@ curl -I http://127.0.0.1/MAIATRON/apps/warden/index.html
 curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast" | head
 ```
 
-**Lint / CI:** A confirmar.
+**Lint / CI:** não há ferramenta de lint nem pipeline CI configurados no repositório.
 
 ## Docker e deploy
 
@@ -291,7 +291,7 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 | Item | Estado |
 |---|---|
 | MCP no repo | **N/A** — sem `.cursor/mcp.json` / `.mcp.json` versionado; configurar no IDE se necessário |
-| Skills | Pacote canónico em `.agents/skills/`; compatibilidade Claude Code em `.claude/skills/` — inventário em [`SKILLS.md`](SKILLS.md) |
+| Skills | Pacote canónico em `.agents/skills/`; compatibilidade Claude Code em `.claude/skills/` — inventário em [`.agents/skills/README.md`](.agents/skills/README.md) |
 | Regras para IAs | [`AGENTS.md`](AGENTS.md) |
 
 Documentação de governança:
@@ -300,8 +300,6 @@ Documentação de governança:
 |---|---|
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, comandos, riscos |
 | [`.agents/ops/HANDOFF.md`](.agents/ops/HANDOFF.md) | Estado operacional e próximos passos |
-| [`tasks/todo.md`](tasks/todo.md) | Plano em curso |
-| [`tasks/lessons.md`](tasks/lessons.md) | Lições aprendidas |
 
 ## Métricas de crescimento (v2.x)
 

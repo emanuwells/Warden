@@ -40,6 +40,13 @@
 - BAZE2: `crontab -l` confirmou uma linha ativa `30 8 * * * ... scripts/slack_daily_digest.py ...`.
 - BAZE2: `scripts/slack_daily_digest.py --dry-run` executou com sucesso, sem envio para Slack; ficheiro temporário em `/tmp` removido.
 
+## Higiene De Raiz
+
+- Raiz alinhada com o padrão aplicado no Overseer: ficheiros de entrada do projeto na raiz, governança em `.agents/`, compatibilidade Claude em `.claude/`.
+- `COMMANDS.md` é a referência operacional curta e específica do Warden.
+- Inventário de Skills vive em `.agents/skills/README.md`.
+- `tasks/` foi removida enquanto só continha placeholders sem estado operacional útil.
+
 ## Próximo passo
 
 1. Rever `git diff` e commitar apenas com pedido explícito.
