@@ -38,7 +38,7 @@ BASH_ENV=/app/runtime/.cron_env
 */5 * * * * flock -n /tmp/warden_export_heavy.lock -c 'cd /app && python scripts/export_payload.py --mode heavy > /dev/null 2>> runtime/logs/export_heavy.err.log'
 
 # Slack alerts + digest
-*/2 * * * * flock -n /tmp/warden_slack_alerts.lock -c 'cd /app && python scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log'
+*/2 * * * * flock -n /tmp/warden_slack_alerts.lock -c 'cd /app && WARDEN_SLACK_IMMEDIATE=1 python scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log'
 30 8 * * * cd /app && python scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
 
 # Retention + weekly archive

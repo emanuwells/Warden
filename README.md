@@ -13,9 +13,9 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 - Monitorização de schemas MariaDB (tamanhos, crescimento).
 - Export de snapshots `fast`, `heavy` e `full` para consumo pela API PHP no host MAIATRON.
 - Janitor com retenção configurável (`RETENTION_DAYS`).
-- Alertas Slack (limiares de disco e digest diário).
+- Alertas Slack imediatos e digest diário, com limite de notificações por incidente.
 - Arquivo semanal agregado (`runtime/archive/weekly`).
-- Housekeeping conservador do host (**CleanTron**) versionado neste repo.
+- Housekeeping conservador via runner `warden_clean`, visível no Overseer.
 - Pasta [`public/`](public/) com UI/API Warden (fatia MAIATRON-HUB), importável e publicável de forma controlada.
 - Scripts PowerShell: import/publicação de `public/`, SSH e limpeza remota em BAZE2.
 
@@ -63,7 +63,7 @@ Fluxo resumido:
 1. `warden.py` recolhe métricas e grava em `Warden.warden_metrics`.
 2. `scripts/export_payload.py` gera `warden_fast_snapshot.json`, `warden_heavy_snapshot.json`, `warden_payload.json`.
 3. `api.php` (no host MAIATRON) serve `ops_fast`, `ops_heavy`, `full`.
-4. Jobs auxiliares: janitor, Slack, arquivo semanal, CleanTron (host).
+4. Jobs auxiliares: janitor, Slack, arquivo semanal e `warden_clean`.
 
 ## Estrutura do projeto
 
@@ -128,7 +128,9 @@ Variáveis principais (ver `.env.example`):
 | `MONITOR_ROOT_PATH` | Raiz para métricas de disco (`/` ou `/hostfs` em Docker) |
 | `WEEKLY_ARCHIVE_RETENTION_WEEKS` | Retenção de arquivo semanal |
 | `ALERT_DISK_WARN`, `ALERT_DISK_CRITICAL` | Limiares de alerta |
-| `SLACK_WARNING_*`, `SLACK_CRITICAL_*` | Canais Slack |
+| `WARDEN_SLACK_IMMEDIATE` | Ativa alertas imediatos por Slack (`1` em produção) |
+| `SLACK_WARNING_*`, `SLACK_CRITICAL_*` | Janelas de confirmação e cooldown por severidade |
+| `SLACK_ALERT_MAX_NOTIFICATIONS` | Máximo de notificações por incidente (`5` por defeito) |
 | `SLACK_DIGEST_HOUR_UTC`, `SLACK_DIGEST_MINUTE_UTC` | Hora do digest diário Slack (`08:30` por defeito) |
 
 ## Utilização
@@ -167,7 +169,7 @@ Contrato operacional:
 | Recolha única | `.venv/bin/python warden.py --once` |
 | Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
 | Janitor | `.venv/bin/python scripts/janitor.py` |
-| CleanTron (host) | `sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run` |
+| Runner `warden_clean` | `./scripts/warden_clean.sh --dry-run` |
 | SSH remoto | `.\scripts\Invoke-WardenSsh.ps1` (PowerShell) |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
 | Importar `public/` | `.\scripts\import-public-from-prod.ps1` |
@@ -195,9 +197,10 @@ Código em [`public/`](public/); em produção sob `/usr/share/nginx/html/MAIATR
 Não há suite de testes automatizada versionada. Validação documentada:
 
 ```bash
-python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py \
-  scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py \
+python3 -m py_compile warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py \
+  src/slack_notifier.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py \
   scripts/janitor.py scripts/weekly_archive.py
+bash -n scripts/warden_clean.sh
 ```
 
 Smoke local (Docker):
@@ -253,8 +256,7 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 | Runbook | Conteúdo |
 |---|---|
 | [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md) | `public/`, Docker dev, publish |
-| [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) | SSH, diagnóstico, Warden, CleanTron |
-| [`docs/CleanTron.md`](docs/CleanTron.md) | Housekeeping semanal |
+| [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) | SSH, diagnóstico e `warden_clean` |
 
 ```powershell
 .\scripts\setup-secrets-from-wells-api.ps1
@@ -262,14 +264,14 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 .\scripts\publish-public.ps1 -DryRun
 ```
 
-`WARDEN_SUDO_PASSWORD` apenas em `secrets/production.deploy.local.env` local (nunca commitar).
+O agendamento de `warden_clean` é gerido pelo catálogo do Overseer em `deploy/runners/baze2.yaml`.
 
 ## Troubleshooting
 
 | Sintoma | Verificar |
 |---|---|
 | API 404 em `ops_fast` | vhost/nginx; path `apps/warden`; snapshots em `runtime/export/` |
-| Disco cheio | `df -h`; CleanTron; janitor; runbook produção |
+| Disco cheio | `df -h`; `warden_clean`; janitor; runbook produção |
 | Collector duplicado | `systemctl --user` vs `systemctl` — desativar user service |
 | Path legado `/opt/warden` | `crontab -l`, `systemctl cat warden` |
 | Export vazio | DB `Warden` acessível; `warden.py --once` |
@@ -284,7 +286,7 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 - Não commitar `.env`, `.env.docker`, `secrets/database.json`, `secrets/slack.json`, chaves SSH nem `production.deploy.local.env`.
 - Usar apenas ficheiros `*.example` no Git.
 - Não versionar `runtime/export`, `runtime/logs`, `runtime/cache`, `runtime/archive` (exceto `.gitkeep`).
-- Alterar CleanTron só via `scripts/maiatron_weekly_housekeeping.sh` + doc em `docs/CleanTron.md`.
+- A limpeza operacional versionada vive em `scripts/warden_clean.sh`.
 
 ## MCP servers e Skills
 

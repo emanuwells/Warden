@@ -46,7 +46,7 @@ systemd/warden.service
 config/
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
-docs/                     # produção, CleanTron, Warden_Public_Deploy, adr/
+docs/                     # produção, Warden_Public_Deploy, adr/
 .agents/                  # policies, ops, mcp, templates e skills canónicas
 docker-compose.yml        # stack web local (include dev)
 docker-compose.pipeline.yml
@@ -63,7 +63,7 @@ docker-compose.sync.yml
 | API Warden (canónica) | `.../MAIATRON-HUB/backend/apps/warden/api.php` |
 | URL pública UI/API | `/MAIATRON/apps/warden/` |
 | Snapshots export | `.../Warden/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
-| CleanTron instalado | `/usr/local/sbin/maiatron_weekly_housekeeping.sh` |
+| Runner `warden_clean` | `/home/eferreira/overseer-runners/warden_clean/run.sh` |
 | Legado templates | `/opt/warden` — não usar em produção nova |
 
 ## Acesso SSH A Produção (BAZE2)
@@ -135,7 +135,7 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 
 | Risco | Mitigação |
 |---|---|
-| Disco cheio no host | Runbook limpeza, CleanTron |
+| Disco cheio no host | Runbook limpeza, `warden_clean` |
 | Publish `public/` sem backup | `publish-public.ps1` com backup/rollback |
 | Auth MAIATRON em Docker local | Smoke aceita 401 sem sessão |
 

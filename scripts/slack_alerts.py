@@ -30,8 +30,8 @@ logging.basicConfig(
     format="%(asctime)s  [%(levelname)-7s]  %(message)s",
 )
 logger = logging.getLogger("warden.slack_alerts")
-SEND_WARNINGS_TO_SLACK = False
 IMMEDIATE_SLACK_ENABLED = os.getenv("WARDEN_SLACK_IMMEDIATE", "0").strip().lower() in {"1", "true", "yes", "on"}
+MAX_NOTIFICATIONS_PER_INCIDENT = max(1, int(getattr(settings, "slack_alert_max_notifications", 5)))
 ALERT_MENTION = "<!channel>"
 
 
@@ -187,6 +187,13 @@ def _format_firing(alert: dict[str, Any], first_seen_at: str, reminder: bool) ->
     )
 
 
+def _int_from_state(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _format_resolved(alert: dict[str, Any], open_since: str | None, resolved_at: str) -> str:
     duration = _format_duration(open_since, resolved_at)
     duration_line = f"\nDuração do alerta: `{duration}`" if duration else ""
@@ -241,11 +248,12 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
     warning_sustain, warning_cooldown = _timing_minutes_for_severity("warning")
     critical_sustain, critical_cooldown = _timing_minutes_for_severity("critical")
     logger.info(
-        "Slack cadence: warning sustain=%sm cooldown=%sm | critical sustain=%sm cooldown=%sm",
+        "Slack cadence: warning sustain=%sm cooldown=%sm | critical sustain=%sm cooldown=%sm | max notifications=%s",
         warning_sustain,
         warning_cooldown,
         critical_sustain,
         critical_cooldown,
+        MAX_NOTIFICATIONS_PER_INCIDENT,
     )
 
     sent_count = 0
@@ -265,6 +273,7 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
         sustain_window = timedelta(minutes=sustain_minutes)
         cooldown = timedelta(minutes=cooldown_minutes)
         previous_notified = bool(previous.get("notified_firing"))
+        notifications_sent = max(0, _int_from_state(previous.get("notifications_sent"), 0))
 
         if new_status == "firing":
             send_now = False
@@ -288,7 +297,8 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                 and previous_severity != "critical"
             )
 
-            if SEND_WARNINGS_TO_SLACK or is_critical:
+            has_notification_budget = notifications_sent < MAX_NOTIFICATIONS_PER_INCIDENT
+            if has_notification_budget:
                 if not previous_notified and sustained:
                     send_now = True
                     notification = "firing"
@@ -302,6 +312,8 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                 elif previous_notified and previous_last_sent is None:
                     send_now = True
                     notification = "reminder"
+            elif previous.get("max_notifications_reached_at") is None:
+                previous["max_notifications_reached_at"] = now_iso
 
             sent_to_slack = False
 
@@ -310,7 +322,10 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                 if dry_run or notifier.send(message):
                     sent_count += 1
                     sent_to_slack = True
+                    notifications_sent += 1
                     previous["last_sent_at"] = now_iso
+                    if notifications_sent >= MAX_NOTIFICATIONS_PER_INCIDENT:
+                        previous["max_notifications_reached_at"] = now_iso
 
             if notification is not None:
                 _append_event(
@@ -336,6 +351,9 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                     "last_value": alert.get("value"),
                     "threshold": alert.get("threshold"),
                     "notified_firing": (previous_notified or sent_to_slack),
+                    "notifications_sent": notifications_sent,
+                    "max_notifications": MAX_NOTIFICATIONS_PER_INCIDENT,
+                    "max_notifications_reached_at": previous.get("max_notifications_reached_at"),
                 }
             )
             state_alerts[key] = previous
@@ -375,6 +393,9 @@ def run(payload_path: Path | None = None, dry_run: bool = False) -> int:
                 "last_value": alert.get("value"),
                 "threshold": alert.get("threshold"),
                 "notified_firing": False,
+                "notifications_sent": 0,
+                "max_notifications": MAX_NOTIFICATIONS_PER_INCIDENT,
+                "max_notifications_reached_at": None,
             }
         )
         state_alerts[key] = previous

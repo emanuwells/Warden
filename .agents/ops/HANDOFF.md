@@ -4,9 +4,9 @@
 
 | Campo | Valor |
 |---|---|
-| Última atualização | 2026-06-11 |
-| Objetivo atual | Warden com raiz limpa, governança em `.agents/` e digest Slack diário às `08:30` |
-| Estado | Alterações locais e crontab real em BAZE2 validados |
+| Última atualização | 2026-06-12 |
+| Objetivo atual | Alertas Slack com limite por incidente, digest com incidentes ativos e runner `warden_clean` para Overseer |
+| Estado | Alterações locais preparadas; deploy do runner deve ser feito pelo catálogo do Overseer |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
 ## Local genérico (Docker)
@@ -29,6 +29,7 @@
 - HUB: `/usr/share/nginx/html/MAIATRON-HUB` — publicar só `deploy/hub/` com `publish-public.ps1`
 - Digest Slack: templates/defaults locais e crontab real de BAZE2 ajustados para `08:30`.
 - Backup do crontab antes da alteração: `/home/eferreira/warden_crontab_20260611142254.bak`.
+- Runner planeado para Overseer: `/home/eferreira/overseer-runners/warden_clean/run.sh`, marcador `# overseer:warden_clean`.
 
 ## Validação Local Mais Recente
 
@@ -46,11 +47,14 @@
 - `COMMANDS.md` é a referência operacional curta e específica do Warden.
 - Inventário de Skills vive em `.agents/skills/README.md`.
 - `tasks/` foi removida enquanto só continha placeholders sem estado operacional útil.
+- Auditoria agressiva desta iteração não encontrou ficheiros versionados obsoletos seguros para remover; `.claude/`, `public/`, `deploy/hub/`, `runtime/**/.gitkeep` e exemplos de secrets permanecem intencionais.
 
 ## Próximo passo
 
-1. Rever `git diff` e commitar apenas com pedido explícito.
-2. `publish-public.ps1` continua só após validação e OK explícito, quando houver alterações em `public/`.
+1. Executar gates documentados em `COMMANDS.md`.
+2. Provisionar `warden_clean` pelo repo Overseer (`deploy/runners/baze2.yaml`).
+3. Rever `git diff` e commitar apenas com pedido explícito.
+4. `publish-public.ps1` continua só após validação e OK explícito, quando houver alterações em `public/`.
 
 ## Skills / MCP (esta entrega)
 

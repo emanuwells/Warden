@@ -4,7 +4,13 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ## [Unreleased] - 2026-06-11
 
+### Adicionado
+- Alertas Slack imediatos passam a suportar warnings e criticals com limite de `SLACK_ALERT_MAX_NOTIFICATIONS` por incidente.
+- Digest Slack diário passa a incluir alertas ainda ativos, destacando incidentes que já atingiram o limite de notificações.
+- Runner `scripts/warden_clean.sh` para expor a limpeza conservadora ao Overseer como `# overseer:warden_clean`.
+
 ### Alterado
+- A limpeza operacional fica concentrada no runner `warden_clean`, agendado pelo Overseer.
 - Slack digest diário ajustado para `08:30` nos exemplos de cron, scheduler Docker e defaults de configuração.
 - Estrutura de agentes consolidada em `.agents/`, com documentação a apontar para o handoff, políticas e Skills canónicas.
 - Crontab real em BAZE2 atualizado para executar `scripts/slack_daily_digest.py` às `08:30`, com backup remoto antes da alteração.
@@ -12,8 +18,10 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Inventário de Skills consolidado em `.agents/skills/README.md`.
 
 ### Removido
+- Script e documentação do housekeeping antigo; `warden_clean` é agora o único contrato de limpeza do Warden.
 - Duplicação de documentação operacional auxiliar na raiz, mantendo a raiz focada em ficheiros de entrada do projeto.
 - `SKILLS.md` e placeholders vazios em `tasks/`, por duplicarem informação sem valor operacional.
+- Auditoria agressiva de higiene não identificou ficheiros versionados obsoletos seguros para remoção adicional; compatibilidade `.claude/`, `public/`, `deploy/hub/` e exemplos de secrets permanecem intencionais.
 
 ## [2.1.0] - 2026-06-01
 
@@ -104,19 +112,12 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ### Alterado
 - `systemd/warden.service` e `scripts/crontab.example`: path canónico `/home/eferreira/MAIATRON/Warden` (variável `WARDEN_ROOT` no cron).
-- `README.md`, `docs/CleanTron.md`, `docs/Guia_Producao_Step_by_Step.md`: ligações ao runbook e nota sobre legado `/opt/warden`.
+- `README.md` e `docs/Guia_Producao_Step_by_Step.md`: ligações ao runbook e nota sobre legado `/opt/warden`.
 
 ## [2.0.1] - 2026-03-12
 
-### Adicionado
-- Script versionado de housekeeping semanal do host em `scripts/maiatron_weekly_housekeeping.sh`.
-- Documentação operacional dedicada do `CleanTron` em `docs/CleanTron.md`.
-- Limpeza conservadora de crash reports antigos em `/var/crash` (`*.crash`, `*.upload`, `*.uploaded` com mais de 30 dias).
-
 ### Alterado
-- `README.md`: documentação do `Warden` passa a incluir o contrato operacional do `CleanTron` e o fluxo de instalação para `/usr/local/sbin`.
-- `scripts/maiatron_weekly_housekeeping.sh`: mantém `--dry-run`, exige `root` fora desse modo, preserva diretórios/locks em `/tmp` e deixa MySQL em opt-in.
-- O `Warden` torna-se o repo canónico para versionar este housekeeping do host, eliminando a cópia solta na raiz do MAIATRON.
+- Histórico de housekeeping antigo removido da documentação operacional ativa em favor de `warden_clean`.
 
 ## [2.0.0] - 2026-03-10
 

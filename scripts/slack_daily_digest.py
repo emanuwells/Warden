@@ -25,6 +25,7 @@ from src.settings import settings
 from src.slack_notifier import SlackNotifier
 
 ALERT_EVENTS_PATH = ROOT / "runtime" / "slack_alert_events.jsonl"
+ALERT_STATE_PATH = ROOT / "runtime" / "slack_alert_state.json"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,6 +77,16 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
             except Exception:
                 continue
     return rows
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def _parse_target_date(raw: str | None) -> date:
@@ -186,20 +197,63 @@ def _load_alert_summary(start_dt: datetime, end_dt: datetime, top_n: int) -> dic
     }
 
 
+def _load_active_alerts(limit: int = 5) -> list[dict[str, Any]]:
+    state = _load_json(ALERT_STATE_PATH)
+    alerts = state.get("alerts")
+    if not isinstance(alerts, dict):
+        return []
+
+    active: list[dict[str, Any]] = []
+    for key, raw in alerts.items():
+        if not isinstance(raw, dict):
+            continue
+        if str(raw.get("status") or "") != "firing":
+            continue
+        notifications_sent = int(_to_float(raw.get("notifications_sent")))
+        max_notifications = int(_to_float(raw.get("max_notifications"))) or 5
+        active.append(
+            {
+                "key": str(key),
+                "severity": str(raw.get("severity") or "warning"),
+                "open_since": raw.get("open_since"),
+                "last_sent_at": raw.get("last_sent_at"),
+                "last_value": raw.get("last_value"),
+                "threshold": raw.get("threshold"),
+                "notifications_sent": notifications_sent,
+                "max_notifications": max_notifications,
+                "notifications_exhausted": bool(raw.get("max_notifications_reached_at"))
+                or notifications_sent >= max_notifications,
+            }
+        )
+
+    severity_rank = {"critical": 0, "warning": 1}
+    active.sort(
+        key=lambda item: (
+            severity_rank.get(str(item.get("severity") or ""), 2),
+            str(item.get("open_since") or ""),
+            str(item.get("key") or ""),
+        )
+    )
+    return active[: max(1, limit)]
+
+
 def _build_message(
     target_date: date,
     host_summary: dict[str, Any],
     db_summary: dict[str, Any],
     alert_summary: dict[str, Any],
+    active_alerts: list[dict[str, Any]],
 ) -> str:
     critical_count = int(alert_summary.get("critical") or 0)
     warning_count = int(alert_summary.get("warning") or 0)
-    if critical_count > 0:
+    active_critical_count = sum(1 for item in active_alerts if item.get("severity") == "critical")
+    active_warning_count = sum(1 for item in active_alerts if item.get("severity") == "warning")
+    if active_critical_count > 0 or critical_count > 0:
         status_icon = ":rotating_light:"
-        status_line = f"{critical_count} critico(s) no periodo"
-    elif warning_count > 0:
+        status_line = f"{critical_count} critico(s) no periodo; {active_critical_count} ainda ativo(s)"
+    elif active_warning_count > 0 or warning_count > 0:
         status_icon = ":warning:"
-        status_line = f"{warning_count} warning(s) no periodo"
+        status_line = f"{warning_count} warning(s) no periodo; {active_warning_count} ainda ativo(s)"
     else:
         status_icon = ":white_check_mark:"
         status_line = "Sem alertas de warning/critico no periodo"
@@ -250,6 +304,19 @@ def _build_message(
             lines.append(f"  - `{key}` x{count}")
     else:
         lines.append("- Mais recorrentes: `nenhum`")
+
+    lines.extend(["", ":warning: *Alertas ainda ativos*"])
+    if active_alerts:
+        for alert in active_alerts:
+            exhausted = " | notificacoes esgotadas" if alert.get("notifications_exhausted") else ""
+            lines.append(
+                "- "
+                f"`{alert['key']}` {alert['severity']} | "
+                f"valor `{_fmt_num(alert.get('last_value'))}` / limite `{_fmt_num(alert.get('threshold'))}` | "
+                f"notificacoes `{alert['notifications_sent']}/{alert['max_notifications']}`{exhausted}"
+            )
+    else:
+        lines.append("- `nenhum`")
     return "\n".join(lines)
 
 
@@ -267,7 +334,8 @@ def run(target_date: date, top_n: int = 5, dry_run: bool = False) -> int:
     host_summary = _load_host_summary(start_dt, end_dt)
     db_summary = _load_db_summary(start_dt, end_dt)
     alert_summary = _load_alert_summary(start_dt, end_dt, top_n=top_n)
-    message = _build_message(target_date, host_summary, db_summary, alert_summary)
+    active_alerts = _load_active_alerts(limit=top_n)
+    message = _build_message(target_date, host_summary, db_summary, alert_summary, active_alerts)
 
     if dry_run:
         print(message)

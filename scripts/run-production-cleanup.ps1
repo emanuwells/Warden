@@ -1,9 +1,7 @@
 param(
     [string]$DeployEnvPath = 'secrets/production.deploy.local.env',
     [switch]$DryRunOnly,
-    [switch]$SkipCleanTron,
-    [switch]$SkipWarden,
-    [switch]$EnableMysqlCleanup
+    [switch]$SkipWarden
 )
 
 $ErrorActionPreference = 'Stop'
@@ -70,7 +68,6 @@ function Invoke-WardenRemote {
 $deployEnvFile = Resolve-RepoPath -Path $DeployEnvPath
 $envValues = Read-EnvFile -Path $deployEnvFile
 $wardenRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_RUNTIME_ROOT') -Default '/home/eferreira/MAIATRON/Warden'
-$sudoPassword = Get-EnvValue -Values $envValues -Keys @('WARDEN_SUDO_PASSWORD')
 
 Write-Host "[Warden] Diagnóstico inicial..."
 Invoke-WardenRemote -Command @"
@@ -82,52 +79,19 @@ du -sh $wardenRoot/runtime/* 2>/dev/null || true
 "@
 
 if (-not $SkipWarden) {
-    Write-Host "[Warden] Limpeza Warden (janitor, logs, db_monitor history)..."
+    Write-Host "[Warden] warden_clean..."
+    $dryRunFlag = if ($DryRunOnly) { '--dry-run' } else { '' }
     Invoke-WardenRemote -Command @"
 set -e
 cd $wardenRoot
-if test -x .venv/bin/python; then
-  .venv/bin/python scripts/janitor.py
+if test -x scripts/warden_clean.sh; then
+  bash scripts/warden_clean.sh $dryRunFlag
+else
+  echo 'scripts/warden_clean.sh não encontrado'
+  exit 1
 fi
-find $wardenRoot/runtime/logs -maxdepth 1 -type f \( -name '*.log' -o -name '*.err.log' \) -size +1M -exec truncate -s 0 {} + 2>/dev/null || true
-truncate -s 0 $wardenRoot/runtime/db_monitor_history.jsonl 2>/dev/null || true
-truncate -s 0 /home/eferreira/D4MAIA/_crontab_logs/crontab_weather.txt 2>/dev/null || true
-echo 'Warden cleanup done'
 "@
 
-}
-
-if (-not $SkipCleanTron) {
-    $cleantron = '/usr/local/sbin/maiatron_weekly_housekeeping.sh'
-    $mysqlFlag = if ($EnableMysqlCleanup) { 'ENABLE_MYSQL_CLEANUP=1 ' } else { '' }
-
-    function Invoke-CleanTron {
-        param([switch]$DryRun)
-
-        $flag = if ($DryRun) { '--dry-run' } else { '' }
-        Write-Host "[Warden] CleanTron $flag ..."
-
-        try {
-            if ($sudoPassword -ne '') {
-                $escaped = $sudoPassword.Replace("'", "'\''")
-                Invoke-WardenRemote -Command "echo '$escaped' | sudo -S ${mysqlFlag}$cleantron $flag"
-            } else {
-                Invoke-WardenRemote -Command "sudo -n ${mysqlFlag}$cleantron $flag"
-            }
-        } catch {
-            Write-Warning "CleanTron falhou (sudo). Define WARDEN_SUDO_PASSWORD em secrets/production.deploy.local.env ou executa manualmente: sudo $cleantron $flag"
-            if ($sudoPassword -eq '') {
-                Write-Warning $_.Exception.Message
-            } else {
-                throw
-            }
-        }
-    }
-
-    Invoke-CleanTron -DryRun
-    if (-not $DryRunOnly) {
-        Invoke-CleanTron
-    }
 }
 
 Write-Host "[Warden] Validação final..."

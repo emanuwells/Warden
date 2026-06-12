@@ -5,7 +5,6 @@ Runbook operacional para o host MAIATRON. **Não versionar** hostnames, password
 Documentação relacionada:
 
 - [`Guia_Producao_Step_by_Step.md`](Guia_Producao_Step_by_Step.md)
-- [`CleanTron.md`](CleanTron.md)
 - [`../README.md`](../README.md)
 
 ## Pré-requisitos
@@ -23,7 +22,7 @@ Configuração local (mesmo padrão que **WELLS_API**):
 | Host / user / porta | `secrets/production.deploy.local.env` |
 | Chave SSH | `secrets/.ssh/id_ed25519` |
 | `WARDEN_ROOT` | `WARDEN_RUNTIME_ROOT` no `.env` ou `/home/eferreira/MAIATRON/Warden` |
-| `sudo` | CleanTron; opcional `WARDEN_SUDO_PASSWORD` no `.env` local para scripts |
+| `sudo` | Não necessário para `warden_clean`; reservado para diagnósticos explícitos |
 
 ### Scripts PowerShell (recomendado no Windows)
 
@@ -61,8 +60,8 @@ echo "=== journald ==="
 journalctl --disk-usage 2>/dev/null || true
 echo "=== warden service ==="
 systemctl status warden --no-pager 2>/dev/null || true
-echo "=== CleanTron ==="
-ls -l /usr/local/sbin/maiatron_weekly_housekeeping.sh 2>/dev/null || true
+echo "=== warden_clean ==="
+ls -l /home/eferreira/overseer-runners/warden_clean/run.sh 2>/dev/null || true
 '
 ```
 
@@ -111,47 +110,33 @@ ssh USER@HOST 'du -sh /home/eferreira/MAIATRON/Warden/runtime/archive/weekly/* 2
 
 Não apagar snapshots em `runtime/export/` — são regenerados pelos jobs de export mas a API pode depender do último ficheiro válido.
 
-## 3. CleanTron (host, root, conservador)
+## 3. Runner `warden_clean` (Overseer, utilizador do runtime)
 
-Fonte versionada: `scripts/maiatron_weekly_housekeeping.sh`  
-Instalação típica: `/usr/local/sbin/maiatron_weekly_housekeeping.sh`
+Fonte versionada: `scripts/warden_clean.sh`
+Instalação típica: `/home/eferreira/overseer-runners/warden_clean/run.sh`
 
-**Ordem obrigatória:**
+O runner executa limpeza conservadora diária para ser visível ao Overseer pelo marcador:
 
-```bash
-ssh USER@HOST 'sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run'
+```text
+# overseer:warden_clean
 ```
 
-Rever o output. Se estiver correto:
+Deploy recomendado: atualizar o catálogo `deploy/runners/baze2.yaml` no repo Overseer e correr o provisionamento de runners.
 
-```bash
-ssh USER@HOST 'sudo /usr/local/sbin/maiatron_weekly_housekeeping.sh'
+Linha esperada no crontab:
+
+```text
+0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean
 ```
 
-O script trata de:
-
-- journald até 300M;
-- logs rotativos antigos em `/var/log` (>7 dias, extensões seguras);
-- ficheiros temporários antigos em `/tmp` e `/var/tmp` (não apaga diretórios nem `*.lock`/`*.pid`/`*.sock`);
-- crash reports antigos em `/var/crash`;
-- `apt-get clean`, cache snap, `snap refresh.retain=2`.
-
-### MySQL (opt-in)
-
-Limpeza de `BAZE.logs` (>30 dias) **desligada por omissão**. Só executar com autorização explícita:
-
-```bash
-ssh USER@HOST 'sudo ENABLE_MYSQL_CLEANUP=1 /usr/local/sbin/maiatron_weekly_housekeeping.sh --dry-run'
-# depois, se aprovado:
-ssh USER@HOST 'sudo ENABLE_MYSQL_CLEANUP=1 /usr/local/sbin/maiatron_weekly_housekeeping.sh'
-```
+O runner não apaga backups, dumps, diretórios de aplicação, volumes Docker, dados MySQL nem binlogs.
 
 ## 4. Proibido por defeito
 
 Só com aprovação explícita do responsável:
 
 - `rm -rf` em diretórios de aplicação ou dados de negócio;
-- `docker system prune` (não documentado para este host);
+- `docker system prune`;
 - apagar binlogs MySQL manualmente (retenção em `/etc/mysql/conf.d/99-maiatron-binlog-retention.cnf`);
 - `DELETE` SQL em massa fora do script versionado.
 
@@ -163,19 +148,3 @@ ssh USER@HOST 'df -h; systemctl is-active warden; \
 ```
 
 Registar em `.agents/ops/HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
-
-## 6. Instalar ou atualizar CleanTron a partir do repo
-
-No servidor, após `git pull` em `WARDEN_ROOT`:
-
-```bash
-sudo install -m 750 -o root -g root \
-  /home/eferreira/MAIATRON/Warden/scripts/maiatron_weekly_housekeeping.sh \
-  /usr/local/sbin/maiatron_weekly_housekeeping.sh
-```
-
-Agendamento root (domingo 03:20):
-
-```text
-20 3 * * 0 /usr/local/sbin/maiatron_weekly_housekeeping.sh
-```

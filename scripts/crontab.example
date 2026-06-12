@@ -42,7 +42,7 @@ WARDEN_ROOT=/home/eferreira/MAIATRON/Warden
 */5 * * * * flock -n /tmp/warden_export_heavy.lock -c 'cd $WARDEN_ROOT && /usr/bin/python3 scripts/export_payload.py --mode heavy > /dev/null 2>> runtime/logs/export_heavy.err.log'
 
 # Slack alerts (threshold warnings/criticals) every 2 minutes
-*/2 * * * * cd $WARDEN_ROOT && /usr/bin/python3 scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log
+*/2 * * * * cd $WARDEN_ROOT && WARDEN_SLACK_IMMEDIATE=1 /usr/bin/python3 scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log
 
 # Daily Slack digest at 08:30 (server local time)
 30 8 * * * cd $WARDEN_ROOT && /usr/bin/python3 scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
@@ -56,7 +56,5 @@ WARDEN_ROOT=/home/eferreira/MAIATRON/Warden
 # Daily trim for large runtime logs
 25 3 * * * find $WARDEN_ROOT/runtime/logs -maxdepth 1 -type f \( -name '*.log' -o -name '*.err.log' \) -size +20M -exec truncate -s 0 {} +
 
-# Optional root cron outside the runtime user:
-# 20 3 * * 0 /usr/local/sbin/maiatron_weekly_housekeeping.sh
-# Source of truth for that script lives in this repo:
-# $WARDEN_ROOT/scripts/maiatron_weekly_housekeeping.sh
+# Overseer-visible Warden cleanup runner
+0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean
