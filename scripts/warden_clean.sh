@@ -99,12 +99,12 @@ run "Remover caches Python antigos dentro do Warden" \
 run "Remover bytecode Python antigo dentro do Warden" \
   find "$WARDEN_ROOT" \
     \( -path "$WARDEN_ROOT/.git" -o -path "$WARDEN_ROOT/.venv" -o -path "$WARDEN_ROOT/secrets" \) -prune -o \
-    \( -type f \( -name '*.pyc' -o -name '*.pyo' \) -mtime +"$CACHE_MTIME_DAYS" -delete \)
+    \( -type f \( -name '*.pyc' -o -name '*.pyo' \) -mtime +"$CACHE_MTIME_DAYS" -exec rm -f {} + \)
 
 run "Remover ficheiros temporarios de editor e sistema dentro do Warden" \
   find "$WARDEN_ROOT" \
     \( -path "$WARDEN_ROOT/.git" -o -path "$WARDEN_ROOT/.venv" -o -path "$WARDEN_ROOT/secrets" \) -prune -o \
-    \( -type f \( -name '*~' -o -name '.DS_Store' -o -name 'Thumbs.db' -o -name '*.swp' -o -name '*.swo' \) -mtime +"$TEMP_FILE_MTIME_DAYS" -delete \)
+    \( -type f \( -name '*~' -o -name '.DS_Store' -o -name 'Thumbs.db' -o -name '*.swp' -o -name '*.swo' \) -mtime +"$TEMP_FILE_MTIME_DAYS" -exec rm -f {} + \)
 
 if [[ -d "$CRONTAB_LOG_DIR" ]]; then
   run "Truncar logs grandes de crontab MAIATRON" \
