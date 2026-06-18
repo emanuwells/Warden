@@ -88,7 +88,7 @@ fi
 
 if [[ -d "$WARDEN_ROOT/runtime/cache" ]]; then
   run "Remover cache runtime antiga Warden" \
-    find "$WARDEN_ROOT/runtime/cache" -mindepth 1 -mtime +"$CACHE_MTIME_DAYS" -delete
+    find "$WARDEN_ROOT/runtime/cache" -mindepth 1 ! -name '.gitkeep' -mtime +"$CACHE_MTIME_DAYS" -delete
 fi
 
 run "Remover caches Python antigos dentro do Warden" \
