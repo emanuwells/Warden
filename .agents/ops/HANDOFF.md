@@ -6,7 +6,7 @@
 |---|---|
 | Última atualização | 2026-06-18 |
 | Objetivo atual | Runner `warden_clean` diário em produção e limpeza operacional mais ampla, mas segura |
-| Estado | Causa confirmada: runner existe em BAZE2, mas o crontab real não tinha `# overseer:warden_clean` |
+| Estado | Produção alinhada; `warden_clean` agendado diariamente e validado em execução manual |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
 ## Local genérico (Docker)
@@ -31,7 +31,10 @@
 - Backup do crontab antes da alteração: `/home/eferreira/warden_crontab_20260611142254.bak`.
 - Runner Overseer: `/home/eferreira/overseer-runners/warden_clean/run.sh`, manifesto com `schedule: 0 1 * * *`.
 - Causa encontrada em 2026-06-18: o runner existia, mas o `crontab -l` real não continha `# overseer:warden_clean`; o log dedicado estava vazio.
-- Correção operacional escolhida: editar o crontab real com backup em `/home/eferreira/warden_crontab_<timestamp>.bak` e inserir a linha diária de forma idempotente.
+- Correção aplicada em 2026-06-18: backup do crontab em `/home/eferreira/warden_crontab_20260618160354.bak`; linha `# overseer:warden_clean` inserida de forma idempotente.
+- Produção alinhada no commit `e75f96f`; `git status --short --branch` remoto limpo em `main...origin/main`.
+- Validação final: crontab com `count=1`, serviço `warden` ativo, disco `/` em 89% e `runtime/export` reduzido para 34M.
+- Execução manual validada: `warden_clean` correu sem WARN após preservar `runtime/cache/.gitkeep`; janitor removeu dados antigos conforme `RETENTION_DAYS=7`.
 
 ## Validação Local Mais Recente
 
@@ -53,10 +56,9 @@
 
 ## Próximo passo
 
-1. Executar gates documentados em `COMMANDS.md`.
-2. Fazer commit/push das alterações do `warden_clean`.
-3. Em BAZE2, executar `git pull --ff-only origin main`, corrigir o crontab com backup e validar dry-run antes da limpeza real.
-4. `publish-public.ps1` continua só após validação e OK explícito, quando houver alterações em `public/`.
+1. Confirmar no dia seguinte que `/home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt` recebeu output do cron das 01:00.
+2. Se o catálogo do Overseer ficar disponível, alinhar a definição declarativa com a linha de cron aplicada para evitar drift futuro.
+3. `publish-public.ps1` continua só após validação e OK explícito, quando houver alterações em `public/`.
 
 ## Skills / MCP (esta entrega)
 
