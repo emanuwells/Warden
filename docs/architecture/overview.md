@@ -1,0 +1,66 @@
+# Visão Geral da Arquitetura — Warden
+
+## Objetivo do Sistema
+
+Runtime de monitorização do ecossistema MAIATRON. Recolhe métricas de sistema (CPU, RAM, disco, rede, processos) e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para consumo pela API/UI e envia alertas Slack.
+
+## Contexto
+
+| Campo | Valor |
+|---|---|
+| Domínio | Monitorização de infraestrutura e base de dados |
+| Utilizadores principais | Operadores de sistemas, equipa de infraestrutura |
+| Sistemas externos | MariaDB, Slack (webhooks), MAIATRON-HUB (API/UI) |
+| Dados críticos | Métricas de sistema, snapshots JSON, eventos de alerta |
+| Restrições técnicas | Python 3.10+, MariaDB, systemd/cron, Docker opcional |
+
+## Componentes
+
+| Componente | Responsabilidade | Tecnologia | Observações |
+|---|---|---|---|
+| Collector | Recolha de métricas de sistema e DB | Python 3 + psutil | `warden.py`, executado por systemd/cron |
+| DB Writer | Persistência em MariaDB | Python 3 + PyMySQL | `src/db_writer.py` |
+| Export | Geração de snapshots JSON | Python 3 | `scripts/export_payload.py` |
+| Janitor | Limpeza de métricas antigas | Python 3 | `scripts/janitor.py` |
+| Slack Alerts | Alertas imediatos e digest diário | Python 3 + requests | `scripts/slack_alerts.py`, `scripts/slack_daily_digest.py` |
+| API/UI | Interface web para visualização | PHP + estáticos | `public/` (fatia MAIATRON-HUB) |
+
+## Fluxo Principal
+
+```text
+warden.py (collector) --> MariaDB (warden_metrics)
+cron/systemd --> export_payload.py --> runtime/export/*.json
+cron/systemd --> janitor.py --> MariaDB (cleanup)
+cron/systemd --> slack_alerts.py --> Slack webhooks
+cron/systemd --> slack_daily_digest.py --> Slack webhooks
+runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
+```
+
+## Fronteiras
+
+### Dentro do sistema
+
+- Collector, export, janitor, Slack alerts/digest.
+- Persistência em MariaDB (schema `Warden`).
+- Snapshots JSON em `runtime/export/`.
+
+### Fora do sistema
+
+- MariaDB (dados de monitorização).
+- Slack (notificações).
+- MAIATRON-HUB (API PHP e UI).
+- Sistema operativo (métricas via psutil).
+
+## Riscos Arquiteturais
+
+| Risco | Mitigação |
+|---|---|
+| Disco cheio no host | Runbook limpeza, `warden_clean`, janitor |
+| Alertas duplicados | Cooldown, `SLACK_ALERT_MAX_NOTIFICATIONS` |
+| API/UI em produção sem sessão | Smoke aceita 401 sem sessão em dev |
+
+## Dívida Técnica Conhecida
+
+- CI/CD não configurado.
+- Sem suite de testes automatizada.
+- Validar `User`/`Group` em `systemd/warden.service`.
