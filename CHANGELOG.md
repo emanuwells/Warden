@@ -8,10 +8,12 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Alertas Slack imediatos passam a suportar warnings e criticals com limite de `SLACK_ALERT_MAX_NOTIFICATIONS` por incidente.
 - Digest Slack diário passa a incluir alertas ainda ativos, destacando incidentes que já atingiram o limite de notificações.
 - Runner `scripts/warden_clean.sh` para expor a limpeza conservadora ao Overseer como `# overseer:warden_clean`.
+- `warden_clean` passa a remover temporários atómicos antigos, cache runtime regenerável, caches Python, bytecode e ficheiros de editor/sistema dentro de `WARDEN_ROOT`, preservando snapshots ativos, backups, secrets, virtualenvs e dados.
 
 ### Alterado
 - A limpeza operacional fica concentrada no runner `warden_clean`, agendado pelo Overseer.
 - `scripts/warden_clean.sh` passa a estar versionado como executável para uso direto em Linux/produção.
+- Runbook de produção documenta o caso real em que o runner existe mas o crontab não contém `# overseer:warden_clean`, com correção por backup e inserção idempotente.
 - Slack digest diário ajustado para `08:30` nos exemplos de cron, scheduler Docker e defaults de configuração.
 - Estrutura de agentes consolidada em `.agents/`, com documentação a apontar para o handoff, políticas e Skills canónicas.
 - Crontab real em BAZE2 atualizado para executar `scripts/slack_daily_digest.py` às `08:30`, com backup remoto antes da alteração.

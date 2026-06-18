@@ -64,6 +64,7 @@ docker-compose.sync.yml
 | URL pública UI/API | `/MAIATRON/apps/warden/` |
 | Snapshots export | `.../Warden/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
 | Runner `warden_clean` | `/home/eferreira/overseer-runners/warden_clean/run.sh` |
+| Cron `warden_clean` | Deve existir uma única linha `# overseer:warden_clean`; se ausente, corrigir com backup conforme runbook |
 | Legado templates | `/opt/warden` — não usar em produção nova |
 
 ## Acesso SSH A Produção (BAZE2)

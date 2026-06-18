@@ -55,7 +55,9 @@ Comandos rápidos do Warden. Este ficheiro é referência operacional curta; det
 | Configurar secrets locais | `.\scripts\setup-secrets-from-wells-api.ps1` |
 | SSH wrapper | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand '<comando>'` |
 | Ver estado remoto | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd /home/eferreira/MAIATRON/Warden && git status --short --branch'` |
+| Ver cron `warden_clean` | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'crontab -l 2>/dev/null \| grep -n "overseer:warden_clean" \|\| true'` |
 | Pull remoto seguro | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd /home/eferreira/MAIATRON/Warden && git pull --ff-only origin main'` |
+| Limpeza produção dry-run | `.\scripts\run-production-cleanup.ps1 -DryRunOnly` |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
 | Publicar `public/` dry-run | `.\scripts\publish-public.ps1 -DryRun` |
 

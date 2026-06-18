@@ -264,7 +264,7 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 .\scripts\publish-public.ps1 -DryRun
 ```
 
-O agendamento de `warden_clean` é gerido pelo catálogo do Overseer em `deploy/runners/baze2.yaml`.
+O runner `warden_clean` vive em `/home/eferreira/overseer-runners/warden_clean/run.sh`; o crontab real deve conter exatamente uma linha com `# overseer:warden_clean`. Se o runner existir mas o cron estiver ausente, seguir o runbook de produção para criar backup do crontab e inserir a linha de forma idempotente.
 
 ## Troubleshooting
 
@@ -286,7 +286,7 @@ O agendamento de `warden_clean` é gerido pelo catálogo do Overseer em `deploy/
 - Não commitar `.env`, `.env.docker`, `secrets/database.json`, `secrets/slack.json`, chaves SSH nem `production.deploy.local.env`.
 - Usar apenas ficheiros `*.example` no Git.
 - Não versionar `runtime/export`, `runtime/logs`, `runtime/cache`, `runtime/archive` (exceto `.gitkeep`).
-- A limpeza operacional versionada vive em `scripts/warden_clean.sh`.
+- A limpeza operacional versionada vive em `scripts/warden_clean.sh` e cobre janitor, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema e cache Docker antiga sem apagar backups, dados, secrets, volumes ou snapshots ativos.
 
 ## MCP servers e Skills
 

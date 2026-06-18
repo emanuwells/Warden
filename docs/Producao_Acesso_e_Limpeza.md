@@ -62,6 +62,7 @@ echo "=== warden service ==="
 systemctl status warden --no-pager 2>/dev/null || true
 echo "=== warden_clean ==="
 ls -l /home/eferreira/overseer-runners/warden_clean/run.sh 2>/dev/null || true
+crontab -l 2>/dev/null | grep -n "overseer:warden_clean" || true
 '
 ```
 
@@ -110,6 +111,17 @@ ssh USER@HOST 'du -sh /home/eferreira/MAIATRON/Warden/runtime/archive/weekly/* 2
 
 Não apagar snapshots em `runtime/export/` — são regenerados pelos jobs de export mas a API pode depender do último ficheiro válido.
 
+### 2.4 Temporários e cache regenerável
+
+`scripts/warden_clean.sh` também remove apenas artefactos regeneráveis e scoped ao Warden:
+
+- temporários atómicos antigos em `runtime/export/*.tmp-*` e `runtime/archive/weekly/*.tmp-*`;
+- entradas antigas em `runtime/cache/`;
+- `__pycache__`, `.pytest_cache`, `*.pyc` e `*.pyo`, excluindo `.git`, `.venv` e `secrets`;
+- ficheiros de editor/sistema antigos: `*~`, `.DS_Store`, `Thumbs.db`, `*.swp`, `*.swo`.
+
+O script continua a preservar snapshots JSON ativos, backups, dumps, diretórios de aplicação, volumes Docker, dados MySQL, binlogs, secrets e virtualenvs.
+
 ## 3. Runner `warden_clean` (Overseer, utilizador do runtime)
 
 Fonte versionada: `scripts/warden_clean.sh`
@@ -121,7 +133,21 @@ O runner executa limpeza conservadora diária para ser visível ao Overseer pelo
 # overseer:warden_clean
 ```
 
-Deploy recomendado: atualizar o catálogo `deploy/runners/baze2.yaml` no repo Overseer e correr o provisionamento de runners.
+O runner pode existir sem linha ativa no crontab. Quando isso acontecer, corrigir diretamente o crontab real com backup e inserção idempotente:
+
+```bash
+ssh USER@HOST 'set -e
+backup="/home/eferreira/warden_crontab_$(date +%Y%m%d%H%M%S).bak"
+line="0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean"
+crontab -l > "$backup"
+if ! crontab -l | grep -Fq "# overseer:warden_clean"; then
+  { crontab -l; printf "%s\n" "$line"; } | crontab -
+fi
+echo "$backup"
+crontab -l | grep -n "overseer:warden_clean"'
+```
+
+Quando o catálogo do Overseer estiver disponível, alinhar também a definição declarativa para evitar drift futuro.
 
 Linha esperada no crontab:
 
@@ -129,7 +155,7 @@ Linha esperada no crontab:
 0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean
 ```
 
-O runner não apaga backups, dumps, diretórios de aplicação, volumes Docker, dados MySQL nem binlogs.
+O runner não apaga backups, dumps, diretórios de aplicação, volumes Docker, dados MySQL, binlogs, secrets, virtualenvs nem snapshots ativos.
 
 ## 4. Proibido por defeito
 

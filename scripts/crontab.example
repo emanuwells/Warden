@@ -56,5 +56,5 @@ WARDEN_ROOT=/home/eferreira/MAIATRON/Warden
 # Daily trim for large runtime logs
 25 3 * * * find $WARDEN_ROOT/runtime/logs -maxdepth 1 -type f \( -name '*.log' -o -name '*.err.log' \) -size +20M -exec truncate -s 0 {} +
 
-# Overseer-visible Warden cleanup runner
+# Overseer-visible Warden cleanup runner. Production crontab must contain this marker once.
 0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean
