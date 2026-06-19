@@ -19,6 +19,8 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - `scripts/host-hygiene.sh` e `scripts/host-hygiene.sudoers` — higiene diária de logs SO e artefactos `.bak` (cron `# overseer:host_hygiene`).
 
 ### Corrigido
+- `warden.py` na raiz — entrypoint legacy para systemd que apontava para ficheiro inexistente.
+- `scripts/install-warden-systemd.sh` — instala unit com `python -m src.warden`.
 - Export fast em modo `cache_only` evita bloqueio de ~12s no cron/collector (process tops só via heavy).
 - Cron fast 2s restaurado como lane primária (modelo Task Manager); collector só persiste na DB.
 - `EXPORT_FAST_ON_COLLECT=0` por defeito — export inline opcional, não bloqueante recomendado.

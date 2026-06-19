@@ -31,6 +31,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Validar pipeline (prod) | `WARDEN_RUNTIME_ROOT=/path bash scripts/validate-pipeline.sh` |
 | Patch cron fast Fase 2 | `WARDEN_RUNTIME_ROOT=/path bash scripts/patch-crontab-phase2-fast.sh --dry-run` |
 | Restaurar cron fast 2s | `WARDEN_RUNTIME_ROOT=/path WARDEN_EXPORT_FAST_LOCK=/tmp/lock bash scripts/restore-crontab-fast-2s.sh` |
+| Instalar systemd collector | `sudo WARDEN_RUNTIME_ROOT=/path bash scripts/install-warden-systemd.sh` |
 | Export fast fallback manual | `bash scripts/export_fast_fallback.sh` |
 
 ## Validação
