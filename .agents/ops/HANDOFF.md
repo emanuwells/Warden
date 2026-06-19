@@ -5,33 +5,29 @@
 | Campo | Valor |
 |---|---|
 | Última atualização | 2026-06-19 |
-| Objetivo actual | Snapshot fast ~2s (modelo Task Manager) |
-| Estado | Alinhado — local, origin e produção em `9d5276a` |
+| Objetivo actual | Ops Center telemetria ~2s |
+| Estado | Alinhado — `8090f43` local/origin/prod |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
-## Task Manager cadence (2026-06-19)
+## Fix Ops Center 2026-06-19
 
-| Lane | Intervalo | Estado prod |
-|---|---|---|
-| Collector | 2s | active (restart pendente sudo para código novo) |
-| Cron fast 2s | 30×/min | restaurado (`# warden:export_fast_2s`) |
-| Ops Center poll | 1.2s | HUB `ops-center.js` (já configurado) |
-| Export fast | <0.2s | `cache_only` — sem force em process tops |
+### Causa raiz
 
-### Causa do "há 52s"
+`warden.service` executava `warden.py` inexistente → collector em crash loop → `current.timestamp` com 60–80s de atraso → Ops Center mostrava "há 76s" e **ATENÇÃO** (telemetria stale).
 
-Fase 2 bloqueava o collector com export fast (~12s cache fria) e cron reduzido a 1×/min. Corrigido: lanes separadas como Task Manager.
+### Correcção
 
-### Validação prod pós-fix
+- `warden.py` na raiz (shim para `src.warden`)
+- `scripts/install-warden-systemd.sh` → `ExecStart=python -m src.warden`
+- Prod: serviço **active**, validate **PASS**, fast idade **2s**
 
-```text
-validate-pipeline.sh: PASS — fast idade=1s (limite 7s)
-export --mode fast: 0.188s (cache_only)
-```
+### Pipeline activo
 
-### Pendente
-
-- `sudo systemctl restart warden` em prod (código sem export inline bloqueante).
+| Lane | Estado |
+|---|---|
+| Collector 2s | active |
+| Cron fast 2s | 30×/min |
+| Ops Center poll | 1.2s (HUB) |
 
 ## Produção
 
