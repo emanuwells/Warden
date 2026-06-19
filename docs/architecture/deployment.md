@@ -19,7 +19,7 @@
 | Plataforma | Método | Observações |
 |---|---|---|
 | Host Linux | `systemd` + `cron` | Path canónico: `/home/eferreira/MAIATRON/Warden` |
-| Docker Pipeline | `docker-compose.pipeline.yml` | Collector + scheduler |
+| Docker Pipeline | `docker/compose.pipeline.yml` | Collector + scheduler |
 | Docker Dev | `docker-compose.yml` | UI/API local (Nginx + PHP-FPM) |
 
 ## Docker
@@ -27,12 +27,12 @@
 | Ficheiro | Serviço | Função |
 |---|---|---|
 | `docker-compose.yml` | web (nginx + php-fpm) | UI/API local |
-| `docker-compose.dev.yml` | web (include) | Configuração dev |
-| `docker-compose.pipeline.yml` | warden-collector, warden-scheduler | Pipeline |
-| `docker-compose.sync.yml` | warden-sync | SCP snapshots de produção |
-| `Dockerfile` | web | Nginx + PHP-FPM |
-| `Dockerfile.php` | web | PHP-FPM standalone |
-| `Dockerfile.sync` | warden-sync | SCP read-only |
+| `docker/compose.dev.yml` | web (include) | Configuração dev |
+| `docker/compose.pipeline.yml` | warden-collector, warden-scheduler | Pipeline |
+| `docker/compose.sync.yml` | warden-sync | SCP snapshots de produção |
+| `docker/Dockerfile` | pipeline | Collector + scheduler |
+| `docker/Dockerfile.php` | web | PHP-FPM standalone |
+| `docker/Dockerfile.sync` | warden-sync | SCP read-only |
 
 ## Observabilidade
 
@@ -41,7 +41,7 @@
 | Logs | `runtime/logs/` | Gitignored |
 | Alertas | Slack webhooks | Imediatos + digest diário |
 | Métricas | Dashboard UI | Auto-refresh 30s |
-| Health | `warden.py --once` | Smoke manual |
+| Health | `python -m src.warden --once` | Smoke manual |
 
 ## Regras
 

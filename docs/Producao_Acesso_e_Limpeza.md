@@ -91,12 +91,12 @@ ssh USER@HOST 'find /home/eferreira/MAIATRON/Warden/runtime/logs -maxdepth 1 -ty
   \( -name "*.log" -o -name "*.err.log" \) -size +20M -exec truncate -s 0 {} +'
 ```
 
-### 2.2 Janitor (métricas antigas)
+### 2.2 Warden Clean (métricas antigas)
 
 ```bash
 ssh USER@HOST 'cd /home/eferreira/MAIATRON/Warden && \
   . .venv/bin/activate 2>/dev/null || true; \
-  .venv/bin/python scripts/janitor.py'
+  .venv/bin/python scripts/warden_clean.py'
 ```
 
 Retenção por omissão: `RETENTION_DAYS=7` (`.env`).

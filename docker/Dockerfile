@@ -25,4 +25,4 @@ RUN mkdir -p /app/runtime/logs /app/runtime/cache /app/runtime/export /app/runti
     && touch /app/runtime/logs/.gitkeep /app/runtime/cache/.gitkeep /app/runtime/export/.gitkeep /app/runtime/archive/.gitkeep \
     && chmod +x /app/scripts/docker-scheduler.sh
 
-CMD ["python", "warden.py"]
+CMD ["python", "-m", "src.warden"]

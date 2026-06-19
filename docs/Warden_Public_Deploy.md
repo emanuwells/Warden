@@ -16,7 +16,7 @@ O repo **não** obriga o path `/MAIATRON/` em desenvolvimento. Esse prefixo exis
 | Origem | Comando |
 |---|---|
 | **Produção (recomendado)** | `.\scripts\sync-prod-snapshots.ps1` — SCP read-only dos JSON já em `${WARDEN_RUNTIME_ROOT}/runtime/export/` |
-| **Local** | `warden.py --once` + `export_payload.py` (fast/heavy/full) |
+| **Local** | `python -m src.warden --once` + `export_payload.py` (fast/heavy/full) |
 
 Pré-requisitos para sync de produção (uma vez):
 
@@ -38,8 +38,8 @@ icacls secrets\.ssh\id_ed25519 /inheritance:r /grant:r "$($env:USERNAME):(R)"
 Compose manual:
 
 ```powershell
-docker compose -f docker-compose.sync.yml build
-docker compose -f docker-compose.sync.yml run --rm warden-sync-prod
+docker compose -f docker/compose.sync.yml build
+docker compose -f docker/compose.sync.yml run --rm warden-sync-prod
 ```
 
 Variáveis no Docker PHP:

@@ -1,17 +1,15 @@
-# Bug Report
+---
+name: Bug report
+about: Reportar comportamento incorreto
+title: "[Bug] "
+labels: bug
+assignees: ""
+---
 
 ## Descrição
 
-A confirmar.
-
 ## Passos Para Reproduzir
-
-1. A confirmar.
 
 ## Resultado Esperado
 
-A confirmar.
-
-## Resultado Atual
-
-A confirmar.
+## Evidência

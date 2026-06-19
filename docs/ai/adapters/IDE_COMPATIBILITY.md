@@ -11,7 +11,7 @@ Este pack não depende de um único IDE.
 | Ferramenta | Ficheiros úteis | Observação |
 |---|---|---|
 | Cursor | `.cursor/`, `.cursorrules` | Adaptador completo, não fonte de verdade |
-| Claude Code | `CLAUDE.md`, `.claude/skills/` | Deve seguir o núcleo neutro |
+| Claude Code | `CLAUDE.md`, `tools/ai-adapters/claude/.claude/skills/` | Deve seguir o núcleo neutro |
 | Codex / OpenAI | `AGENTS.md`, `.codex/` | Usar prompts e workflows neutros |
 | Gemini CLI | `GEMINI.md` | Espelha regras principais |
 | GitHub Copilot | `.github/copilot-instructions.md` | Instruções compactas para sugestões/reviews |

@@ -230,7 +230,7 @@ Usar Skills apenas quando relevantes.
 Localizações:
 
 - `.agents/skills/<skill>/SKILL.md` — canónico para qualquer IA.
-- `.claude/skills/<skill>/SKILL.md` — compatibilidade Claude Code.
+- `tools/ai-adapters/claude/.claude/skills/<skill>/SKILL.md` — compatibilidade Claude Code.
 
 Não usar Skills como burocracia. Usar para reduzir erro.
 

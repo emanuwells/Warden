@@ -10,7 +10,7 @@ function Get-RepoRoot {
 }
 
 $repoRoot = Get-RepoRoot
-$exportDir = Join-Path $repoRoot 'runtime\export'
+$exportDir = if ($env:WARDEN_EXPORT_DIR) { $env:WARDEN_EXPORT_DIR } else { Join-Path $repoRoot 'runtime\export' }
 $required = @(
     'warden_fast_snapshot.json',
     'warden_heavy_snapshot.json',
@@ -21,7 +21,7 @@ $missing = @($required | Where-Object { -not (Test-Path -LiteralPath (Join-Path 
 if ($missing.Count -gt 0) {
     Write-Warning "Snapshots em falta em runtime/export: $($missing -join ', ')"
     Write-Warning "De producao (read-only): .\scripts\sync-prod-snapshots.ps1"
-    Write-Warning "Ou localmente: warden.py --once e export_payload.py --mode fast|heavy|full"
+    Write-Warning "Ou localmente: python -m src.warden --once e export_payload.py --mode fast|heavy|full"
 }
 
 $publicWarden = Join-Path $repoRoot 'public\www\index.html'
@@ -31,6 +31,7 @@ if (-not (Test-Path -LiteralPath $publicWarden)) {
 
 Push-Location $repoRoot
 try {
+    $devPort = if ($env:WARDEN_DEV_PORT) { $env:WARDEN_DEV_PORT } else { '8080' }
     $composeArgs = @('-f', 'docker-compose.yml', 'up')
     if (-not $SkipBuild) { $composeArgs += '--build' }
     $composeArgs += '-d'
@@ -39,7 +40,7 @@ try {
 
     if (-not $SkipSmoke) {
         Start-Sleep -Seconds 3
-        $base = 'http://127.0.0.1:8080'
+        $base = "http://127.0.0.1:$devPort"
         $ui = "$base/"
         $api = "$base/api.php?action=ops_fast"
         try {
@@ -62,7 +63,7 @@ try {
         }
     }
 
-    Write-Host 'Dev stack ativo. Parar: docker compose -f docker-compose.yml down'
+    Write-Host "Dev stack ativo em http://127.0.0.1:$devPort/. Parar: docker compose -f docker-compose.yml down"
 } finally {
     Pop-Location
 }

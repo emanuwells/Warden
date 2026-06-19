@@ -30,4 +30,4 @@ Inventário das Skills incluídas.
 
 Local canónico: `.agents/skills/`.
 
-Compatibilidade Claude Code: `.claude/skills/`.
+Compatibilidade Claude Code: `tools/ai-adapters/claude/.claude/skills/`.

@@ -1,6 +1,6 @@
 """
-Warden — Janitor (The Janitor)
-Handles automatic data retention — deletes records older than N days.
+Warden Clean retention.
+Handles automatic data retention by deleting operational records older than N days.
 """
 
 import logging
@@ -9,7 +9,7 @@ from typing import Dict
 from src.db_writer import get_connection
 from src.settings import Settings, settings
 
-logger = logging.getLogger("warden.janitor")
+logger = logging.getLogger("warden.clean")
 
 
 def cleanup(cfg: Settings | None = None) -> int:
@@ -36,19 +36,19 @@ def cleanup(cfg: Settings | None = None) -> int:
                     cur.execute(sql, (days,))
                     deleted_by_table[table] = int(cur.rowcount)
                 except Exception as exc:
-                    # Keep janitor resilient during partial/bootstrap schemas.
+                    # Keep Warden Clean resilient during partial/bootstrap schemas.
                     deleted_by_table[table] = 0
-                    logger.warning("Janitor: skipped %s (%s).", table, exc)
+                    logger.warning("Warden Clean: skipped %s (%s).", table, exc)
 
     deleted = sum(deleted_by_table.values())
 
     if deleted:
         logger.info(
-            "Janitor: deleted %d rows older than %d days (%s).",
+            "Warden Clean: deleted %d rows older than %d days (%s).",
             deleted,
             days,
             ", ".join(f"{k}={v}" for k, v in deleted_by_table.items()),
         )
     else:
-        logger.info("Janitor: nothing to clean (retention=%d days).", days)
+        logger.info("Warden Clean: nothing to clean (retention=%d days).", days)
     return deleted

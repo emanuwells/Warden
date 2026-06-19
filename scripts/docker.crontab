@@ -41,8 +41,8 @@ BASH_ENV=/app/runtime/.cron_env
 */2 * * * * flock -n /tmp/warden_slack_alerts.lock -c 'cd /app && WARDEN_SLACK_IMMEDIATE=1 python scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log'
 30 8 * * * cd /app && python scripts/slack_daily_digest.py >> runtime/logs/slack_daily_digest.log 2>&1
 
-# Retention + weekly archive
-0 3 * * * flock -n /tmp/warden_janitor.lock -c 'cd /app && python scripts/janitor.py >> runtime/logs/janitor.log 2>&1'
+# Warden Clean retention + weekly archive
+0 3 * * * flock -n /tmp/warden_clean_retention.lock -c 'cd /app && python scripts/warden_clean.py >> runtime/logs/warden_clean.log 2>&1'
 58 23 * * 0 flock -n /tmp/warden_weekly_archive.lock -c 'cd /app && python scripts/weekly_archive.py >> runtime/logs/weekly_archive.log 2>&1'
 
 # Trim large logs

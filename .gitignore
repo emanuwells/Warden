@@ -1,15 +1,36 @@
-# Environment
+# Ambiente
 .env
 .env.docker
+.env.*
+!.env.example
+
+# Dependencias
+node_modules/
+vendor/
 venv/
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Builds e caches
+dist/
+build/
+.out/
+out/
+coverage/
+.cache/
+.tmp/
+tmp/
+.parcel-cache/
+.next/
+.nuxt/
+.vite/
 
 # Secrets (real credentials) — ver secrets/README.md
 secrets/*
 !secrets/README.md
 !secrets/*.example
+!secrets/*.example.json
 secrets/database.json
 secrets/slack.json
 secrets/ssh_key
@@ -17,6 +38,14 @@ secrets/.ssh/
 secrets/production.deploy.local.env
 secrets/maiatron.deploy.local.env
 secrets/environments.local.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa*
+id_ed25519*
 
 # Runtime
 runtime/*.json
@@ -35,12 +64,38 @@ runtime/archive/**
 # Frontend payloads (generated)
 frontend/warden_payload.json
 
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # IDE
-.vscode/
+.vscode/settings.local.json
 .idea/
 *.swp
 *.swo
+
+# Cursor / MCP
+.cursor/mcp.json
+.cursor/**/local.*
+.cursor/**/secrets.*
+
+# Dados locais
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.dump
+*.sql.gz
+
+# Artefactos temporarios comuns
+*.tmp
+*.temp

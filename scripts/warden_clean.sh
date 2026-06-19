@@ -7,6 +7,8 @@ CRONTAB_LOG_DIR="${WARDEN_CRONTAB_LOG_DIR:-/home/eferreira/D4MAIA/_crontab_logs}
 DOCKER_BUILD_CACHE_UNTIL="${WARDEN_DOCKER_BUILD_CACHE_UNTIL:-168h}"
 TEMP_FILE_MTIME_DAYS="${WARDEN_TEMP_FILE_MTIME_DAYS:-1}"
 CACHE_MTIME_DAYS="${WARDEN_CACHE_MTIME_DAYS:-1}"
+SERVER_TEMP_MTIME_DAYS="${WARDEN_SERVER_TEMP_MTIME_DAYS:-2}"
+SQL_LOG_MAX_SIZE="${WARDEN_SQL_LOG_MAX_SIZE:-50M}"
 DRY_RUN=0
 
 usage() {
@@ -15,7 +17,7 @@ Usage: warden_clean.sh [--dry-run]
 
 Runs conservative Warden housekeeping for the Overseer-managed warden_clean job.
 It does not remove backups, dumps, application directories, Docker volumes,
-MySQL data, MySQL binlogs, secrets, virtualenvs, or active export snapshots.
+MySQL data, MySQL binlogs, relay logs, secrets, virtualenvs, or active export snapshots.
 EOF
 }
 
@@ -62,7 +64,7 @@ fi
 cd "$WARDEN_ROOT"
 
 if [[ -x "$PYTHON_BIN" ]]; then
-  run "Executar janitor Warden" "$PYTHON_BIN" scripts/janitor.py
+  run "Executar retencao de dados Warden Clean" "$PYTHON_BIN" scripts/warden_clean.py
 else
   log WARN "Python Warden nao encontrado ou sem execucao: $PYTHON_BIN"
 fi
@@ -109,6 +111,31 @@ run "Remover ficheiros temporarios de editor e sistema dentro do Warden" \
 if [[ -d "$CRONTAB_LOG_DIR" ]]; then
   run "Truncar logs grandes de crontab MAIATRON" \
     find "$CRONTAB_LOG_DIR" -maxdepth 1 -type f -name '*.txt' -size +5M -mtime +1 -exec truncate -s 0 {} +
+fi
+
+for temp_dir in /tmp /var/tmp; do
+  if [[ -d "$temp_dir" ]]; then
+    run "Remover temporarios antigos seguros em $temp_dir" \
+      find "$temp_dir" -xdev -mindepth 1 -maxdepth 1 \
+        \( -type f -o -type d \) \
+        \( -name 'tmp.*' -o -name '*.tmp' -o -name 'tmp-*' -o -name 'pip-*' \) \
+        -mtime +"$SERVER_TEMP_MTIME_DAYS" -exec rm -rf {} +
+  fi
+done
+
+for sql_log_dir in /var/log/mysql /var/log/mariadb; do
+  if [[ -d "$sql_log_dir" ]]; then
+    run "Truncar logs textuais SQL grandes em $sql_log_dir" \
+      find "$sql_log_dir" -maxdepth 1 -type f \
+        \( -name '*.log' -o -name '*.err' -o -name '*.slow' \) \
+        -size +"$SQL_LOG_MAX_SIZE" -exec truncate -s 0 {} +
+  fi
+done
+
+if command -v apt-get >/dev/null 2>&1; then
+  run "Limpar cache apt segura" apt-get clean
+else
+  log SKIP "apt-get nao disponivel."
 fi
 
 if command -v docker >/dev/null 2>&1; then

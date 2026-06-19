@@ -89,13 +89,13 @@ if (-not (Test-Path -LiteralPath $exportDir)) {
 }
 
 Write-Host "Sync SCP (read-only): ${userName}@${hostName} -> runtime/export/"
-Write-Host "Pré-requisito: snapshots em producao em `${WARDEN_RUNTIME_ROOT}/runtime/export/`"
+Write-Host 'Pré-requisito: snapshots em producao em ${WARDEN_RUNTIME_ROOT}/runtime/export/'
 
 Push-Location $repoRoot
 try {
-    $composeArgs = @('-f', 'docker-compose.sync.yml', 'run', '--rm', 'warden-sync-prod')
+    $composeArgs = @('-f', 'docker/compose.sync.yml', 'run', '--rm', 'warden-sync-prod')
     if (-not $SkipBuild) {
-        & docker compose -f docker-compose.sync.yml build warden-sync-prod
+        & docker compose -f docker/compose.sync.yml build warden-sync-prod
         if ($LASTEXITCODE -ne 0) { throw 'docker compose build falhou' }
     }
 

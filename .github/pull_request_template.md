@@ -1,16 +1,14 @@
-# Pull Request
-
 ## Resumo
 
-A confirmar.
+-
 
 ## Validação
 
-- [ ] Testes
-- [ ] Lint
-- [ ] Build
-- [ ] Documentação
+- [ ] Gates locais executados
+- [ ] Documentação atualizada quando aplicável
+- [ ] Sem segredos ou dados sensíveis
 
-## Riscos
+## Risco / Rollback
 
-A confirmar.
+- Risco:
+- Rollback:

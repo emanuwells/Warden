@@ -31,7 +31,7 @@
 
 ## Regras
 
-- Usar migrações manuais via `warden.py --setup`.
+- Usar migrações manuais via `python -m src.warden --setup`.
 - Evitar alterações destrutivas sem plano de rollback.
 - Não guardar segredos em texto claro.
 - Não executar operações destrutivas contra produção sem confirmação explícita.

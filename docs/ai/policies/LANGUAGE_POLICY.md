@@ -19,7 +19,7 @@ Aplica-se a:
 - documentação em `docs/`;
 - políticas em `docs/ai/policies/`;
 - operação em `docs/ai/ops/`;
-- competências em `docs/ai/skills/` e `.claude/skills/`;
+- competências em `docs/ai/skills/` e `tools/ai-adapters/claude/.claude/skills/`;
 - modelos de issues, pull requests, ADRs, tarefas e handoff;
 - comentários em código novo ou alterado, quando o projeto usar comentários em português.
 
@@ -28,7 +28,7 @@ Aplica-se a:
 Podem permanecer em inglês quando forem convenções técnicas, nomes próprios ou identificadores reais:
 
 - nomes de ficheiros: `README.md`, `CHANGELOG.md`, `Dockerfile`, `package.json`;
-- nomes de pastas técnicas: `.github`, `docs/ai`, `.claude`, `src`, `tests`;
+- nomes de pastas técnicas: `.github`, `docs/ai`, `tools/ai-adapters`, `src`, `tests`;
 - comandos: `npm run build`, `docker compose up`, `git status`;
 - APIs, bibliotecas, frameworks, variáveis, classes, funções e endpoints;
 - marcas, produtos e protocolos: Docker, GitHub, Node.js, React, MCP, SSH, API, CI/CD;

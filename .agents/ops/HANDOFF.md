@@ -34,25 +34,25 @@
 - Correção aplicada em 2026-06-18: backup do crontab em `/home/eferreira/warden_crontab_20260618160354.bak`; linha `# overseer:warden_clean` inserida de forma idempotente.
 - Produção alinhada no commit `e75f96f`; `git status --short --branch` remoto limpo em `main...origin/main`.
 - Validação final: crontab com `count=1`, serviço `warden` ativo, disco `/` em 89% e `runtime/export` reduzido para 34M.
-- Execução manual validada: `warden_clean` correu sem WARN após preservar `runtime/cache/.gitkeep`; janitor removeu dados antigos conforme `RETENTION_DAYS=7`.
+- Execução manual validada: `warden_clean` correu sem WARN após preservar `runtime/cache/.gitkeep`; a retenção de dados removeu registos antigos conforme `RETENTION_DAYS=7`.
 
 ## Validação Local Mais Recente
 
-- `python -m py_compile warden.py src\settings.py src\collector.py src\db_monitor.py scripts\export_payload.py scripts\slack_alerts.py scripts\slack_daily_digest.py scripts\janitor.py scripts\weekly_archive.py`
+- `python -m py_compile src\warden.py src\settings.py src\collector.py src\db_monitor.py scripts\export_payload.py scripts\slack_alerts.py scripts\slack_daily_digest.py scripts\warden_clean.py scripts\weekly_archive.py`
 - `php -l public\www\api.php`
 - `php -l public\backend\apps\warden\api.php`
-- `docker compose -f docker-compose.pipeline.yml config` com `.env.docker` temporário gerado a partir de `.env.docker.example` e removido no fim.
+- `docker compose -f docker/compose.pipeline.yml config` com `.env.docker` temporário gerado a partir de `config/env.docker.example` e removido no fim.
 - `git diff --check` sem erros; apenas avisos esperados de line endings no Windows.
 - BAZE2: `crontab -l` confirmou uma linha ativa `30 8 * * * ... scripts/slack_daily_digest.py ...`.
 - BAZE2: `scripts/slack_daily_digest.py --dry-run` executou com sucesso, sem envio para Slack; ficheiro temporário em `/tmp` removido.
 
 ## Higiene De Raiz
 
-- Raiz alinhada com o padrão aplicado no Overseer: ficheiros de entrada do projeto na raiz, governança em `.agents/`, compatibilidade Claude em `.claude/`.
+- Raiz alinhada com o template: ficheiros de entrada do projeto na raiz, governança em `.agents/`, compatibilidade Claude em `tools/ai-adapters/claude/.claude/`.
 - `COMMANDS.md` é a referência operacional curta e específica do Warden.
 - Inventário de Skills vive em `.agents/skills/README.md`.
 - `tasks/` foi removida enquanto só continha placeholders sem estado operacional útil.
-- Auditoria agressiva desta iteração não encontrou ficheiros versionados obsoletos seguros para remover; `.claude/`, `public/`, `deploy/hub/`, `runtime/**/.gitkeep` e exemplos de secrets permanecem intencionais.
+- Auditoria agressiva desta iteração preserva `public/`, `deploy/hub/`, `runtime/**/.gitkeep` e exemplos de secrets como intencionais.
 
 ## Próximo passo
 

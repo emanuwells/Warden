@@ -5,12 +5,17 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [Unreleased] - 2026-06-11
 
 ### Adicionado
+- `src/warden.py` como implementação canónica e única do CLI Python.
+- Dockerfiles e Compose especializados centralizados em `docker/`, mantendo `docker-compose.yml` na raiz como wrapper do stack web local.
+- `scripts/warden_clean.sh` passa a cobrir temporários seguros do servidor, cache apt, logs textuais SQL grandes e limpeza Docker conservadora.
 - Alertas Slack imediatos passam a suportar warnings e criticals com limite de `SLACK_ALERT_MAX_NOTIFICATIONS` por incidente.
 - Digest Slack diário passa a incluir alertas ainda ativos, destacando incidentes que já atingiram o limite de notificações.
 - Runner `scripts/warden_clean.sh` para expor a limpeza conservadora ao Overseer como `# overseer:warden_clean`.
 - `warden_clean` passa a remover temporários atómicos antigos, cache runtime regenerável, caches Python, bytecode e ficheiros de editor/sistema dentro de `WARDEN_ROOT`, preservando snapshots ativos, backups, secrets, virtualenvs e dados.
 
 ### Alterado
+- `systemd/warden.service`, Compose pipeline e documentação passam a usar `python -m src.warden`.
+- Retenção de dados antiga fica exposta como `scripts/warden_clean.py`, removendo referências operacionais paralelas.
 - A limpeza operacional fica concentrada no runner `warden_clean`, agendado pelo Overseer.
 - `scripts/warden_clean.sh` passa a estar versionado como executável para uso direto em Linux/produção.
 - Runbook de produção documenta o caso real em que o runner existe mas o crontab não contém `# overseer:warden_clean`, com correção por backup e inserção idempotente.
@@ -34,14 +39,14 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ### Alterado
 - Estrutura `public/`: removido wrapper legado `public/backend/public/`; dev local só `public/www/` + `public/backend/`.
-- `docker-compose.yml` passa a incluir `docker-compose.dev.yml` (um comando `docker compose up`).
+- `docker-compose.yml` passa a incluir `docker/compose.dev.yml` (um comando `docker compose up`).
 - Documentação e badges atualizados para 2.1.0.
 
 ## [2.0.9] - 2026-06-01
 
 ### Adicionado
-- `docker-compose.sync.yml`, `Dockerfile.sync`, `scripts/docker-sync-prod-entry.sh` — serviço one-shot com venv, pip e SCP read-only dos snapshots de produção para `runtime/export/`.
-- `scripts/sync-prod-snapshots.ps1`, `.env.prod-sync.example` — orquestração Windows para validar UI local com JSON reais.
+- `docker/compose.sync.yml`, `docker/Dockerfile.sync`, `scripts/docker-sync-prod-entry.sh` — serviço one-shot com venv, pip e SCP read-only dos snapshots de produção para `runtime/export/`.
+- `scripts/sync-prod-snapshots.ps1`, `config/env.prod-sync.example` — orquestração Windows para validar UI local com JSON reais.
 
 ### Alterado
 - `scripts/start-warden-dev.ps1` — aviso a sugerir `sync-prod-snapshots.ps1` quando snapshots em falta.
@@ -62,8 +67,8 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ### Adicionado
 - Pasta [`public/`](public/) com UI/API Warden (import de `MAIATRON-HUB`).
-- Docker dev: `docker-compose.dev.yml`, `Dockerfile.php`, `docker/nginx/`, `scripts/start-warden-dev.ps1`.
-- `docker-compose.pipeline.yml` (collector/scheduler, separado do web).
+- Docker dev: `docker/compose.dev.yml`, `docker/Dockerfile.php`, `docker/nginx/`, `scripts/start-warden-dev.ps1`.
+- `docker/compose.pipeline.yml` (collector/scheduler, separado do web).
 - `scripts/import-public-from-prod.ps1`, `scripts/publish-public.ps1`, [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md).
 
 ### Removido
@@ -166,7 +171,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ### Adicionado
 - **Collector (The Agent):** Script Python + psutil para captura de CPU, RAM, Disco e Rede.
 - **DB Writer:** Inserção em MariaDB com suporte a SSH tunnel.
-- **Janitor:** Sistema de auto-expiração de dados (30 dias configurável).
+- **Warden Clean:** Sistema de auto-expiração de dados (30 dias configurável).
 - **CLI:** `warden.py` com modos `--setup`, `--once`, `--export`, `--cleanup`.
 - **Export:** Script de exportação DB → JSON para frontend estático.
 - **Frontend:** Dashboard MAIATRON Design System com:
@@ -182,5 +187,5 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
   - Auto-refresh a cada 30 segundos
   - Responsivo (mobile-first)
 - **systemd:** Unit file para serviço com auto-restart.
-- **Cron:** Templates para export periódico e janitor diário.
+- **Cron:** Templates para export periódico e Warden Clean diário.
 - **Secrets:** Gestão segura via `.env` + `secrets/database.json`.

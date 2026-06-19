@@ -1,13 +1,13 @@
-# Feature Request
+---
+name: Feature request
+about: Propor melhoria ou capacidade nova
+title: "[Feature] "
+labels: enhancement
+assignees: ""
+---
 
 ## Objetivo
 
-A confirmar.
-
-## Valor
-
-A confirmar.
+## Contexto
 
 ## Critérios De Aceitação
-
-- [ ] A confirmar.

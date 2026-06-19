@@ -29,6 +29,6 @@ Inventário das competências incluídas.
 
 Local canónico: `docs/ai/skills/`.
 
-Compatibilidade Claude Code: `.claude/skills/`.
+Compatibilidade Claude Code: `tools/ai-adapters/claude/.claude/skills/`.
 
 | `mcp-server-operator` | Verifica, seleciona e usa servidores MCP de forma segura e proporcional. |

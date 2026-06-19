@@ -32,8 +32,8 @@ Config mínima no `.env`:
 Criar tabela e validar:
 
 ```bash
-.venv/bin/python warden.py --setup
-.venv/bin/python warden.py --once
+.venv/bin/python -m src.warden --setup
+.venv/bin/python -m src.warden --once
 .venv/bin/python scripts/export_payload.py --mode fast
 .venv/bin/python scripts/export_payload.py --mode heavy
 ```
@@ -64,7 +64,7 @@ Jobs críticos:
 
 - fast export (cadência alta)
 - heavy export (5 em 5 min)
-- janitor diário
+- Warden Clean diário
 - slack alerts (2 min)
 - digest diário
 - weekly archive
@@ -89,7 +89,7 @@ curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy | head
 ### 5.1 Configurar
 
 ```bash
-cp .env.docker.example .env.docker
+cp config/env.docker.example .env.docker
 ```
 
 ### 5.2 Arrancar
@@ -101,7 +101,7 @@ docker compose ps
 
 ### 5.3 Serviços no compose
 
-- `warden-collector`: processo contínuo (`python warden.py`)
+- `warden-collector`: processo contínuo (`python -m src.warden`)
 - `warden-scheduler`: cron (`scripts/docker.crontab`)
 
 ### 5.4 Host metrics em Docker
@@ -122,7 +122,7 @@ SELECT COUNT(*) FROM Warden.warden_metrics
 WHERE captured_at < NOW() - INTERVAL 7 DAY;
 ```
 
-Esperado: `0` após ciclo do janitor.
+Esperado: `0` após ciclo do Warden Clean.
 
 ### Campos de crescimento por janela (Disco + DB)
 
@@ -140,7 +140,7 @@ Validar no frontend:
 ### Sintaxe Python
 
 ```bash
-python3 -m py_compile warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py
+python3 -m py_compile src/warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/warden_clean.py scripts/weekly_archive.py
 ```
 
 ## 7) Troubleshooting rápido

@@ -19,9 +19,9 @@ const WARDEN_FULL_STALE_MS = 10 * 60 * 1000;
 const WARDEN_RETENTION_DAYS = 7;
 const WARDEN_FALLBACK_30D_DAYS = 30;
 const WARDEN_INGEST_LOCK_NAME = 'maiatron_warden_ingest_v1';
-const WARDEN_JANITOR_LOCK_NAME = 'maiatron_warden_janitor_v1';
-const WARDEN_JANITOR_EVERY_SECONDS = 6 * 3600;
-const WARDEN_JANITOR_DELETE_BATCH = 5000;
+const WARDEN_CLEAN_LOCK_NAME = 'maiatron_warden_clean_v1';
+const WARDEN_CLEAN_EVERY_SECONDS = 6 * 3600;
+const WARDEN_CLEAN_DELETE_BATCH = 5000;
 
 function warden_app_version(): string
 {
@@ -771,7 +771,7 @@ function warden_ingest_snapshot(array $full, array $sourceStat, string $cacheKey
     }
 }
 
-function warden_run_janitor_if_due(bool $force = false, ?PDO $pdo = null): array
+function warden_run_clean_if_due(bool $force = false, ?PDO $pdo = null): array
 {
     $result = [
         'ran' => false,
@@ -784,56 +784,56 @@ function warden_run_janitor_if_due(bool $force = false, ?PDO $pdo = null): array
     try {
         warden_db_ensure_schema();
     } catch (Throwable $e) {
-        error_log('[Warden API] janitor schema failed: ' . $e->getMessage());
+        error_log('[Warden API] warden_clean schema failed: ' . $e->getMessage());
         return $result;
     }
 
     $pdo = $pdo ?: warden_db_warden();
-    if (!warden_db_get_lock($pdo, WARDEN_JANITOR_LOCK_NAME, 0)) {
+    if (!warden_db_get_lock($pdo, WARDEN_CLEAN_LOCK_NAME, 0)) {
         return $result;
     }
 
     try {
-        $lastRaw = warden_state_get($pdo, 'last_janitor_at');
+        $lastRaw = warden_state_get($pdo, 'last_warden_clean_at');
         $lastTs = $lastRaw ? strtotime($lastRaw) : false;
         $now = time();
-        if (!$force && $lastTs !== false && ($now - $lastTs) < WARDEN_JANITOR_EVERY_SECONDS) {
+        if (!$force && $lastTs !== false && ($now - $lastTs) < WARDEN_CLEAN_EVERY_SECONDS) {
             return $result;
         }
 
         $cutoffTs = gmdate('Y-m-d H:i:s', $now - (WARDEN_RETENTION_DAYS * 86400));
         $cutoffRegistry = $cutoffTs;
 
-        $deleteMetrics = $pdo->prepare('DELETE FROM `warden_metrics` WHERE `captured_at` < :cutoff LIMIT ' . WARDEN_JANITOR_DELETE_BATCH);
+        $deleteMetrics = $pdo->prepare('DELETE FROM `warden_metrics` WHERE `captured_at` < :cutoff LIMIT ' . WARDEN_CLEAN_DELETE_BATCH);
         do {
             $deleteMetrics->execute(['cutoff' => $cutoffTs]);
             $affected = $deleteMetrics->rowCount();
             $result['deleted_metrics'] += $affected;
-        } while ($affected === WARDEN_JANITOR_DELETE_BATCH);
+        } while ($affected === WARDEN_CLEAN_DELETE_BATCH);
 
-        $deleteTs = $pdo->prepare('DELETE FROM `warden_ts_minute` WHERE `bucket_minute` < :cutoff LIMIT ' . WARDEN_JANITOR_DELETE_BATCH);
+        $deleteTs = $pdo->prepare('DELETE FROM `warden_ts_minute` WHERE `bucket_minute` < :cutoff LIMIT ' . WARDEN_CLEAN_DELETE_BATCH);
         do {
             $deleteTs->execute(['cutoff' => $cutoffTs]);
             $affected = $deleteTs->rowCount();
             $result['deleted_ts'] += $affected;
-        } while ($affected === WARDEN_JANITOR_DELETE_BATCH);
+        } while ($affected === WARDEN_CLEAN_DELETE_BATCH);
 
-        $deleteAlerts = $pdo->prepare('DELETE FROM `warden_alert_events` WHERE `observed_at` < :cutoff LIMIT ' . WARDEN_JANITOR_DELETE_BATCH);
+        $deleteAlerts = $pdo->prepare('DELETE FROM `warden_alert_events` WHERE `observed_at` < :cutoff LIMIT ' . WARDEN_CLEAN_DELETE_BATCH);
         do {
             $deleteAlerts->execute(['cutoff' => $cutoffTs]);
             $affected = $deleteAlerts->rowCount();
             $result['deleted_alerts'] += $affected;
-        } while ($affected === WARDEN_JANITOR_DELETE_BATCH);
+        } while ($affected === WARDEN_CLEAN_DELETE_BATCH);
 
-        $deleteRegistry = $pdo->prepare('DELETE FROM `warden_ingest_registry` WHERE `ingested_at` < :cutoff LIMIT ' . WARDEN_JANITOR_DELETE_BATCH);
+        $deleteRegistry = $pdo->prepare('DELETE FROM `warden_ingest_registry` WHERE `ingested_at` < :cutoff LIMIT ' . WARDEN_CLEAN_DELETE_BATCH);
         do {
             $deleteRegistry->execute(['cutoff' => $cutoffRegistry]);
             $affected = $deleteRegistry->rowCount();
             $result['deleted_registry'] += $affected;
-        } while ($affected === WARDEN_JANITOR_DELETE_BATCH);
+        } while ($affected === WARDEN_CLEAN_DELETE_BATCH);
 
-        warden_state_set($pdo, 'last_janitor_at', gmdate('c', $now));
-        warden_state_set($pdo, 'last_janitor_stats', json_encode([
+        warden_state_set($pdo, 'last_warden_clean_at', gmdate('c', $now));
+        warden_state_set($pdo, 'last_warden_clean_stats', json_encode([
             'deleted_metrics' => $result['deleted_metrics'],
             'deleted_ts' => $result['deleted_ts'],
             'deleted_alerts' => $result['deleted_alerts'],
@@ -844,10 +844,10 @@ function warden_run_janitor_if_due(bool $force = false, ?PDO $pdo = null): array
         $result['ran'] = true;
         return $result;
     } catch (Throwable $e) {
-        error_log('[Warden API] janitor failed: ' . $e->getMessage());
+        error_log('[Warden API] warden_clean failed: ' . $e->getMessage());
         return $result;
     } finally {
-        warden_db_release_lock($pdo, WARDEN_JANITOR_LOCK_NAME);
+        warden_db_release_lock($pdo, WARDEN_CLEAN_LOCK_NAME);
     }
 }
 
@@ -912,13 +912,13 @@ function warden_storage_meta(): array
         warden_db_ensure_schema();
         $pdo = warden_db_warden();
         return [
-            'last_janitor_at' => warden_state_get($pdo, 'last_janitor_at'),
+            'last_warden_clean_at' => warden_state_get($pdo, 'last_warden_clean_at'),
             'last_ingested_snapshot' => warden_state_get($pdo, 'last_ingested_snapshot'),
             'last_ingested_generated_at' => warden_state_get($pdo, 'last_ingested_generated_at'),
         ];
     } catch (Throwable $e) {
         return [
-            'last_janitor_at' => null,
+            'last_warden_clean_at' => null,
             'last_ingested_snapshot' => null,
             'last_ingested_generated_at' => null,
         ];
@@ -1496,8 +1496,8 @@ function warden_current_split_cache(array $sourceStat): array
 
     // Ingest a lightweight time-series snapshot once per source snapshot key.
     warden_ingest_snapshot($full, $sourceStat, $cacheKey);
-    // Opportunistic janitor (throttled by WARDEN_JANITOR_EVERY_SECONDS).
-    warden_run_janitor_if_due(false);
+    // Opportunistic Warden Clean retention (throttled by WARDEN_CLEAN_EVERY_SECONDS).
+    warden_run_clean_if_due(false);
 
     $generatedAt = (string)($full['generated_at'] ?? ($full['current']['timestamp'] ?? ''));
     $fast = warden_build_fast_payload($full);
@@ -1578,7 +1578,7 @@ function warden_load_split_data(): array
                 // Keep Warden DB series/alerts ingest active even in dedicated split mode.
                 $fullPayload = warden_merge_dedicated_payloads($fastPayload, $heavyPayload, $manifest);
                 warden_ingest_snapshot($fullPayload, $sourceMeta, $cacheKey);
-                warden_run_janitor_if_due(false);
+                warden_run_clean_if_due(false);
             } catch (Throwable $e) {
                 error_log('[Warden API] dedicated ingest failed: ' . $e->getMessage());
             }

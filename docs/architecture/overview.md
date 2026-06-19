@@ -18,19 +18,19 @@ Runtime de monitorização do ecossistema MAIATRON. Recolhe métricas de sistema
 
 | Componente | Responsabilidade | Tecnologia | Observações |
 |---|---|---|---|
-| Collector | Recolha de métricas de sistema e DB | Python 3 + psutil | `warden.py`, executado por systemd/cron |
+| Collector | Recolha de métricas de sistema e DB | Python 3 + psutil | `src.warden`, executado por systemd/cron |
 | DB Writer | Persistência em MariaDB | Python 3 + PyMySQL | `src/db_writer.py` |
 | Export | Geração de snapshots JSON | Python 3 | `scripts/export_payload.py` |
-| Janitor | Limpeza de métricas antigas | Python 3 | `scripts/janitor.py` |
+| Warden Clean | Limpeza de métricas antigas | Python 3 | `scripts/warden_clean.py` |
 | Slack Alerts | Alertas imediatos e digest diário | Python 3 + requests | `scripts/slack_alerts.py`, `scripts/slack_daily_digest.py` |
 | API/UI | Interface web para visualização | PHP + estáticos | `public/` (fatia MAIATRON-HUB) |
 
 ## Fluxo Principal
 
 ```text
-warden.py (collector) --> MariaDB (warden_metrics)
+src.warden (collector) --> MariaDB (warden_metrics)
 cron/systemd --> export_payload.py --> runtime/export/*.json
-cron/systemd --> janitor.py --> MariaDB (cleanup)
+cron/systemd --> warden_clean.py --> MariaDB (cleanup)
 cron/systemd --> slack_alerts.py --> Slack webhooks
 cron/systemd --> slack_daily_digest.py --> Slack webhooks
 runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
@@ -40,7 +40,7 @@ runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
 
 ### Dentro do sistema
 
-- Collector, export, janitor, Slack alerts/digest.
+- Collector, export, Warden Clean, Slack alerts/digest.
 - Persistência em MariaDB (schema `Warden`).
 - Snapshots JSON em `runtime/export/`.
 
@@ -55,7 +55,7 @@ runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
 
 | Risco | Mitigação |
 |---|---|
-| Disco cheio no host | Runbook limpeza, `warden_clean`, janitor |
+| Disco cheio no host | Runbook limpeza, `warden_clean` |
 | Alertas duplicados | Cooldown, `SLACK_ALERT_MAX_NOTIFICATIONS` |
 | API/UI em produção sem sessão | Smoke aceita 401 sem sessão em dev |
 

@@ -12,7 +12,7 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 - Recolha periódica de CPU, RAM, disco, rede, processos e top consumo de disco.
 - Monitorização de schemas MariaDB (tamanhos, crescimento).
 - Export de snapshots `fast`, `heavy` e `full` para consumo pela API PHP no host MAIATRON.
-- Janitor com retenção configurável (`RETENTION_DAYS`).
+- Warden Clean com retenção configurável (`RETENTION_DAYS`).
 - Alertas Slack imediatos e digest diário, com limite de notificações por incidente.
 - Arquivo semanal agregado (`runtime/archive/weekly`).
 - Housekeeping conservador via runner `warden_clean`, visível no Overseer.
@@ -36,14 +36,14 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 ```mermaid
 flowchart LR
   subgraph host [Host Linux]
-    warden[warden.py collector]
+    warden[src.warden collector]
     cron[cron / systemd]
     export[export_payload.py]
-    janitor[janitor.py]
+    clean[warden_clean.py]
     slack[slack_alerts.py]
     warden --> dbW[(MariaDB Warden)]
     cron --> export
-    cron --> janitor
+    cron --> clean
     cron --> slack
     export --> snapshots[runtime/export/*.json]
   end
@@ -60,10 +60,10 @@ flowchart LR
 
 Fluxo resumido:
 
-1. `warden.py` recolhe métricas e grava em `Warden.warden_metrics`.
+1. `src.warden` recolhe métricas e grava em `Warden.warden_metrics`.
 2. `scripts/export_payload.py` gera `warden_fast_snapshot.json`, `warden_heavy_snapshot.json`, `warden_payload.json`.
 3. `api.php` (no host MAIATRON) serve `ops_fast`, `ops_heavy`, `full`.
-4. Jobs auxiliares: janitor, Slack, arquivo semanal e `warden_clean`.
+4. Jobs auxiliares: Warden Clean, Slack e arquivo semanal.
 
 ## Estrutura do projeto
 
@@ -78,14 +78,13 @@ Warden/
 ├── public/www/                    # UI/API local (Docker :8080)
 ├── public/backend/                # API PHP canónica + auth MAIATRON
 ├── deploy/hub/                    # Fatia para publicação no MAIATRON-HUB
-├── warden.py, src/, scripts/, requirements.txt
-├── docker-compose.yml             # Stack web local (include → docker-compose.dev.yml)
-├── docker-compose.dev.yml
-├── docker-compose.pipeline.yml    # Collector + scheduler
-├── docker-compose.sync.yml        # SCP snapshots de produção
-├── Dockerfile, Dockerfile.php, Dockerfile.sync
+├── src/, scripts/, requirements.txt
+├── docker-compose.yml             # Wrapper web local (include → docker/compose.dev.yml)
+├── docker/                        # Dockerfiles, Compose especializados e nginx dev
+│   ├── compose.pipeline.yml       # Collector + scheduler
+│   └── compose.sync.yml           # SCP snapshots de produção
 ├── secrets/, runtime/, docs/
-└── .claude/skills/                # Compatibilidade Claude Code
+└── tools/ai-adapters/             # Adaptadores de IDE/agentes
 ```
 
 ## Requisitos
@@ -105,7 +104,7 @@ pip install -r requirements.txt
 cp .env.example .env
 cp secrets/database.json.example secrets/database.json
 # Editar .env e secrets/database.json com valores reais (não commitar)
-.venv/bin/python warden.py --setup
+.venv/bin/python -m src.warden --setup
 ```
 
 Path canónico em produção: `/home/eferreira/MAIATRON/Warden`. Templates antigos usavam `/opt/warden` — não usar em instalações novas.
@@ -138,7 +137,7 @@ Variáveis principais (ver `.env.example`):
 Recolha única e export:
 
 ```bash
-.venv/bin/python warden.py --once
+.venv/bin/python -m src.warden --once
 .venv/bin/python scripts/export_payload.py --mode fast
 .venv/bin/python scripts/export_payload.py --mode heavy
 .venv/bin/python scripts/export_payload.py --mode full
@@ -165,10 +164,10 @@ Contrato operacional:
 
 | Ação | Comando |
 |---|---|
-| Setup schema | `.venv/bin/python warden.py --setup` |
-| Recolha única | `.venv/bin/python warden.py --once` |
+| Setup schema | `.venv/bin/python -m src.warden --setup` |
+| Recolha única | `.venv/bin/python -m src.warden --once` |
 | Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
-| Janitor | `.venv/bin/python scripts/janitor.py` |
+| Warden Clean retenção | `.venv/bin/python scripts/warden_clean.py` |
 | Runner `warden_clean` | `./scripts/warden_clean.sh --dry-run` |
 | SSH remoto | `.\scripts\Invoke-WardenSsh.ps1` (PowerShell) |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
@@ -197,9 +196,9 @@ Código em [`public/`](public/); em produção sob `/usr/share/nginx/html/MAIATR
 Não há suite de testes automatizada versionada. Validação documentada:
 
 ```bash
-python3 -m py_compile warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py \
+python3 -m py_compile src/warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py \
   src/slack_notifier.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py \
-  scripts/janitor.py scripts/weekly_archive.py
+  scripts/warden_clean.py scripts/weekly_archive.py
 bash -n scripts/warden_clean.sh
 ```
 
@@ -229,19 +228,21 @@ curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast" | head
 .\scripts\start-warden-dev.ps1         # http://127.0.0.1:8080/
 ```
 
-Snapshots em `runtime/export/`: copiar de produção com `sync-prod-snapshots.ps1`, ou gerar localmente com `warden.py --once` e `export_payload.py`.
+Snapshots em `runtime/export/`: copiar de produção com `sync-prod-snapshots.ps1`, ou gerar localmente com `python -m src.warden --once` e `export_payload.py`.
 
 ### Pipeline em Docker (sem PHP)
 
 ```bash
-cp .env.docker.example .env.docker
-docker compose -f docker-compose.pipeline.yml up -d --build
+cp config/env.docker.example .env.docker
+docker compose -f docker/compose.pipeline.yml up -d --build
 ```
 
 | Serviço | Função |
 |---|---|
-| `warden-collector` | `python warden.py` |
-| `warden-scheduler` | cron interno (export, janitor, slack, archive) |
+| `warden-collector` | `python -m src.warden` |
+| `warden-scheduler` | cron interno (export, Warden Clean, slack, archive) |
+
+Para alterar a porta do stack web local, definir `WARDEN_DEV_PORT` antes de executar o compose ou `scripts/start-warden-dev.ps1`. Em ambientes onde Docker não consegue montar `runtime/export` diretamente, definir `WARDEN_EXPORT_DIR` para um diretório local alternativo com os snapshots JSON.
 
 Host metrics: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `network_mode: host`.
 
@@ -271,10 +272,10 @@ O runner `warden_clean` vive em `/home/eferreira/overseer-runners/warden_clean/r
 | Sintoma | Verificar |
 |---|---|
 | API 404 em `ops_fast` | vhost/nginx; path `apps/warden`; snapshots em `runtime/export/` |
-| Disco cheio | `df -h`; `warden_clean`; janitor; runbook produção |
+| Disco cheio | `df -h`; `warden_clean`; runbook produção |
 | Collector duplicado | `systemctl --user` vs `systemctl` — desativar user service |
 | Path legado `/opt/warden` | `crontab -l`, `systemctl cat warden` |
-| Export vazio | DB `Warden` acessível; `warden.py --once` |
+| Export vazio | DB `Warden` acessível; `python -m src.warden --once` |
 | Docker sem métricas de disco | `MONITOR_ROOT_PATH` e mount `/hostfs` |
 | API 401 em Docker local | Auth MAIATRON; esperado sem sessão — validar UI estática e PHP a responder |
 | `public/` vazio | `.\scripts\import-public-from-prod.ps1` |
@@ -286,14 +287,14 @@ O runner `warden_clean` vive em `/home/eferreira/overseer-runners/warden_clean/r
 - Não commitar `.env`, `.env.docker`, `secrets/database.json`, `secrets/slack.json`, chaves SSH nem `production.deploy.local.env`.
 - Usar apenas ficheiros `*.example` no Git.
 - Não versionar `runtime/export`, `runtime/logs`, `runtime/cache`, `runtime/archive` (exceto `.gitkeep`).
-- A limpeza operacional versionada vive em `scripts/warden_clean.sh` e cobre janitor, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema e cache Docker antiga sem apagar backups, dados, secrets, volumes ou snapshots ativos.
+- A limpeza operacional versionada vive em `scripts/warden_clean.sh` e cobre retenção de dados, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema, logs textuais SQL grandes e cache Docker antiga sem apagar backups, dados, secrets, volumes, binlogs, relay logs ou snapshots ativos.
 
 ## MCP servers e Skills
 
 | Item | Estado |
 |---|---|
 | MCP no repo | **N/A** — sem `.cursor/mcp.json` / `.mcp.json` versionado; configurar no IDE se necessário |
-| Skills | Pacote canónico em `.agents/skills/`; compatibilidade Claude Code em `.claude/skills/` — inventário em [`.agents/skills/README.md`](.agents/skills/README.md) |
+| Skills | Pacote canónico em `.agents/skills/`; compatibilidade Claude Code em `tools/ai-adapters/claude/.claude/skills/` — inventário em [`.agents/skills/README.md`](.agents/skills/README.md) |
 | Regras para IAs | [`AGENTS.md`](AGENTS.md) |
 
 Documentação de governança:

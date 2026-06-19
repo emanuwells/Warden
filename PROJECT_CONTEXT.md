@@ -25,10 +25,10 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 |---|---|
 | Runtime | Python 3, venv local (`.venv`) |
 | Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
-| Deploy host | systemd (`warden.service`) + cron (exports, janitor, Slack, archive) |
-| Deploy alternativo | Docker Compose pipeline (`docker-compose.pipeline.yml`) |
+| Deploy host | systemd (`warden.service`) + cron (exports, Warden Clean, Slack, archive) |
+| Deploy alternativo | Docker Compose pipeline (`docker/compose.pipeline.yml`) |
 | Frontend/API | PHP + estáticos em `public/` (HUB: `MAIATRON-HUB`) |
-| Docker dev web | Nginx + PHP-FPM (`docker-compose.dev.yml`, porta 8080) |
+| Docker dev web | Nginx + PHP-FPM (`docker/compose.dev.yml`, porta 8080) |
 | Testes | `python3 -m py_compile` (smoke manual documentado no README) |
 | CI/CD | Não configurado no repositório |
 
@@ -38,19 +38,19 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 VERSION, LICENSE          # Versão SemVer e licença MIT
 public/www/, public/backend/
 deploy/hub/               # Publicação MAIATRON-HUB
-warden.py                 # CLI principal (collector)
-src/                      # collector, db_writer, db_monitor, janitor, settings, alerts
-scripts/                  # export, janitor, slack, publish-public, import-public, SSH
-docker/                   # nginx para dev local
+src/warden.py             # CLI principal (collector)
+src/                      # collector, db_writer, db_monitor, warden_clean, settings, alerts
+scripts/                  # export, warden_clean, slack, publish-public, import-public, SSH
+docker/                   # Dockerfiles, Compose especializados e nginx dev local
 systemd/warden.service
 config/
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
 docs/                     # produção, Warden_Public_Deploy, adr/
 .agents/                  # policies, ops, mcp, templates e skills canónicas
-docker-compose.yml        # stack web local (include dev)
-docker-compose.pipeline.yml
-docker-compose.sync.yml
+docker-compose.yml        # wrapper web local (include docker/compose.dev.yml)
+docker/compose.pipeline.yml
+docker/compose.sync.yml
 ```
 
 ## Paths Oficiais (Produção)
@@ -76,7 +76,7 @@ docker-compose.sync.yml
 | Copiar de WELLS_API | `scripts/setup-secrets-from-wells-api.ps1` |
 | Limpeza remota | `scripts/run-production-cleanup.ps1`, `scripts/Invoke-WardenSsh.ps1` |
 | Import `public/` | `scripts/import-public-from-prod.ps1` |
-| Sync snapshots prod → local | `scripts/sync-prod-snapshots.ps1` (`docker-compose.sync.yml`, SCP read-only) |
+| Sync snapshots prod → local | `scripts/sync-prod-snapshots.ps1` (`docker/compose.sync.yml`, SCP read-only) |
 | Publish `public/` | `scripts/publish-public.ps1` |
 
 ## MCP Servers Do Projeto
@@ -105,8 +105,8 @@ Inventário completo: `.agents/skills/README.md`.
 
 | Ação | Comando |
 |---|---|
-| Setup DB | `.venv/bin/python warden.py --setup` |
-| Recolha única | `.venv/bin/python warden.py --once` |
+| Setup DB | `.venv/bin/python -m src.warden --setup` |
+| Recolha única | `.venv/bin/python -m src.warden --once` |
 | Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
 | Dev Docker web | `.\scripts\start-warden-dev.ps1` |
 | Sync snapshots (prod) | `.\scripts\sync-prod-snapshots.ps1` |
@@ -129,8 +129,8 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 | Decisão | Motivo |
 |---|---|
 | `public/` espelha fatia Warden do HUB | Alinhamento com WELLS_API; deploy isolado da UI/API |
-| Pipeline permanece em `/home/eferreira/MAIATRON/Warden` | Não alterar produção até publish explícito do `public/` |
-| `docker-compose.pipeline.yml` separado do web | Evitar confundir collector com stack PHP |
+| Pipeline permanece em `/home/eferreira/MAIATRON/Warden` | Produção executa `python -m src.warden` a partir do diretório do projeto |
+| `docker/compose.pipeline.yml` separado do web | Evitar confundir collector com stack PHP |
 
 ## Riscos Conhecidos
 

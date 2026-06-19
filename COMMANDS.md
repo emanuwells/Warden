@@ -11,17 +11,17 @@ Comandos rápidos do Warden. Este ficheiro é referência operacional curta; det
 | Instalar dependências | `pip install -r requirements.txt` |
 | Criar `.env` local | `cp .env.example .env` |
 | Criar config DB local | `cp secrets/database.json.example secrets/database.json` |
-| Setup schema | `.venv/bin/python warden.py --setup` |
+| Setup schema | `.venv/bin/python -m src.warden --setup` |
 
 ## Runtime E Jobs
 
 | Ação | Comando |
 |---|---|
-| Recolha única | `.venv/bin/python warden.py --once` |
+| Recolha única | `.venv/bin/python -m src.warden --once` |
 | Export fast | `.venv/bin/python scripts/export_payload.py --mode fast` |
 | Export heavy | `.venv/bin/python scripts/export_payload.py --mode heavy` |
 | Export full | `.venv/bin/python scripts/export_payload.py --mode full` |
-| Janitor | `.venv/bin/python scripts/janitor.py` |
+| Warden Clean retenção | `.venv/bin/python scripts/warden_clean.py` |
 | Slack alerts dry-run | `.venv/bin/python scripts/slack_alerts.py --dry-run` |
 | Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
 | Warden clean dry-run | `bash scripts/warden_clean.sh --dry-run` |
@@ -30,12 +30,12 @@ Comandos rápidos do Warden. Este ficheiro é referência operacional curta; det
 
 | Ação | Comando |
 |---|---|
-| Python compile | `python -m py_compile warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py src/slack_notifier.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/janitor.py scripts/weekly_archive.py` |
+| Python compile | `python -m py_compile src/warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py src/slack_notifier.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/warden_clean.py scripts/weekly_archive.py` |
 | Bash syntax | `bash -n scripts/warden_clean.sh` |
 | PHP API local | `php -l public/www/api.php` |
 | PHP API canónica | `php -l public/backend/apps/warden/api.php` |
 | Compose web | `docker compose config` |
-| Compose pipeline | `docker compose -f docker-compose.pipeline.yml config` |
+| Compose pipeline | `docker compose -f docker/compose.pipeline.yml config` |
 
 ## Docker
 
@@ -44,8 +44,8 @@ Comandos rápidos do Warden. Este ficheiro é referência operacional curta; det
 | UI/API local | `.\scripts\start-warden-dev.ps1` |
 | Subir web local | `docker compose up -d --build` |
 | Logs web local | `docker compose logs -f` |
-| Subir pipeline | `docker compose -f docker-compose.pipeline.yml up -d --build` |
-| Logs pipeline | `docker compose -f docker-compose.pipeline.yml logs -f` |
+| Subir pipeline | `docker compose -f docker/compose.pipeline.yml up -d --build` |
+| Logs pipeline | `docker compose -f docker/compose.pipeline.yml logs -f` |
 | Sync snapshots prod | `.\scripts\sync-prod-snapshots.ps1` |
 
 ## Produção BAZE2
