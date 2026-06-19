@@ -5,60 +5,36 @@
 | Campo | Valor |
 |---|---|
 | Última atualização | 2026-06-19 |
-| Objetivo actual | Pipeline Fase 2 — export fast no collector |
-| Estado | Alinhado — local, origin e produção em `e894e03` |
+| Objetivo actual | Snapshot fast ~2s (modelo Task Manager) |
+| Estado | Alinhado — local, origin e produção em `9d5276a` |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
-## Pipeline Fase 2 (2026-06-19)
+## Task Manager cadence (2026-06-19)
 
-| Item | Estado |
-|---|---|
-| Hook collector `export_fast_snapshot_after_collect` | Em produção |
-| `EXPORT_FAST_ON_COLLECT=1` (default) | Activo |
-| Cron fast 30×/min → fallback 1×/min | Migrado em prod |
-| `scripts/export_fast_fallback.sh` | Instalado |
-| `scripts/patch-crontab-phase2-fast.sh` | Executado em prod |
+| Lane | Intervalo | Estado prod |
+|---|---|---|
+| Collector | 2s | active (restart pendente sudo para código novo) |
+| Cron fast 2s | 30×/min | restaurado (`# warden:export_fast_2s`) |
+| Ops Center poll | 1.2s | HUB `ops-center.js` (já configurado) |
+| Export fast | <0.2s | `cache_only` — sem force em process tops |
 
-### Validação produção pós-Fase 2
+### Causa do "há 52s"
+
+Fase 2 bloqueava o collector com export fast (~12s cache fria) e cron reduzido a 1×/min. Corrigido: lanes separadas como Task Manager.
+
+### Validação prod pós-fix
 
 ```text
-validate-pipeline.sh: PASS
-  fast idade=8s (limite 12s = COLLECT_INTERVAL 2 + 10)
-  heavy=191s, full=190s
-  warden: active
-crontab: 1 linha # warden:export_fast_fallback
+validate-pipeline.sh: PASS — fast idade=1s (limite 7s)
+export --mode fast: 0.188s (cache_only)
 ```
 
-### Rollback rápido
+### Pendente
 
-1. `EXPORT_FAST_ON_COLLECT=0` em `.env` + `systemctl restart warden`
-2. Repor cron fast 30×/min (git history `crontab.example` pré-`e894e03`)
+- `sudo systemctl restart warden` em prod (código sem export inline bloqueante).
 
-## Pipeline Fase 1
-
-Ver `docs/Warden_Pipeline.md`. Intervalos: heavy `*/5`, full `*/15`, stale fast 12s.
-
-## Host hygiene (2026-06-19)
-
-| Item | Valor |
-|---|---|
-| Script | `scripts/host-hygiene.sh` → `/usr/local/sbin/warden-host-hygiene` |
-| Cron | `30 1 * * *` — `# overseer:host_hygiene` |
-| Disco | 82G/98G (88%) após limpezas |
-
-## Produção (Warden)
+## Produção
 
 - Pipeline: `/home/eferreira/MAIATRON/Warden`
 - HUB: `/usr/share/nginx/html/MAIATRON-HUB`
-- `COLLECT_INTERVAL=2` (prod)
-- Serviço `warden`: active
-
-## Próximo passo
-
-1. Monitorizar idade do fast snapshot nas próximas 24h.
-2. Disco: ganhos reais em backups NGINX/DB e MySQL grandes.
-
-## Skills / MCP (esta entrega)
-
-- Skills: `quality-gate-runner`, `backend-architecture`, `ssh-server-ops`
-- MCP: N/A
+- `COLLECT_INTERVAL=2`
