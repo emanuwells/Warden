@@ -41,6 +41,9 @@ WARDEN_ROOT=/opt/warden
 # HEAVY snapshot (history, processes, disk top consumers)
 */5 * * * * flock -n /tmp/warden_export_heavy.lock -c 'cd $WARDEN_ROOT && /usr/bin/python3 scripts/export_payload.py --mode heavy > /dev/null 2>> runtime/logs/export_heavy.err.log'
 
+# FULL snapshot (merged payload for Ops Center fallback and legacy consumers)
+*/15 * * * * flock -n /tmp/warden_export_full.lock -c 'cd $WARDEN_ROOT && /usr/bin/python3 scripts/export_payload.py --mode full > /dev/null 2>> runtime/logs/export_full.err.log'
+
 # Slack alerts (threshold warnings/criticals) every 2 minutes
 */2 * * * * cd $WARDEN_ROOT && WARDEN_SLACK_IMMEDIATE=1 /usr/bin/python3 scripts/slack_alerts.py > /dev/null 2>> runtime/logs/slack_alerts.err.log
 
@@ -58,3 +61,7 @@ WARDEN_ROOT=/opt/warden
 
 # Overseer-visible Warden cleanup runner. Production crontab must contain this marker once.
 0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean
+
+# Host hygiene: logs SO, apt cache, artefactos .bak de deploy (após warden_clean).
+# Requer symlink /usr/local/sbin/warden-host-hygiene e scripts/host-hygiene.sudoers.
+30 1 * * * flock -n /tmp/host_hygiene.lock -c 'export WARDEN_HUB_ROOT=/usr/share/nginx/html/MAIATRON-HUB WARDEN_CRONTAB_LOG_DIR=/home/eferreira/D4MAIA/_crontab_logs && /usr/local/sbin/warden-host-hygiene >> /home/eferreira/D4MAIA/_crontab_logs/crontab_host_hygiene.txt 2>&1' # overseer:host_hygiene

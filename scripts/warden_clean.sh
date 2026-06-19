@@ -16,7 +16,6 @@ DOCKER_BUILD_CACHE_UNTIL="${WARDEN_DOCKER_BUILD_CACHE_UNTIL:-168h}"
 TEMP_FILE_MTIME_DAYS="${WARDEN_TEMP_FILE_MTIME_DAYS:-1}"
 CACHE_MTIME_DAYS="${WARDEN_CACHE_MTIME_DAYS:-1}"
 SERVER_TEMP_MTIME_DAYS="${WARDEN_SERVER_TEMP_MTIME_DAYS:-2}"
-SQL_LOG_MAX_SIZE="${WARDEN_SQL_LOG_MAX_SIZE:-50M}"
 DRY_RUN=0
 
 usage() {
@@ -134,7 +133,7 @@ run "Remover ficheiros temporarios de editor e sistema dentro do Warden" \
 
 if [[ -n "$CRONTAB_LOG_DIR" && -d "$CRONTAB_LOG_DIR" ]]; then
   run "Truncar logs grandes de crontab do host" \
-    find "$CRONTAB_LOG_DIR" -maxdepth 1 -type f -name '*.txt' -size +5M -mtime +1 -exec truncate -s 0 {} +
+    find "$CRONTAB_LOG_DIR" -maxdepth 1 -type f -name '*.txt' -size +5M -exec truncate -s 0 {} +
 fi
 
 for temp_dir in /tmp /var/tmp; do
@@ -147,20 +146,7 @@ for temp_dir in /tmp /var/tmp; do
   fi
 done
 
-for sql_log_dir in /var/log/mysql /var/log/mariadb; do
-  if [[ -d "$sql_log_dir" ]]; then
-    run "Truncar logs textuais SQL grandes em $sql_log_dir" \
-      find "$sql_log_dir" -maxdepth 1 -type f \
-        \( -name '*.log' -o -name '*.err' -o -name '*.slow' \) \
-        -size +"$SQL_LOG_MAX_SIZE" -exec truncate -s 0 {} +
-  fi
-done
-
-if command -v apt-get >/dev/null 2>&1; then
-  run "Limpar cache apt segura" apt-get clean
-else
-  log SKIP "apt-get nao disponivel."
-fi
+# Logs SO, apt cache e artefactos .bak: scripts/host-hygiene.sh (cron # overseer:host_hygiene)
 
 if command -v docker >/dev/null 2>&1; then
   run "Limpar cache Docker build antiga" docker builder prune -af --filter "until=$DOCKER_BUILD_CACHE_UNTIL"

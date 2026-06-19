@@ -1,7 +1,8 @@
 param(
     [string]$DeployEnvPath = 'secrets/production.deploy.local.env',
     [switch]$DryRunOnly,
-    [switch]$SkipWarden
+    [switch]$SkipWarden,
+    [switch]$SkipHostHygiene
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,6 +72,7 @@ $wardenRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_RUNTIME_ROOT', 'WA
 if ([string]::IsNullOrWhiteSpace($wardenRoot)) {
     throw 'Definir WARDEN_RUNTIME_ROOT em secrets/production.deploy.local.env'
 }
+$wardenHubRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_HUB_ROOT') -Default ''
 $wardenCrontabLogDir = Get-EnvValue -Values $envValues -Keys @('WARDEN_CRONTAB_LOG_DIR') -Default ''
 
 Write-Host "[Warden] Diagnóstico inicial..."
@@ -97,7 +99,25 @@ else
   exit 1
 fi
 "@
+}
 
+if (-not $SkipHostHygiene) {
+    Write-Host "[Host] host-hygiene..."
+    $hostDryRunFlag = if ($DryRunOnly) { '--dry-run' } else { '' }
+    $hygieneScript = '/usr/local/sbin/warden-host-hygiene'
+    Invoke-WardenRemote -Command @"
+set -e
+export WARDEN_HUB_ROOT='${wardenHubRoot}'
+export WARDEN_CRONTAB_LOG_DIR='${wardenCrontabLogDir}'
+if test -x $hygieneScript; then
+  $hygieneScript $hostDryRunFlag
+elif test -f $wardenRoot/scripts/host-hygiene.sh; then
+  bash $wardenRoot/scripts/host-hygiene.sh $hostDryRunFlag
+else
+  echo 'host-hygiene não encontrado'
+  exit 1
+fi
+"@
 }
 
 Write-Host "[Warden] Validação final..."

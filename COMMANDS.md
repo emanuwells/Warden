@@ -27,6 +27,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Slack alerts dry-run | `.venv/bin/python scripts/slack_alerts.py --dry-run` |
 | Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
 | Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |
+| Host hygiene dry-run | `WARDEN_HUB_ROOT=/path/to/hub bash scripts/host-hygiene.sh --dry-run` |
 
 ## Validação
 
@@ -34,6 +35,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 |---|---|
 | Python compile | `python -m py_compile src/warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py src/slack_notifier.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/warden_clean.py scripts/weekly_archive.py` |
 | Bash syntax | `bash -n scripts/warden_clean.sh` |
+| Bash syntax host hygiene | `bash -n scripts/host-hygiene.sh` |
 | PHP API local | `php -l public/www/api.php` |
 | PHP API canónica | `php -l public/backend/apps/warden/api.php` |
 | Compose web | `docker compose config` |
@@ -58,6 +60,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | SSH wrapper | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand '<comando>'` |
 | Ver estado remoto | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd $WARDEN_RUNTIME_ROOT && git status --short --branch'` |
 | Ver cron `warden_clean` | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'crontab -l 2>/dev/null \| grep -n "overseer:warden_clean" \|\| true'` |
+| Ver cron `host_hygiene` | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'crontab -l 2>/dev/null \| grep -n "overseer:host_hygiene" \|\| true'` |
 | Pull remoto seguro | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd $WARDEN_RUNTIME_ROOT && git pull --ff-only origin main'` |
 | Limpeza produção dry-run | `.\scripts\run-production-cleanup.ps1 -DryRunOnly` |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |

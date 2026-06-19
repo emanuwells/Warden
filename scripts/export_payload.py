@@ -31,6 +31,7 @@ from src.settings import BASE_DIR, settings
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  [%(levelname)-7s]  %(message)s",
+    stream=sys.stdout,
 )
 logger = logging.getLogger("warden.export")
 ALERT_EVENTS_PATH = BASE_DIR / "runtime" / "slack_alert_events.jsonl"

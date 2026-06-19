@@ -5,72 +5,50 @@
 | Campo | Valor |
 |---|---|
 | Última atualização | 2026-06-19 |
-| Objetivo atual | Alinhamento prod/git, Warden Clean seguro e desacoplamento agnóstico de plataforma |
-| Estado | Concluído — local, origin e produção em `27aca6a` |
+| Objetivo atual | Host hygiene diário (logs SO + artefactos .bak) |
+| Estado | Implementado em prod — scripts, sudoers, cron, 1ª execução |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
-## Local genérico (Docker)
+## Host hygiene (2026-06-19)
 
 | Item | Valor |
 |---|---|
-| URL UI | `http://127.0.0.1:8080/` |
-| URL API | `http://127.0.0.1:8080/api.php` |
-| Login | Desligado (`WARDEN_DEV_SKIP_AUTH`, `dev-auth-stub.js`, `data-warden-dev`) |
-| Snapshots | `runtime/export/` — sync SCP de prod ou pipeline local |
+| Script | `scripts/host-hygiene.sh` → `/usr/local/sbin/warden-host-hygiene` |
+| Sudoers | `/etc/sudoers.d/warden-host-hygiene` (NOPASSWD) |
+| Cron | `30 1 * * *` — `# overseer:host_hygiene` |
+| Retenção `.bak` | 1 cópia mais recente por diretório |
+| Backups NGINX/DB | **Intocados** (retenção 3 dias existente) |
 
-```powershell
-.\scripts\sync-prod-snapshots.ps1
-.\scripts\start-warden-dev.ps1
-```
+### Execução manual 2026-06-19
 
-## Produção
+| Métrica | Antes | Depois |
+|---|---|---|
+| `df -h /` uso | 83G / 98G (89%) | 82G / 98G (89%) |
+| Espaço livre | 11G | 12G |
 
-- Pipeline: `$WARDEN_RUNTIME_ROOT` (valor real no `production.deploy.local.env` local)
-- HUB: `$WARDEN_HUB_ROOT` — publicado em 2026-06-19 (`publish-public.ps1`, backup `*.bak_20260619_115647`)
-- HUB `api.php`: novo + `warden-paths.local.php` com paths do runtime
-- ACL `www-data` em `runtime/` e `runtime/export/` para leitura dos snapshots
-- Git remoto: ver abaixo
+- Removidos artefactos `.bak` antigos em `MAIATRON-HUB` e `/usr/share/nginx/html` (api.bak_*, HUB.backup, secrets/*.bak_* antigos).
+- Journald vacuum 7d, truncagem logs SO >50M, `apt-get clean`.
+- API `ops_fast`: HTTP 200 pós-limpeza.
+
+### Pendente git
+
+Nenhum — alinhado após commit/push.
+
+## Produção (Warden)
+
+- Pipeline: `/home/eferreira/MAIATRON/Warden`
+- HUB: `/usr/share/nginx/html/MAIATRON-HUB`
+- Cron `warden_clean`: `# overseer:warden_clean` (01:00)
+- Cron `host_hygiene`: `# overseer:host_hygiene` (01:30)
 - Serviço `warden`: active
-- Cron `warden_clean`: 1 linha `# overseer:warden_clean`
-- Overseer manifest: `cwd` em `$WARDEN_RUNTIME_ROOT` — compatível com novo `warden_clean.sh` (fallback por diretório)
-- Disco `/`: 90% (84G/98G) em 2026-06-19 pós-limpeza
-- Export fast: OK (`export_payload.py --mode fast`)
-- Snapshots: `warden_fast_snapshot.json` (67K), `warden_heavy_snapshot.json` (17M) atualizados
-- API HUB: 403 sem sessão (esperado); ficheiro `api.php` presente no HUB
-
-### Smoke 2026-06-19 (HUB publish)
-
-| Verificação | Resultado |
-|---|---|
-| `publish-public.ps1` | OK — HUB `api.php` 19 Jun |
-| `warden-paths.local.php` no HUB | OK — paths para `runtime/export/` |
-| ACL `www-data` em `runtime/export` | OK |
-| Snapshot fast legível + `generated_at` | OK (2026-06-19T10:58Z) |
-| API `ops_fast` sem sessão | 403 (esperado) |
-
-### Smoke 2026-06-19 (final)
-
-| Verificação | Resultado |
-|---|---|
-| `git push` + `git pull --ff-only origin main` (prod) | OK → `27aca6a` |
-| `systemctl is-active warden` | active |
-| `export_payload.py --mode fast` | OK |
-| `warden_clean.sh --dry-run` (só `cwd`, como Overseer) | OK (sem WARN) |
-| `df -h /` | 90% |
-
-## Warden Clean
-
-- `scripts/warden_clean.sh` exige `WARDEN_ROOT`/`WARDEN_RUNTIME_ROOT` ou execução a partir do diretório do runtime.
-- Lista PRESERVE documentada no script e em `docs/Producao_Acesso_e_Limpeza.md`.
-- `WARDEN_CRONTAB_LOG_DIR` opcional para truncar logs do runner Overseer.
 
 ## Próximo passo
 
-1. Validar Warden app e Ops Center no browser (com sessão) — dados devem refletir `generated_at` recente.
-2. Monitorizar cron `warden_clean` às 01:00 (log ainda vazio).
-3. Opcional: envs `WARDEN_*` no php-fpm pool (redundante se `warden-paths.local.php` existir).
+1. `git commit` + `push` das alterações versionadas (host-hygiene, docs, crontab.example).
+2. Rotacionar password sudo (foi usada para instalar sudoers).
+3. Monitorizar `crontab_host_hygiene.txt` após 01:30.
 
 ## Skills / MCP (esta entrega)
 
-- Skills: `repo-hygiene`, `quality-gate-runner`, `ssh-server-ops`, `professional-documentation`
+- Skills: `repo-hygiene`, `ssh-server-ops`, `professional-documentation`
 - MCP: N/A

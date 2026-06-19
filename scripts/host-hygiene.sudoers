@@ -1,0 +1,6 @@
+# Allow the Warden host hygiene script (logs SO, apt cache) without password.
+# Install:
+#   sudo ln -sf /path/to/Warden/scripts/host-hygiene.sh /usr/local/sbin/warden-host-hygiene
+#   sudo install -m 440 scripts/host-hygiene.sudoers /etc/sudoers.d/warden-host-hygiene
+#   sudo visudo -cf /etc/sudoers.d/warden-host-hygiene
+eferreira ALL=(root) NOPASSWD: /usr/local/sbin/warden-host-hygiene

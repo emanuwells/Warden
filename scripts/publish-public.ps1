@@ -142,6 +142,9 @@ foreach ($map in $publishMaps) {
 
     & scp -r @($sshScp.Scp + @("${localDir}/.", "${target}:${remote}/"))
     if ($LASTEXITCODE -ne 0) { throw "scp falhou para $remote" }
+
+    # scp preserva modo restritivo (700) em pastas novas; www-data precisa de traverse+read.
+    Invoke-Remote -SshArgs $sshScp.Ssh -Command "find '$remote' -type d -exec chmod 755 {} +; find '$remote' -type f -exec chmod 644 {} +"
 }
 
 Write-Host 'Publicacao HUB concluida (nao altera public/www local generico).'

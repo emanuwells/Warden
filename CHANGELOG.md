@@ -9,8 +9,16 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Secção "Warden Clean — o que nunca apaga" no README e runbook de produção.
 - Bloco PRESERVE em `scripts/warden_clean.sh`.
 - `EXPORT_FAST_PATH`, `EXPORT_HEAVY_PATH`, `WEEKLY_ARCHIVE_RETENTION_WEEKS` em `.env.example`.
+- Job cron `export_payload.py --mode full` (15 min) em `scripts/crontab.example` e `scripts/docker.crontab`.
+- `scripts/host-hygiene.sh` e `scripts/host-hygiene.sudoers` — higiene diária de logs SO e artefactos `.bak` (cron `# overseer:host_hygiene`).
+
+### Corrigido
+- `publish-public.ps1` aplica `chmod 755`/`644` após `scp` para evitar pastas `700` inacessíveis ao PHP-FPM (`www-data`).
+- `export_payload.py` envia logs INFO para stdout (evita crescimento de `export_fast.err.log`).
 
 ### Alterado
+- `scripts/warden_clean.sh` delega logs SO/apt a `host-hygiene.sh`.
+- `scripts/run-production-cleanup.ps1` inclui passo `host-hygiene` (`-SkipHostHygiene` opcional).
 - Documentação (README, PROJECT_CONTEXT, COMMANDS, docs/*) desacoplada de branding de plataforma específica.
 - `scripts/warden_clean.sh` exige `WARDEN_ROOT`/`WARDEN_RUNTIME_ROOT` (fallback: diretório atual com `scripts/warden_clean.py`).
 - `api.php` resolve snapshots via `WARDEN_RUNTIME_ROOT` em vez de paths hardcoded.

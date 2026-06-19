@@ -152,3 +152,45 @@ ssh USER@HOST 'df -h; systemctl is-active warden; \
 ```
 
 Registar em `.agents/ops/HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
+
+## 6. Host hygiene (logs SO e artefactos .bak)
+
+Script: [`scripts/host-hygiene.sh`](../scripts/host-hygiene.sh) — separado do `warden_clean` (scope Warden).
+
+| Variável | Função |
+|---|---|
+| `WARDEN_HUB_ROOT` | Limpeza `.bak_*` / `*.backup-*` no HUB |
+| `HOST_HYGIENE_NGINX_HTML` | Limpeza `.bak` em `/usr/share/nginx/html` (default) |
+| `HOST_HYGIENE_BAK_KEEP` | Cópias a manter por diretório (default: `1`) |
+| `WARDEN_CRONTAB_LOG_DIR` | Truncar logs crontab Overseer >5 MB |
+
+**Não apaga:** `/BackupNGINX`, `/BackupDB`, binlogs MySQL, snapshots `runtime/export/*.json`, dados de negócio.
+
+### 6.1 Instalar sudo NOPASSWD (uma vez, com sudo interactivo)
+
+```bash
+sudo ln -sf $WARDEN_RUNTIME_ROOT/scripts/host-hygiene.sh /usr/local/sbin/warden-host-hygiene
+sudo chmod +x $WARDEN_RUNTIME_ROOT/scripts/host-hygiene.sh
+sudo install -m 440 $WARDEN_RUNTIME_ROOT/scripts/host-hygiene.sudoers /etc/sudoers.d/warden-host-hygiene
+sudo visudo -cf /etc/sudoers.d/warden-host-hygiene
+```
+
+### 6.2 Dry-run e execução
+
+```bash
+export WARDEN_HUB_ROOT=/usr/share/nginx/html/MAIATRON-HUB
+export WARDEN_CRONTAB_LOG_DIR=/home/eferreira/D4MAIA/_crontab_logs
+/usr/local/sbin/warden-host-hygiene --dry-run
+/usr/local/sbin/warden-host-hygiene
+```
+
+Windows:
+
+```powershell
+.\scripts\run-production-cleanup.ps1 -DryRunOnly
+.\scripts\run-production-cleanup.ps1 -SkipWarden   # só host-hygiene
+```
+
+### 6.3 Cron produção
+
+Marcador: `# overseer:host_hygiene` (ver [`scripts/crontab.example`](../scripts/crontab.example), linha 01:30 após `warden_clean`).
