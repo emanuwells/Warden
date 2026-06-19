@@ -70,7 +70,7 @@ A IA deve explicar conceitos, arquitetura e responsabilidades técnicas, não de
 Evitar frases como:
 
 ```text
-Isto liga à DB MAIATRON.
+Isto liga à DB interna do host.
 ```
 
 Preferir:

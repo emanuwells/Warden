@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT — Warden
 
-Este ficheiro descreve o contexto específico do projeto Warden (runtime MAIATRON).
+Este ficheiro descreve o contexto específico do projeto Warden (runtime de monitorização agnóstico de plataforma).
 
 Deve ser lido em conjunto com `AGENTS.md`, `.agents/ops/HANDOFF.md`, `.agents/skills/README.md` e `.agents/policies/CHANGELOG_POLICY.md`.
 
@@ -9,15 +9,15 @@ Deve ser lido em conjunto com `AGENTS.md`, `.agents/ops/HANDOFF.md`, `.agents/sk
 | Campo | Valor |
 |---|---|
 | Nome | Warden |
-| Tipo | Runtime de monitorização (collector + export + alertas) + fatia UI/API no HUB |
+| Tipo | Runtime de monitorização (collector + export + alertas) + fatia UI/API publicável no HUB do host |
 | Responsável | A confirmar |
 | Versão repo | `VERSION` — 2.1.0 |
 | Licença | MIT (`LICENSE`) |
-| Estado | Produção (path home documentado) |
+| Estado | Produção |
 
 ## Objetivo
 
-Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, exportar snapshots JSON para consumo da API/UI MAIATRON e emitir alertas Slack.
+Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, exportar snapshots JSON para consumo por qualquer API/UI frontend e emitir alertas Slack.
 
 ## Stack Técnica
 
@@ -27,7 +27,7 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 | Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
 | Deploy host | systemd (`warden.service`) + cron (exports, Warden Clean, Slack, archive) |
 | Deploy alternativo | Docker Compose pipeline (`docker/compose.pipeline.yml`) |
-| Frontend/API | PHP + estáticos em `public/` (HUB: `MAIATRON-HUB`) |
+| Frontend/API | PHP + estáticos em `public/` (publicável no HUB do host) |
 | Docker dev web | Nginx + PHP-FPM (`docker/compose.dev.yml`, porta 8080) |
 | Testes | `python3 -m py_compile` (smoke manual documentado no README) |
 | CI/CD | Não configurado no repositório |
@@ -37,12 +37,12 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 ```text
 VERSION, LICENSE          # Versão SemVer e licença MIT
 public/www/, public/backend/
-deploy/hub/               # Publicação MAIATRON-HUB
+deploy/hub/               # Fatia para publicação no HUB do host
 src/warden.py             # CLI principal (collector)
 src/                      # collector, db_writer, db_monitor, warden_clean, settings, alerts
 scripts/                  # export, warden_clean, slack, publish-public, import-public, SSH
 docker/                   # Dockerfiles, Compose especializados e nginx dev local
-systemd/warden.service
+systemd/warden.service    # Template — ajustar paths no deploy
 config/
 secrets/                  # *.example — credenciais reais não versionadas
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
@@ -53,21 +53,28 @@ docker/compose.pipeline.yml
 docker/compose.sync.yml
 ```
 
-## Paths Oficiais (Produção)
+## Paths De Deploy (configuráveis)
 
-| Componente | Path |
+Todos os paths de produção são definidos por ambiente. Variáveis canónicas:
+
+| Variável | Função |
 |---|---|
-| Runtime/pipeline | `/home/eferreira/MAIATRON/Warden` |
-| HUB (nginx root) | `/usr/share/nginx/html/MAIATRON-HUB` |
-| Frontend Warden | `.../MAIATRON-HUB/frontend/apps/warden/` |
-| API Warden (canónica) | `.../MAIATRON-HUB/backend/apps/warden/api.php` |
-| URL pública UI/API | `/MAIATRON/apps/warden/` |
-| Snapshots export | `.../Warden/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
-| Runner `warden_clean` | `/home/eferreira/overseer-runners/warden_clean/run.sh` |
-| Cron `warden_clean` | Deve existir uma única linha `# overseer:warden_clean`; se ausente, corrigir com backup conforme runbook |
-| Legado templates | `/opt/warden` — não usar em produção nova |
+| `WARDEN_RUNTIME_ROOT` | Diretório raiz do runtime Warden no host |
+| `WARDEN_HUB_ROOT` | Raiz do HUB/plataforma onde a UI/API é publicada (opcional) |
+| `WARDEN_CRONTAB_LOG_DIR` | Logs do runner `warden_clean` no Overseer (opcional) |
 
-## Acesso SSH A Produção (BAZE2)
+| Componente | Path típico (exemplo) |
+|---|---|
+| Runtime/pipeline | `$WARDEN_RUNTIME_ROOT` |
+| HUB (nginx root) | `$WARDEN_HUB_ROOT` |
+| Frontend Warden | `$WARDEN_HUB_ROOT/frontend/apps/warden/` |
+| API Warden (canónica) | `$WARDEN_HUB_ROOT/backend/apps/warden/api.php` |
+| Snapshots export | `$WARDEN_RUNTIME_ROOT/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
+| Runner `warden_clean` | Path do Overseer no host (ver runbook) |
+| Cron `warden_clean` | Uma linha `# overseer:warden_clean` no crontab real |
+| Legado templates | `/opt/warden` — evitar em instalações novas |
+
+## Acesso SSH A Produção
 
 | Item | Localização |
 |---|---|
@@ -128,9 +135,10 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 
 | Decisão | Motivo |
 |---|---|
-| `public/` espelha fatia Warden do HUB | Alinhamento com WELLS_API; deploy isolado da UI/API |
-| Pipeline permanece em `/home/eferreira/MAIATRON/Warden` | Produção executa `python -m src.warden` a partir do diretório do projeto |
+| `public/` espelha fatia Warden do HUB | Deploy isolado da UI/API; sync com repositório da plataforma host |
+| Pipeline configurável via `WARDEN_RUNTIME_ROOT` | O collector executa `python -m src.warden` a partir do diretório do projeto |
 | `docker/compose.pipeline.yml` separado do web | Evitar confundir collector com stack PHP |
+| Auth do host opcional | Libs em `core/shared/` são adaptador da plataforma; Warden core permanece agnóstico |
 
 ## Riscos Conhecidos
 
@@ -138,9 +146,9 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 |---|---|
 | Disco cheio no host | Runbook limpeza, `warden_clean` |
 | Publish `public/` sem backup | `publish-public.ps1` com backup/rollback |
-| Auth MAIATRON em Docker local | Smoke aceita 401 sem sessão |
+| Auth do host em Docker local | Smoke aceita 401 sem sessão |
 
 ## Dívida Técnica / Pendências
 
 - CI/CD não configurado; avaliar pipeline leve quando houver necessidade de gates automáticos.
-- Validar `User`/`Group` em `systemd/warden.service`.
+- Validar `User`/`Group` em `systemd/warden.service` no deploy real.

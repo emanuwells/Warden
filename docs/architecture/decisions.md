@@ -4,11 +4,12 @@ Resumo vivo das decisões arquiteturais principais. Para decisões relevantes, c
 
 | Data | Decisão | Motivo | ADR |
 |---|---|---|---|
-| 2026-03-10 | `public/` como fatia Warden do MAIATRON-HUB | Alinhamento com WELLS_API; deploy isolado da UI/API | N/A |
-| 2026-03-10 | Pipeline permanece em `/home/eferreira/MAIATRON/Warden` | Não alterar produção até publish explícito do `public/` | N/A |
+| 2026-03-10 | `public/` como fatia publicável no HUB do host | Deploy isolado da UI/API | N/A |
+| 2026-03-10 | Pipeline configurável via `WARDEN_RUNTIME_ROOT` | Separar runtime do path físico do deploy | N/A |
 | 2026-03-10 | `docker/compose.pipeline.yml` separado do web | Evitar confundir collector com stack PHP | N/A |
-| 2026-06-01 | Snapshots JSON em `runtime/export/` | Interface com API PHP no MAIATRON-HUB | N/A |
+| 2026-06-01 | Snapshots JSON em `runtime/export/` | Interface agnóstica com API PHP consumidora | N/A |
 | 2026-06-01 | `warden_clean` como único contrato de limpeza | Centralizar housekeeping no Overseer | N/A |
+| 2026-06-19 | Documentação e envs agnósticos de plataforma | Warden consumível por qualquer frontend | N/A |
 
 ## Regras
 

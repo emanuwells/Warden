@@ -67,7 +67,11 @@ function Invoke-WardenRemote {
 
 $deployEnvFile = Resolve-RepoPath -Path $DeployEnvPath
 $envValues = Read-EnvFile -Path $deployEnvFile
-$wardenRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_RUNTIME_ROOT') -Default '/home/eferreira/MAIATRON/Warden'
+$wardenRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_RUNTIME_ROOT', 'WARDEN_ROOT') -Default ''
+if ([string]::IsNullOrWhiteSpace($wardenRoot)) {
+    throw 'Definir WARDEN_RUNTIME_ROOT em secrets/production.deploy.local.env'
+}
+$wardenCrontabLogDir = Get-EnvValue -Values $envValues -Keys @('WARDEN_CRONTAB_LOG_DIR') -Default ''
 
 Write-Host "[Warden] Diagnóstico inicial..."
 Invoke-WardenRemote -Command @"
@@ -84,6 +88,8 @@ if (-not $SkipWarden) {
     Invoke-WardenRemote -Command @"
 set -e
 cd $wardenRoot
+export WARDEN_ROOT='$wardenRoot'
+export WARDEN_CRONTAB_LOG_DIR='${wardenCrontabLogDir}'
 if test -x scripts/warden_clean.sh; then
   bash scripts/warden_clean.sh $dryRunFlag
 else

@@ -62,7 +62,10 @@ validate_ssh_prereqs() {
   host="$(get_env WARDEN_DEPLOY_SSH_HOST)"
   user="$(get_env WARDEN_DEPLOY_SSH_USER)"
   port="$(get_env WARDEN_DEPLOY_SSH_PORT "22")"
-  runtime_root="$(get_env WARDEN_RUNTIME_ROOT "/home/eferreira/MAIATRON/Warden")"
+  runtime_root="$(get_env WARDEN_RUNTIME_ROOT "")"
+  if [ -z "$runtime_root" ]; then
+    die "Definir WARDEN_RUNTIME_ROOT em secrets/production.deploy.local.env"
+  fi
 
   if [ -z "$host" ] || [ -z "$user" ]; then
     die "Definir WARDEN_DEPLOY_SSH_HOST e WARDEN_DEPLOY_SSH_USER em secrets/production.deploy.local.env (ver secrets/production.deploy.local.env.example)."

@@ -2,7 +2,7 @@
 
 ## Objetivo do Sistema
 
-Runtime de monitorização do ecossistema MAIATRON. Recolhe métricas de sistema (CPU, RAM, disco, rede, processos) e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para consumo pela API/UI e envia alertas Slack.
+Runtime de monitorização agnóstico de plataforma. Recolhe métricas de sistema (CPU, RAM, disco, rede, processos) e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para consumo por qualquer API/UI e envia alertas Slack.
 
 ## Contexto
 
@@ -10,7 +10,7 @@ Runtime de monitorização do ecossistema MAIATRON. Recolhe métricas de sistema
 |---|---|
 | Domínio | Monitorização de infraestrutura e base de dados |
 | Utilizadores principais | Operadores de sistemas, equipa de infraestrutura |
-| Sistemas externos | MariaDB, Slack (webhooks), MAIATRON-HUB (API/UI) |
+| Sistemas externos | MariaDB, Slack (webhooks), HUB/plataforma host (API/UI opcional) |
 | Dados críticos | Métricas de sistema, snapshots JSON, eventos de alerta |
 | Restrições técnicas | Python 3.10+, MariaDB, systemd/cron, Docker opcional |
 
@@ -23,7 +23,7 @@ Runtime de monitorização do ecossistema MAIATRON. Recolhe métricas de sistema
 | Export | Geração de snapshots JSON | Python 3 | `scripts/export_payload.py` |
 | Warden Clean | Limpeza de métricas antigas | Python 3 | `scripts/warden_clean.py` |
 | Slack Alerts | Alertas imediatos e digest diário | Python 3 + requests | `scripts/slack_alerts.py`, `scripts/slack_daily_digest.py` |
-| API/UI | Interface web para visualização | PHP + estáticos | `public/` (fatia MAIATRON-HUB) |
+| API/UI | Interface web para visualização | PHP + estáticos | `public/` (publicável no HUB do host) |
 
 ## Fluxo Principal
 
@@ -33,7 +33,7 @@ cron/systemd --> export_payload.py --> runtime/export/*.json
 cron/systemd --> warden_clean.py --> MariaDB (cleanup)
 cron/systemd --> slack_alerts.py --> Slack webhooks
 cron/systemd --> slack_daily_digest.py --> Slack webhooks
-runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
+runtime/export/*.json --> api.php --> UI (frontend consumer)
 ```
 
 ## Fronteiras
@@ -48,7 +48,7 @@ runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
 
 - MariaDB (dados de monitorização).
 - Slack (notificações).
-- MAIATRON-HUB (API PHP e UI).
+- HUB/plataforma host (API PHP e UI).
 - Sistema operativo (métricas via psutil).
 
 ## Riscos Arquiteturais
@@ -63,4 +63,4 @@ runtime/export/*.json --> api.php --> UI (MAIATRON-HUB)
 
 - CI/CD não configurado.
 - Sem suite de testes automatizada.
-- Validar `User`/`Group` em `systemd/warden.service`.
+- Validar `User`/`Group` em `systemd/warden.service` no deploy real.

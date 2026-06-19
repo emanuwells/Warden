@@ -2,6 +2,25 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-06-19
+
+### Adicionado
+- Variáveis agnósticas na API PHP: `WARDEN_RUNTIME_ROOT`, `WARDEN_HUB_ROOT`, `WARDEN_AUTH_DB_NAME`, `WARDEN_API_CACHE_DIR`.
+- Secção "Warden Clean — o que nunca apaga" no README e runbook de produção.
+- Bloco PRESERVE em `scripts/warden_clean.sh`.
+- `EXPORT_FAST_PATH`, `EXPORT_HEAVY_PATH`, `WEEKLY_ARCHIVE_RETENTION_WEEKS` em `.env.example`.
+
+### Alterado
+- Documentação (README, PROJECT_CONTEXT, COMMANDS, docs/*) desacoplada de branding de plataforma específica.
+- `scripts/warden_clean.sh` exige `WARDEN_ROOT`/`WARDEN_RUNTIME_ROOT` (fallback: diretório atual com `scripts/warden_clean.py`).
+- `api.php` resolve snapshots via `WARDEN_RUNTIME_ROOT` em vez de paths hardcoded.
+- `systemd/warden.service` passa a template genérico com paths de exemplo.
+- `secrets/production.deploy.local.env.example` usa paths genéricos configuráveis.
+
+### Mantido (integração host)
+- Libs `maiatron-auth*.php` como adaptador opcional da plataforma host.
+- Valores legacy de lock MySQL e fallbacks `MAIATRON_*` na API para compatibilidade.
+
 ## [Unreleased] - 2026-06-11
 
 ### Adicionado

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Warden — Export Payload
-Reads metrics from DB and writes JSON snapshots consumed by MAIATRON.
+Reads metrics from DB and writes JSON snapshots consumed by the Warden API/frontend.
 
 Modes:
 - fast: lightweight snapshot for near-real-time cards/charts

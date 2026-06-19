@@ -1,19 +1,19 @@
 # Guia de Produção — Warden (estado atual)
 
-## 1) Contexto e paths oficiais
+## 1) Contexto e paths
 
-- Runtime/pipeline oficial: `/home/eferreira/MAIATRON/Warden` (canónico; `/opt/warden` é legado de templates)
+- Runtime/pipeline: `$WARDEN_RUNTIME_ROOT` (definido em `secrets/production.deploy.local.env`)
 - Limpeza de disco / SSH: [`Producao_Acesso_e_Limpeza.md`](Producao_Acesso_e_Limpeza.md)
-- Frontend/API oficial (HUB): `/usr/share/nginx/html/MAIATRON-HUB` (`frontend/apps/warden`, `backend/apps/warden`)
-- Fonte de snapshots consumidos pela API:
-  - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_fast_snapshot.json`
-  - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_heavy_snapshot.json`
-  - `/home/eferreira/MAIATRON/Warden/runtime/export/warden_payload.json`
+- Frontend/API (HUB do host): `$WARDEN_HUB_ROOT` (`frontend/apps/warden`, `backend/apps/warden`)
+- Snapshots consumidos pela API:
+  - `$WARDEN_RUNTIME_ROOT/runtime/export/warden_fast_snapshot.json`
+  - `$WARDEN_RUNTIME_ROOT/runtime/export/warden_heavy_snapshot.json`
+  - `$WARDEN_RUNTIME_ROOT/runtime/export/warden_payload.json`
 
 ## 2) Bootstrap host (sem Docker)
 
 ```bash
-cd /home/eferreira/MAIATRON/Warden
+cd "$WARDEN_RUNTIME_ROOT"
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -28,6 +28,7 @@ Config mínima no `.env`:
 - `EXPORT_PATH=runtime/export/warden_payload.json`
 - `EXPORT_FAST_PATH=runtime/export/warden_fast_snapshot.json`
 - `EXPORT_HEAVY_PATH=runtime/export/warden_heavy_snapshot.json`
+- `WEEKLY_ARCHIVE_RETENTION_WEEKS=6`
 
 Criar tabela e validar:
 
@@ -42,13 +43,14 @@ Criar tabela e validar:
 
 ### Serviço
 
+Ajustar paths em `systemd/warden.service` antes de instalar:
+
 ```bash
 sudo cp systemd/warden.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now warden
 sudo systemctl status warden --no-pager
 
-# Garantir 1 único collector (evitar user service paralelo)
 systemctl --user stop warden.service || true
 systemctl --user disable warden.service || true
 ```
@@ -57,65 +59,39 @@ systemctl --user disable warden.service || true
 
 ```bash
 crontab -e
-# inserir conteúdo de scripts/crontab.example
+# inserir conteúdo de scripts/crontab.example (ajustar WARDEN_ROOT)
 ```
 
-Jobs críticos:
+Jobs críticos: fast export, heavy export, Warden Clean, slack alerts, digest diário, weekly archive.
 
-- fast export (cadência alta)
-- heavy export (5 em 5 min)
-- Warden Clean diário
-- slack alerts (2 min)
-- digest diário
-- weekly archive
+## 4) Integração com API no host
 
-## 4) Integração com MAIATRON (API)
+Garantir env vars para `apps/warden/api.php`:
 
-Garantir no nginx/php os env vars para `apps/warden/api.php`:
+- `WARDEN_RUNTIME_ROOT`
+- `WARDEN_SOURCE_PATH`, `WARDEN_FAST_SOURCE_PATH`, `WARDEN_HEAVY_SOURCE_PATH` (opcional)
+- `WARDEN_AUTH_DB_NAME` (schema de auth do host, se aplicável)
 
-- `WARDEN_SOURCE_PATH`
-- `WARDEN_FAST_SOURCE_PATH`
-- `WARDEN_HEAVY_SOURCE_PATH`
-
-Smoke:
+Smoke (ajustar URL ao vhost):
 
 ```bash
-curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast | head
-curl -s http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_heavy | head
+curl -s http://127.0.0.1/apps/warden/api.php?action=ops_fast | head
+curl -s http://127.0.0.1/apps/warden/api.php?action=ops_heavy | head
 ```
 
 ## 5) Docker (pipeline-only, DB externa)
 
-### 5.1 Configurar
-
 ```bash
 cp config/env.docker.example .env.docker
+docker compose -f docker/compose.pipeline.yml up -d --build
+docker compose -f docker/compose.pipeline.yml ps
 ```
 
-### 5.2 Arrancar
-
-```bash
-docker compose up -d --build
-docker compose ps
-```
-
-### 5.3 Serviços no compose
-
-- `warden-collector`: processo contínuo (`python -m src.warden`)
-- `warden-scheduler`: cron (`scripts/docker.crontab`)
-
-### 5.4 Host metrics em Docker
-
-Config obrigatória para refletir máquina anfitriã:
-
-- `MONITOR_ROOT_PATH=/hostfs`
-- mount `/:/hostfs:ro`
-- `pid: host`
-- `network_mode: host`
+Host metrics: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `network_mode: host`.
 
 ## 6) Verificações operacionais
 
-### Retenção 7 dias
+Retenção 7 dias:
 
 ```sql
 SELECT COUNT(*) FROM Warden.warden_metrics
@@ -124,28 +100,9 @@ WHERE captured_at < NOW() - INTERVAL 7 DAY;
 
 Esperado: `0` após ciclo do Warden Clean.
 
-### Campos de crescimento por janela (Disco + DB)
-
-Validar no snapshot full:
-
-```bash
-jq '.history_24h[0] | {disk_total_gb_avg,disk_used_gb_avg,disk_free_gb_avg,disk_growth_gb_h_avg}' runtime/export/warden_payload.json
-jq '.db.history["24h"][0] | {storage_total_gb_avg,storage_growth_gb_h_avg}' runtime/export/warden_payload.json
-```
-
-Validar no frontend:
-- tab `Disk` mostra gráfico dedicado de crescimento com hint `Atual + Média janela`.
-- tab `DB` mostra gráfico dedicado de consumo/crescimento separado de `QPS/TPS`.
-
-### Sintaxe Python
-
-```bash
-python3 -m py_compile src/warden.py src/settings.py src/collector.py src/db_monitor.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/warden_clean.py scripts/weekly_archive.py
-```
-
 ## 7) Troubleshooting rápido
 
-- **API sem dados**: validar paths `WARDEN_*_SOURCE_PATH` e permissões de leitura.
+- **API sem dados**: validar `WARDEN_*_SOURCE_PATH` e permissões de leitura.
 - **Snapshots não atualizam**: validar cron/scheduler e logs em `runtime/logs`.
 - **Retenção não aplica**: confirmar `RETENTION_DAYS` no processo `warden.service` ativo.
 - **Docker sem métricas de host**: confirmar `MONITOR_ROOT_PATH=/hostfs`, `pid: host` e mount root host.

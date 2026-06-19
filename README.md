@@ -5,19 +5,19 @@
 ![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-2ecc71)
 
-Runtime de monitorização (collector + export + alertas) do ecossistema **MAIATRON**. Recolhe métricas de sistema e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para a API/UI e envia alertas Slack.
+Runtime de monitorização (collector + export + alertas) agnóstico de plataforma. Recolhe métricas de sistema e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para qualquer API/UI consumidora e envia alertas Slack.
 
 ## Funcionalidades principais
 
 - Recolha periódica de CPU, RAM, disco, rede, processos e top consumo de disco.
 - Monitorização de schemas MariaDB (tamanhos, crescimento).
-- Export de snapshots `fast`, `heavy` e `full` para consumo pela API PHP no host MAIATRON.
+- Export de snapshots `fast`, `heavy` e `full` para consumo por API PHP no host ou frontend externo.
 - Warden Clean com retenção configurável (`RETENTION_DAYS`).
 - Alertas Slack imediatos e digest diário, com limite de notificações por incidente.
 - Arquivo semanal agregado (`runtime/archive/weekly`).
 - Housekeeping conservador via runner `warden_clean`, visível no Overseer.
-- Pasta [`public/`](public/) com UI/API Warden (fatia MAIATRON-HUB), importável e publicável de forma controlada.
-- Scripts PowerShell: import/publicação de `public/`, SSH e limpeza remota em BAZE2.
+- Pasta [`public/`](public/) com UI/API Warden (fatia publicável no HUB do host), importável e publicável de forma controlada.
+- Scripts PowerShell: import/publicação de `public/`, SSH e limpeza remota.
 
 ## Stack tecnológica
 
@@ -28,7 +28,7 @@ Runtime de monitorização (collector + export + alertas) do ecossistema **MAIAT
 | Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
 | Deploy host | systemd + cron |
 | Deploy alternativo | Docker Compose (pipeline only; DB externa) |
-| Frontend/API | Versionados em `public/`; em produção dentro de `MAIATRON-HUB` (URL `/MAIATRON/apps/warden/`) |
+| Frontend/API | Versionados em `public/`; publicáveis no HUB da plataforma host |
 | CI/CD | Não configurado no repositório |
 
 ## Arquitetura
@@ -47,7 +47,7 @@ flowchart LR
     cron --> slack
     export --> snapshots[runtime/export/*.json]
   end
-  subgraph hub [MAIATRON-HUB public]
+  subgraph frontendConsumer [Host platform HUB]
     api[api.php]
     ui[index.html]
     api --> snapshots
@@ -62,7 +62,7 @@ Fluxo resumido:
 
 1. `src.warden` recolhe métricas e grava em `Warden.warden_metrics`.
 2. `scripts/export_payload.py` gera `warden_fast_snapshot.json`, `warden_heavy_snapshot.json`, `warden_payload.json`.
-3. `api.php` (no host MAIATRON) serve `ops_fast`, `ops_heavy`, `full`.
+3. `api.php` (no HUB do host ou Docker local) serve `ops_fast`, `ops_heavy`, `full`.
 4. Jobs auxiliares: Warden Clean, Slack e arquivo semanal.
 
 ## Estrutura do projeto
@@ -76,8 +76,8 @@ Warden/
 ├── README.md
 ├── .agents/                       # Políticas, runbook, handoff, MCP, templates e Skills
 ├── public/www/                    # UI/API local (Docker :8080)
-├── public/backend/                # API PHP canónica + auth MAIATRON
-├── deploy/hub/                    # Fatia para publicação no MAIATRON-HUB
+├── public/backend/                # API PHP canónica + adaptador auth do host
+├── deploy/hub/                    # Fatia para publicação no HUB do host
 ├── src/, scripts/, requirements.txt
 ├── docker-compose.yml             # Wrapper web local (include → docker/compose.dev.yml)
 ├── docker/                        # Dockerfiles, Compose especializados e nginx dev
@@ -91,13 +91,13 @@ Warden/
 
 - **Host:** Linux com Python 3.10+, MariaDB acessível, systemd (opcional) e cron.
 - **Docker (opcional):** Docker Engine + Compose v2; DB MariaDB externa ao compose.
-- **Produção BAZE2 (ops):** SSH com chave em `secrets/.ssh/`; ver [`secrets/README.md`](secrets/README.md).
+- **Produção (ops):** SSH com chave em `secrets/.ssh/`; ver [`secrets/README.md`](secrets/README.md).
 - **Windows (ops):** PowerShell 5.1+ para scripts `*.ps1`.
 
 ## Instalação (host)
 
 ```bash
-cd /home/eferreira/MAIATRON/Warden
+cd "$WARDEN_RUNTIME_ROOT"   # ex.: /opt/warden
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -107,7 +107,7 @@ cp secrets/database.json.example secrets/database.json
 .venv/bin/python -m src.warden --setup
 ```
 
-Path canónico em produção: `/home/eferreira/MAIATRON/Warden`. Templates antigos usavam `/opt/warden` — não usar em instalações novas.
+Definir `WARDEN_RUNTIME_ROOT` no ambiente ou em `secrets/production.deploy.local.env` para scripts de ops. Templates antigos usavam `/opt/warden` como path genérico.
 
 ## Configuração
 
@@ -132,6 +132,16 @@ Variáveis principais (ver `.env.example`):
 | `SLACK_ALERT_MAX_NOTIFICATIONS` | Máximo de notificações por incidente (`5` por defeito) |
 | `SLACK_DIGEST_HOUR_UTC`, `SLACK_DIGEST_MINUTE_UTC` | Hora do digest diário Slack (`08:30` por defeito) |
 
+Variáveis da API PHP (host/HUB):
+
+| Variável | Descrição |
+|---|---|
+| `WARDEN_RUNTIME_ROOT` | Raiz do runtime para resolver snapshots |
+| `WARDEN_HUB_ROOT` | Raiz do HUB para secrets partilhados |
+| `WARDEN_*_SOURCE_PATH` | Override de paths dos snapshots |
+| `WARDEN_AUTH_DB_NAME` | Schema de auth do host (fallback legacy: `MAIATRON`) |
+| `WARDEN_API_CACHE_DIR` | Cache da API |
+
 ## Utilização
 
 Recolha única e export:
@@ -146,12 +156,13 @@ Recolha única e export:
 Serviço systemd + cron:
 
 ```bash
+# Ajustar paths em systemd/warden.service ao deploy real
 sudo cp systemd/warden.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now warden
 systemctl --user stop warden.service || true
 systemctl --user disable warden.service || true
-crontab -e   # colar scripts/crontab.example
+crontab -e   # colar scripts/crontab.example (ajustar WARDEN_ROOT)
 ```
 
 Contrato operacional:
@@ -168,28 +179,30 @@ Contrato operacional:
 | Recolha única | `.venv/bin/python -m src.warden --once` |
 | Export | `.venv/bin/python scripts/export_payload.py --mode {fast,heavy,full}` |
 | Warden Clean retenção | `.venv/bin/python scripts/warden_clean.py` |
-| Runner `warden_clean` | `./scripts/warden_clean.sh --dry-run` |
+| Runner `warden_clean` | `WARDEN_ROOT=/opt/warden ./scripts/warden_clean.sh --dry-run` |
 | SSH remoto | `.\scripts\Invoke-WardenSsh.ps1` (PowerShell) |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
 | Importar `public/` | `.\scripts\import-public-from-prod.ps1` |
 | Publicar `public/` | `.\scripts\publish-public.ps1 -DryRun` (depois sem dry-run, com OK explícito) |
 | Dev UI/API Docker | `.\scripts\start-warden-dev.ps1` |
 
-## API e frontend (MAIATRON-HUB)
+## API e frontend
 
-Código em [`public/`](public/); em produção sob `/usr/share/nginx/html/MAIATRON-HUB/frontend|backend/...`. URL pública nginx:
+Código em [`public/`](public/); em produção publicado sob `$WARDEN_HUB_ROOT/frontend|backend/...`. URLs dependem do vhost/nginx do host.
 
 | Recurso | URL típica |
 |---|---|
 | UI (local Docker) | `http://127.0.0.1:8080/` |
 | API (local Docker) | `http://127.0.0.1:8080/api.php` |
-| UI (produção HUB) | `/MAIATRON/apps/warden/` (nginx) |
+| UI (produção) | Configurada no reverse proxy do host |
 
 | `action=` | Uso |
 |---|---|
 | `ops_fast` | Snapshot leve |
 | `ops_heavy` | Snapshot pesado |
 | `full` | Payload completo |
+
+O adaptador de auth em `public/backend/core/shared/` é opcional e específico da plataforma host onde o HUB está integrado.
 
 ## Testes, lint e build
 
@@ -209,11 +222,11 @@ curl -I http://127.0.0.1:8080/
 curl -s "http://127.0.0.1:8080/api.php?action=ops_fast" | head
 ```
 
-Smoke em produção (host BAZE, com auth MAIATRON):
+Smoke em produção (ajustar URL ao vhost do host):
 
 ```bash
-curl -I http://127.0.0.1/MAIATRON/apps/warden/index.html
-curl -s "http://127.0.0.1/MAIATRON/apps/warden/api.php?action=ops_fast" | head
+curl -I http://127.0.0.1/apps/warden/index.html
+curl -s "http://127.0.0.1/apps/warden/api.php?action=ops_fast" | head
 ```
 
 **Lint / CI:** não há ferramenta de lint nem pipeline CI configurados no repositório.
@@ -248,11 +261,11 @@ Host metrics: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `n
 
 ### Publicação do `public/` em produção
 
-Ver [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md). **Não altera** o pipeline em `/home/eferreira/MAIATRON/Warden` até pedido explícito.
+Ver [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md). **Não altera** o pipeline em `$WARDEN_RUNTIME_ROOT` até pedido explícito.
 
 Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Producao_Step_by_Step.md).
 
-## Produção (BAZE2) — operações
+## Produção — operações
 
 | Runbook | Conteúdo |
 |---|---|
@@ -261,11 +274,11 @@ Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Produca
 
 ```powershell
 .\scripts\setup-secrets-from-wells-api.ps1
-.\scripts\run-production-cleanup.ps1
+.\scripts\run-production-cleanup.ps1 -DryRunOnly
 .\scripts\publish-public.ps1 -DryRun
 ```
 
-O runner `warden_clean` vive em `/home/eferreira/overseer-runners/warden_clean/run.sh`; o crontab real deve conter exatamente uma linha com `# overseer:warden_clean`. Se o runner existir mas o cron estiver ausente, seguir o runbook de produção para criar backup do crontab e inserir a linha de forma idempotente.
+O runner `warden_clean` no Overseer deve exportar `WARDEN_ROOT`/`WARDEN_RUNTIME_ROOT`. O crontab real deve conter exatamente uma linha com `# overseer:warden_clean`.
 
 ## Troubleshooting
 
@@ -277,7 +290,7 @@ O runner `warden_clean` vive em `/home/eferreira/overseer-runners/warden_clean/r
 | Path legado `/opt/warden` | `crontab -l`, `systemctl cat warden` |
 | Export vazio | DB `Warden` acessível; `python -m src.warden --once` |
 | Docker sem métricas de disco | `MONITOR_ROOT_PATH` e mount `/hostfs` |
-| API 401 em Docker local | Auth MAIATRON; esperado sem sessão — validar UI estática e PHP a responder |
+| API 401 em Docker local | Auth do host; esperado sem sessão — validar UI estática e PHP a responder |
 | `public/` vazio | `.\scripts\import-public-from-prod.ps1` |
 | `snapshot_unavailable` em dev | `.\scripts\sync-prod-snapshots.ps1` ou gerar JSON localmente |
 | SCP sync: bad permissions | `icacls` na chave em `secrets/.ssh/id_ed25519` (ver `docs/Warden_Public_Deploy.md`) |
@@ -287,7 +300,14 @@ O runner `warden_clean` vive em `/home/eferreira/overseer-runners/warden_clean/r
 - Não commitar `.env`, `.env.docker`, `secrets/database.json`, `secrets/slack.json`, chaves SSH nem `production.deploy.local.env`.
 - Usar apenas ficheiros `*.example` no Git.
 - Não versionar `runtime/export`, `runtime/logs`, `runtime/cache`, `runtime/archive` (exceto `.gitkeep`).
-- A limpeza operacional versionada vive em `scripts/warden_clean.sh` e cobre retenção de dados, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema, logs textuais SQL grandes e cache Docker antiga sem apagar backups, dados, secrets, volumes, binlogs, relay logs ou snapshots ativos.
+
+### Warden Clean — o que nunca apaga
+
+A limpeza operacional em `scripts/warden_clean.sh` cobre retenção de dados, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema, logs textuais SQL grandes e cache Docker antiga.
+
+**Preserva sempre:** `.git/`, `.venv/`, `secrets/`, `.env`, snapshots ativos em `runtime/export/*.json`, arquivos semanais `runtime/archive/weekly/*.json.gz`, `runtime/cache/.gitkeep`, dados MySQL, binlogs, relay logs, volumes Docker, backups e dumps.
+
+Retenção de arquivos semanais: `scripts/weekly_archive.py` com `WEEKLY_ARCHIVE_RETENTION_WEEKS` — não confundir com o runner diário.
 
 ## MCP servers e Skills
 

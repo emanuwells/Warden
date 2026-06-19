@@ -1,6 +1,6 @@
 param(
     [string]$DeployEnvPath = 'secrets/production.deploy.local.env',
-    [string]$RemoteHubRoot = '/usr/share/nginx/html/MAIATRON-HUB',
+    [string]$RemoteHubRoot = '',
     [switch]$DryRun,
     [switch]$SkipValidation,
     [switch]$Rollback,
@@ -81,6 +81,10 @@ $deployEnv = Resolve-RepoPath -Path $DeployEnvPath
 $envValues = Read-EnvFile -Path $deployEnv
 $hostName = Get-EnvValue -Values $envValues -Keys @('WARDEN_DEPLOY_SSH_HOST', 'WELLS_API_DEPLOY_SSH_HOST')
 $userName = Get-EnvValue -Values $envValues -Keys @('WARDEN_DEPLOY_SSH_USER', 'WELLS_API_DEPLOY_SSH_USER')
+if ($RemoteHubRoot -eq '') {
+    $RemoteHubRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_HUB_ROOT') -Default ''
+}
+if ($RemoteHubRoot -eq '') { throw 'Definir WARDEN_HUB_ROOT em secrets/production.deploy.local.env ou -RemoteHubRoot.' }
 if ($hostName -eq '' -or $userName -eq '') { throw 'Host/user SSH em falta.' }
 
 $target = "${userName}@${hostName}"

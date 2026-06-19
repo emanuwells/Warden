@@ -1,6 +1,9 @@
 """
 Warden Clean retention.
 Handles automatic data retention by deleting operational records older than N days.
+
+Target tables are optional during bootstrap or partial schemas; missing tables are
+skipped with a warning so the job stays resilient across environments.
 """
 
 import logging

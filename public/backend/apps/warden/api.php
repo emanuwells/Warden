@@ -155,22 +155,49 @@ function warden_envelope(string $kind, array $payload, array $meta): array
     ];
 }
 
+function warden_runtime_root(): string
+{
+    $root = trim((string)(getenv('WARDEN_RUNTIME_ROOT') ?: getenv('WARDEN_ROOT') ?: ''));
+    return $root !== '' ? rtrim($root, '/\\') : '';
+}
+
+function warden_hub_root(): string
+{
+    $root = trim((string)(getenv('WARDEN_HUB_ROOT') ?: ''));
+    return $root !== '' ? rtrim($root, '/\\') : '';
+}
+
+function warden_env_first(array $keys): string
+{
+    foreach ($keys as $key) {
+        $value = getenv($key);
+        if (is_string($value) && trim($value) !== '') {
+            return trim($value);
+        }
+    }
+    return '';
+}
+
 function warden_db_secret_candidate_paths(): array
 {
     $candidates = [];
-    $envPath = getenv('MAIATRON_AUTH_DB_SECRET');
-    if (is_string($envPath) && trim($envPath) !== '') {
-        $candidates[] = trim($envPath);
+    $envPath = warden_env_first(['WARDEN_AUTH_DB_SECRET', 'MAIATRON_AUTH_DB_SECRET']);
+    if ($envPath !== '') {
+        $candidates[] = $envPath;
     }
 
     $candidates[] = __DIR__ . '/../../../secrets/database.local.php';
     $candidates[] = __DIR__ . '/../../../secrets/database.local.json';
-    $candidates[] = '/opt/maiatron/MAIATRON_HUB/secrets/database.json';
-    $candidates[] = '/opt/maiatron/Warden/secrets/database.json';
-    $candidates[] = '/opt/maiatron/Overseer/secrets/database.json';
-    $candidates[] = '/opt/maiatron/fontetron/secrets/database.json';
-    $candidates[] = '/home/eferreira/MAIATRON/Warden/secrets/database.json';
-    $candidates[] = '/home/eferreira/MAIATRON/Overseer/secrets/database.json';
+
+    $runtimeRoot = warden_runtime_root();
+    if ($runtimeRoot !== '') {
+        $candidates[] = $runtimeRoot . '/secrets/database.json';
+    }
+
+    $hubRoot = warden_hub_root();
+    if ($hubRoot !== '') {
+        $candidates[] = $hubRoot . '/secrets/database.json';
+    }
 
     $normalized = [];
     foreach ($candidates as $path) {
@@ -239,7 +266,8 @@ function warden_db_warden(): PDO
 
 function warden_db_auth(): PDO
 {
-    return warden_db_connect('MAIATRON');
+    $dbName = warden_env_first(['WARDEN_AUTH_DB_NAME']) ?: 'MAIATRON';
+    return warden_db_connect($dbName);
 }
 
 function warden_db_ensure_schema(): void
@@ -1003,8 +1031,11 @@ function warden_source_path(): string
     if ($env !== '') return $env;
     $legacy = trim((string)(getenv('MAIATRON_WARDEN_FULL_SNAPSHOT_PATH') ?: ''));
     if ($legacy !== '') return $legacy;
-    $repoPath = '/opt/maiatron/Warden/runtime/export/warden_payload.json';
-    if (is_file($repoPath) && is_readable($repoPath)) return $repoPath;
+    $runtimeRoot = warden_runtime_root();
+    if ($runtimeRoot !== '') {
+        $repoPath = warden_path_join($runtimeRoot, 'runtime/export/warden_payload.json');
+        if (is_file($repoPath) && is_readable($repoPath)) return $repoPath;
+    }
     return __DIR__ . '/warden_payload.json';
 }
 
@@ -1019,8 +1050,11 @@ function warden_fast_source_path(): string
     if ($env !== '') return $env;
     $legacy = trim((string)(getenv('MAIATRON_WARDEN_FAST_SNAPSHOT_PATH') ?: ''));
     if ($legacy !== '') return $legacy;
-    $repoPath = '/opt/maiatron/Warden/runtime/export/warden_fast_snapshot.json';
-    if (is_file($repoPath) && is_readable($repoPath)) return $repoPath;
+    $runtimeRoot = warden_runtime_root();
+    if ($runtimeRoot !== '') {
+        $repoPath = warden_path_join($runtimeRoot, 'runtime/export/warden_fast_snapshot.json');
+        if (is_file($repoPath) && is_readable($repoPath)) return $repoPath;
+    }
     return warden_path_join(dirname(warden_source_path()), 'warden_fast_snapshot.json');
 }
 
@@ -1030,15 +1064,18 @@ function warden_heavy_source_path(): string
     if ($env !== '') return $env;
     $legacy = trim((string)(getenv('MAIATRON_WARDEN_HEAVY_SNAPSHOT_PATH') ?: ''));
     if ($legacy !== '') return $legacy;
-    $repoPath = '/opt/maiatron/Warden/runtime/export/warden_heavy_snapshot.json';
-    if (is_file($repoPath) && is_readable($repoPath)) return $repoPath;
+    $runtimeRoot = warden_runtime_root();
+    if ($runtimeRoot !== '') {
+        $repoPath = warden_path_join($runtimeRoot, 'runtime/export/warden_heavy_snapshot.json');
+        if (is_file($repoPath) && is_readable($repoPath)) return $repoPath;
+    }
     return warden_path_join(dirname(warden_source_path()), 'warden_heavy_snapshot.json');
 }
 
 function warden_cache_dir(): string
 {
-    $env = trim((string)(getenv('MAIATRON_WARDEN_CACHE_DIR') ?: ''));
-    $dir = $env !== '' ? $env : (rtrim(sys_get_temp_dir(), '/\\') . '/maiatron_warden_api_cache');
+    $env = warden_env_first(['WARDEN_API_CACHE_DIR', 'MAIATRON_WARDEN_CACHE_DIR']);
+    $dir = $env !== '' ? $env : (rtrim(sys_get_temp_dir(), '/\\') . '/warden_api_cache');
     if (!is_dir($dir)) {
         @mkdir($dir, 0770, true);
     }

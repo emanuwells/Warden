@@ -6,7 +6,7 @@
 |---|---|---|---|
 | Local (Docker) | `http://127.0.0.1:8080/` | `.env` + `secrets/database.json` | UI/API dev |
 | Pipeline (Docker) | N/A (interno) | `.env.docker` | Collector + scheduler |
-| Produção BAZE2 | `/home/eferreira/MAIATRON/Warden` | `.env` real | systemd + cron |
+| Produção | `$WARDEN_RUNTIME_ROOT` | `.env` real | systemd + cron |
 
 ## Build
 
@@ -18,7 +18,7 @@
 
 | Plataforma | Método | Observações |
 |---|---|---|
-| Host Linux | `systemd` + `cron` | Path canónico: `/home/eferreira/MAIATRON/Warden` |
+| Host Linux | `systemd` + `cron` | Path via `WARDEN_RUNTIME_ROOT` |
 | Docker Pipeline | `docker/compose.pipeline.yml` | Collector + scheduler |
 | Docker Dev | `docker-compose.yml` | UI/API local (Nginx + PHP-FPM) |
 

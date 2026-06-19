@@ -15,7 +15,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $dst '.ssh') | Out-Null
 
 $files = @(
     @{ Src = 'secrets\production.deploy.local.env'; Dst = 'secrets\production.deploy.local.env' },
-    @{ Src = 'secrets\maiatron.deploy.local.env'; Dst = 'secrets\maiatron.deploy.local.env' },
+    @{ Src = 'secrets\platform.deploy.local.env'; Dst = 'secrets\platform.deploy.local.env' },
     @{ Src = 'secrets\environments.local.json'; Dst = 'secrets\environments.local.json' },
     @{ Src = 'secrets\.ssh\id_ed25519'; Dst = 'secrets\.ssh\id_ed25519' }
 )

@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WARDEN_ROOT="${WARDEN_ROOT:-/home/eferreira/MAIATRON/Warden}"
-PYTHON_BIN="${WARDEN_PYTHON_BIN:-$WARDEN_ROOT/.venv/bin/python}"
-CRONTAB_LOG_DIR="${WARDEN_CRONTAB_LOG_DIR:-/home/eferreira/D4MAIA/_crontab_logs}"
+# PRESERVE (never deleted by this script):
+#   - .git/, .venv/, secrets/, .env
+#   - runtime/export/*.json (active snapshots)
+#   - runtime/archive/weekly/*.json.gz (weekly archives; retention via weekly_archive.py)
+#   - runtime/cache/.gitkeep
+#   - MySQL data, binlogs, relay logs, Docker volumes
+#   - backups, dumps, application directories outside Warden runtime
+
+WARDEN_ROOT="${WARDEN_ROOT:-${WARDEN_RUNTIME_ROOT:-}}"
+PYTHON_BIN="${WARDEN_PYTHON_BIN:-${WARDEN_ROOT:+$WARDEN_ROOT/.venv/bin/python}}"
+CRONTAB_LOG_DIR="${WARDEN_CRONTAB_LOG_DIR:-}"
 DOCKER_BUILD_CACHE_UNTIL="${WARDEN_DOCKER_BUILD_CACHE_UNTIL:-168h}"
 TEMP_FILE_MTIME_DAYS="${WARDEN_TEMP_FILE_MTIME_DAYS:-1}"
 CACHE_MTIME_DAYS="${WARDEN_CACHE_MTIME_DAYS:-1}"
@@ -16,6 +24,8 @@ usage() {
 Usage: warden_clean.sh [--dry-run]
 
 Runs conservative Warden housekeeping for the Overseer-managed warden_clean job.
+Requires WARDEN_ROOT or WARDEN_RUNTIME_ROOT to point at the Warden install directory.
+
 It does not remove backups, dumps, application directories, Docker volumes,
 MySQL data, MySQL binlogs, relay logs, secrets, virtualenvs, or active export snapshots.
 EOF
@@ -56,9 +66,23 @@ while (( $# > 0 )); do
   shift
 done
 
+if [[ -z "$WARDEN_ROOT" && -f "$(pwd)/scripts/warden_clean.py" ]]; then
+  WARDEN_ROOT="$(pwd)"
+fi
+
+if [[ -z "$WARDEN_ROOT" ]]; then
+  log ERROR "WARDEN_ROOT ou WARDEN_RUNTIME_ROOT deve estar definido."
+  usage
+  exit 1
+fi
+
 if [[ ! -d "$WARDEN_ROOT" ]]; then
   log ERROR "WARDEN_ROOT nao existe: $WARDEN_ROOT"
   exit 1
+fi
+
+if [[ -z "$PYTHON_BIN" ]]; then
+  PYTHON_BIN="$WARDEN_ROOT/.venv/bin/python"
 fi
 
 cd "$WARDEN_ROOT"
@@ -108,8 +132,8 @@ run "Remover ficheiros temporarios de editor e sistema dentro do Warden" \
     \( -path "$WARDEN_ROOT/.git" -o -path "$WARDEN_ROOT/.venv" -o -path "$WARDEN_ROOT/secrets" \) -prune -o \
     \( -type f \( -name '*~' -o -name '.DS_Store' -o -name 'Thumbs.db' -o -name '*.swp' -o -name '*.swo' \) -mtime +"$TEMP_FILE_MTIME_DAYS" -exec rm -f {} + \)
 
-if [[ -d "$CRONTAB_LOG_DIR" ]]; then
-  run "Truncar logs grandes de crontab MAIATRON" \
+if [[ -n "$CRONTAB_LOG_DIR" && -d "$CRONTAB_LOG_DIR" ]]; then
+  run "Truncar logs grandes de crontab do host" \
     find "$CRONTAB_LOG_DIR" -maxdepth 1 -type f -name '*.txt' -size +5M -mtime +1 -exec truncate -s 0 {} +
 fi
 

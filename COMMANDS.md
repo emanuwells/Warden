@@ -2,6 +2,8 @@
 
 Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `.agents/ops/HANDOFF.md`.
 
+Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de comandos SSH remotos.
+
 ## Ambiente
 
 | Ação | Comando |
@@ -24,7 +26,7 @@ Comandos rápidos do Warden. Este ficheiro é referência operacional curta; det
 | Warden Clean retenção | `.venv/bin/python scripts/warden_clean.py` |
 | Slack alerts dry-run | `.venv/bin/python scripts/slack_alerts.py --dry-run` |
 | Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
-| Warden clean dry-run | `bash scripts/warden_clean.sh --dry-run` |
+| Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |
 
 ## Validação
 
@@ -48,15 +50,15 @@ Comandos rápidos do Warden. Este ficheiro é referência operacional curta; det
 | Logs pipeline | `docker compose -f docker/compose.pipeline.yml logs -f` |
 | Sync snapshots prod | `.\scripts\sync-prod-snapshots.ps1` |
 
-## Produção BAZE2
+## Produção (SSH)
 
 | Ação | Comando |
 |---|---|
 | Configurar secrets locais | `.\scripts\setup-secrets-from-wells-api.ps1` |
 | SSH wrapper | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand '<comando>'` |
-| Ver estado remoto | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd /home/eferreira/MAIATRON/Warden && git status --short --branch'` |
+| Ver estado remoto | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd $WARDEN_RUNTIME_ROOT && git status --short --branch'` |
 | Ver cron `warden_clean` | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'crontab -l 2>/dev/null \| grep -n "overseer:warden_clean" \|\| true'` |
-| Pull remoto seguro | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd /home/eferreira/MAIATRON/Warden && git pull --ff-only origin main'` |
+| Pull remoto seguro | `.\scripts\Invoke-WardenSsh.ps1 -RemoteCommand 'cd $WARDEN_RUNTIME_ROOT && git pull --ff-only origin main'` |
 | Limpeza produção dry-run | `.\scripts\run-production-cleanup.ps1 -DryRunOnly` |
 | Limpeza produção | `.\scripts\run-production-cleanup.ps1` |
 | Publicar `public/` dry-run | `.\scripts\publish-public.ps1 -DryRun` |

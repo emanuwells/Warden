@@ -2,8 +2,8 @@
 # Warden — Cron Schedule (Ubuntu)
 # ============================================
 # Add to crontab: crontab -e
-# Path canónico em produção MAIATRON (ajustar se necessário):
-WARDEN_ROOT=/home/eferreira/MAIATRON/Warden
+# Ajustar WARDEN_ROOT ao path de instalação do runtime no host:
+WARDEN_ROOT=/opt/warden
 # Legado: algumas instalações antigas usavam /opt/warden (symlink ou cópia).
 
 # FAST snapshot (light lane, near-real-time)

@@ -8,7 +8,7 @@
 | Scripts principais | `src.warden` (CLI), `scripts/export_payload.py`, `scripts/warden_clean.py` |
 | Bibliotecas | `psutil`, `PyMySQL`, `python-dotenv`, `requests` |
 | Persistência | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
-| Autenticação | N/A (collector interno); API MAIATRON usa auth MAIATRON |
+| Autenticação | N/A (collector interno); API usa adaptador auth do host (opcional) |
 | Testes | `python -m py_compile` (smoke manual) |
 
 ## Estrutura
