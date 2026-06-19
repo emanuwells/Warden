@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | Aceite (Fase 1 em produção) |
+| Estado | Aceite (Fase 1 + Fase 2 em produção) |
 | Data | 2026-06-19 |
 | Decisores | Equipa Warden / infra |
 
@@ -32,10 +32,10 @@ O collector (`systemd`) persiste na DB; crons exportam JSON; a API faz merge e e
 - Thresholds stale: fast 12s, heavy 10 min.
 - `COLLECT_INTERVAL=15` no collector.
 
-### Fase 2 (planeada)
+### Fase 2 (implementada 2026-06-19)
 
-- Collector invoca export fast após cada insert.
-- Cron fast reduzido a fallback 1×/min.
+- Collector invoca export fast após cada insert (`EXPORT_FAST_ON_COLLECT=1`).
+- Cron fast: fallback 1×/min via `export_fast_fallback.sh`.
 - Ver `docs/Warden_Pipeline.md`.
 
 ## Alternativas consideradas

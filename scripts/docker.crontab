@@ -2,37 +2,8 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 BASH_ENV=/app/runtime/.cron_env
 
-# FAST snapshot (2s cadence)
-* * * * * sleep 0;  flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 2;  flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 4;  flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 6;  flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 8;  flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 10; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 12; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 14; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 16; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 18; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 20; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 22; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 24; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 26; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 28; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 30; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 32; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 34; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 36; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 38; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 40; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 42; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 44; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 46; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 48; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 50; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 52; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 54; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 56; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
-* * * * * sleep 58; flock -n /tmp/warden_export_fast.lock -c 'cd /app && python scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'
+# FAST snapshot fallback (Phase 2 — primary: collector EXPORT_FAST_ON_COLLECT)
+* * * * * flock -n /tmp/warden_export_fast.lock -c 'cd /app && bash scripts/export_fast_fallback.sh > /dev/null 2>> runtime/logs/export_fast.err.log' # warden:export_fast_fallback
 
 # HEAVY snapshot (every 5 minutes)
 */5 * * * * flock -n /tmp/warden_export_heavy.lock -c 'cd /app && python scripts/export_payload.py --mode heavy > /dev/null 2>> runtime/logs/export_heavy.err.log'

@@ -15,10 +15,18 @@ fi
 
 cd "$ROOT"
 
-# Limites alinhados com docs/Warden_Pipeline.md (Fase 1)
-FAST_MAX_AGE="${WARDEN_VALIDATE_FAST_MAX_AGE:-20}"
+# Limites alinhados com docs/Warden_Pipeline.md (Fase 2)
+FAST_MAX_AGE="${WARDEN_VALIDATE_FAST_MAX_AGE:-}"
 HEAVY_MAX_AGE="${WARDEN_VALIDATE_HEAVY_MAX_AGE:-360}"
 FULL_MAX_AGE="${WARDEN_VALIDATE_FULL_MAX_AGE:-960}"
+
+if [[ -z "$FAST_MAX_AGE" && -f ".env" ]]; then
+  collect_interval="$(grep -E '^COLLECT_INTERVAL=' .env 2>/dev/null | cut -d= -f2 | tr -d ' \r' || true)"
+  if [[ -n "${collect_interval:-}" && "$collect_interval" =~ ^[0-9]+$ ]]; then
+    FAST_MAX_AGE=$((collect_interval + 10))
+  fi
+fi
+FAST_MAX_AGE="${FAST_MAX_AGE:-30}"
 
 FAST_REL="${EXPORT_FAST_PATH:-runtime/export/warden_fast_snapshot.json}"
 HEAVY_REL="${EXPORT_HEAVY_PATH:-runtime/export/warden_heavy_snapshot.json}"

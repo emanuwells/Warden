@@ -89,6 +89,7 @@ class Settings:
 
     # Export
     export_path: str = "runtime/export/warden_payload.json"
+    export_fast_on_collect: bool = True
 
     # Logging
     log_level: str = "INFO"
@@ -152,6 +153,7 @@ class Settings:
             process_top_scan_interval_seconds=int(os.getenv("PROCESS_TOP_SCAN_INTERVAL_SECONDS", "15")),
             process_top_network_scan_interval_seconds=int(os.getenv("PROCESS_TOP_NETWORK_SCAN_INTERVAL_SECONDS", "15")),
             export_path=os.getenv("EXPORT_PATH", "runtime/export/warden_payload.json"),
+            export_fast_on_collect=_env_bool("EXPORT_FAST_ON_COLLECT", True),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             log_file=os.getenv("LOG_FILE", "runtime/logs/warden.log"),
             db_monitor_enabled=_env_bool("DB_MONITOR_ENABLED", True),

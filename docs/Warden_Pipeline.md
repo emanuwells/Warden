@@ -79,54 +79,43 @@ Critérios de sucesso:
 | Warden Clean | 01:00 | `# overseer:warden_clean` |
 | Host hygiene | 01:30 | `# overseer:host_hygiene` |
 
-## Fase 2 — Desenho (não implementada)
+## Fase 2 — Implementada (2026-06-19)
 
-Objectivo: reduzir carga de cron fast mantendo latência &lt; 15s, alinhando export ao ciclo do collector.
+Objectivo: reduzir carga de cron fast mantendo latência alinhada ao `COLLECT_INTERVAL`.
 
-### Proposta
+### Arquitectura actual
 
 ```text
 systemd warden.service
         │
         ├── collect + insert DB
-        └── pós-insert: export_payload.export(mode="fast")   ◄── NOVO
+        └── pós-insert: export_payload.export(mode="fast")   (EXPORT_FAST_ON_COLLECT=1)
         │
-cron fast (fallback) 1×/min  ──► apenas se snapshot &gt; 30s
-cron heavy */5       ──► inalterado
-cron full */15       ──► inalterado
+cron fast fallback 1×/min  ──► export_fast_fallback.sh (só se snapshot >30s)
+cron heavy */5           ──► inalterado
+cron full */15           ──► inalterado
 ```
 
-### Alterações previstas
+### Componentes
 
-| Componente | Mudança |
+| Componente | Ficheiro |
 |---|---|
-| `src/warden.py` (`cmd_run`) | Após `insert_metric`, invocar export fast (subprocess ou import de `export_payload.export`) |
-| `scripts/export_payload.py` | Expor `export(mode="fast")` como API estável para import |
-| `scripts/crontab.example` | Reduzir de 30 para 1 linha fast/min (fallback) |
-| `scripts/validate-pipeline.sh` | Ajustar limiar fast para `COLLECT_INTERVAL + 5s` |
-| Monitorização | Métrica: idade do fast snapshot; alerta se &gt; 30s |
+| Hook collector | `src/fast_snapshot.py`, `src/warden.py` |
+| Flag env | `EXPORT_FAST_ON_COLLECT=1` (default) |
+| Cron fallback | `scripts/export_fast_fallback.sh` |
+| Patch crontab prod | `scripts/patch-crontab-phase2-fast.sh` |
 
-### Critérios de aceitação (Fase 2)
+### Rollback
 
-1. Idade média do fast snapshot ≤ `COLLECT_INTERVAL + 3s` em 24h.
-2. Redução ≥ 90% de execuções `export_payload --mode fast` via cron.
-3. `ops_fast` sem regressão de `stale: false` em condições normais.
-4. Rollback: repor bloco cron fast de 30 linhas; remover hook no collector.
+1. `EXPORT_FAST_ON_COLLECT=0` em `.env` + `systemctl restart warden`
+2. Repor bloco cron fast de 30 linhas (ver git history de `crontab.example`)
+3. Ou `git revert` do commit Phase 2
 
-### Riscos e mitigação
+### Critérios de aceitação
 
-| Risco | Mitigação |
-|---|---|
-| Export fast bloqueia collector | Export em thread/subprocess com timeout; falha não impede collect |
-| Lock flock entre cron e collector | Manter `flock` no cron fallback; export inline sem lock ou lock curto |
-| Pico CPU no host | Medir antes/depois; manter cron fallback |
-| Divergência fast/heavy | Heavy continua independente; full cron reconcilia |
-
-### Fora de âmbito (Fase 2)
-
-- WebSocket / SSE para push real-time
-- API que lê só DB (sem JSON)
-- Eliminar `warden_payload.json` legacy
+1. Idade do fast snapshot ≤ `COLLECT_INTERVAL + 10s` (`validate-pipeline.sh`)
+2. Redução ≥ 90% de execuções cron fast (30/min → ≤1/min efectiva)
+3. `ops_fast` sem regressão
 
 Ver ADR: [docs/adr/0001-warden-dual-snapshot-pipeline.md](adr/0001-warden-dual-snapshot-pipeline.md).
 

@@ -29,6 +29,8 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |
 | Host hygiene dry-run | `WARDEN_HUB_ROOT=/path/to/hub bash scripts/host-hygiene.sh --dry-run` |
 | Validar pipeline (prod) | `WARDEN_RUNTIME_ROOT=/path bash scripts/validate-pipeline.sh` |
+| Patch cron fast Fase 2 | `WARDEN_RUNTIME_ROOT=/path WARDEN_EXPORT_FAST_LOCK=/tmp/lock bash scripts/patch-crontab-phase2-fast.sh --dry-run` |
+| Export fast fallback manual | `bash scripts/export_fast_fallback.sh` |
 
 ## Validação
 
@@ -38,6 +40,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Bash syntax | `bash -n scripts/warden_clean.sh` |
 | Bash syntax host hygiene | `bash -n scripts/host-hygiene.sh` |
 | Bash syntax validate pipeline | `bash -n scripts/validate-pipeline.sh` |
+| Bash syntax export fast fallback | `bash -n scripts/export_fast_fallback.sh` |
 | PHP API local | `php -l public/www/api.php` |
 | PHP API canónica | `php -l public/backend/apps/warden/api.php` |
 | Compose web | `docker compose config` |

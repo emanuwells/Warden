@@ -5,6 +5,9 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [Unreleased] - 2026-06-19
 
 ### Adicionado
+- Pipeline Fase 2: `src/fast_snapshot.py` exporta fast após cada collect (`EXPORT_FAST_ON_COLLECT`).
+- `scripts/export_fast_fallback.sh` — cron fallback inteligente (só se snapshot >30s).
+- `scripts/patch-crontab-phase2-fast.sh` — migração idempotente do cron fast.
 - `docs/Warden_Pipeline.md` — Fase 1 (checklist operacional) e desenho Fase 2.
 - `docs/adr/0001-warden-dual-snapshot-pipeline.md` — ADR do pipeline dual snapshot.
 - `scripts/validate-pipeline.sh` — validação de frescura dos snapshots e serviço `warden`.
@@ -20,6 +23,8 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - `export_payload.py` envia logs INFO para stdout (evita crescimento de `export_fast.err.log`).
 
 ### Alterado
+- Cron fast: de 30×/min para fallback 1×/min (`crontab.example`, `docker.crontab`).
+- `validate-pipeline.sh`: limiar fast derivado de `COLLECT_INTERVAL + 10s`.
 - `scripts/warden_clean.sh` delega logs SO/apt a `host-hygiene.sh`.
 - `scripts/run-production-cleanup.ps1` inclui passo `host-hygiene` (`-SkipHostHygiene` opcional).
 - Documentação (README, PROJECT_CONTEXT, COMMANDS, docs/*) desacoplada de branding de plataforma específica.

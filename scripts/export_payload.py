@@ -732,7 +732,7 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
     logger.info("HEAVY snapshot exported -> %s (%d bytes)", out["heavy"], out["heavy"].stat().st_size)
 
     if mode == "heavy":
-        # Fast snapshot is produced by the dedicated fast cron lane.
+        # Fast snapshot is produced by the collector hook and the cron fallback lane.
         # Avoid overwriting it here with an older capture taken at heavy start time.
         return
 
