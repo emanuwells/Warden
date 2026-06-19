@@ -79,43 +79,34 @@ Critérios de sucesso:
 | Warden Clean | 01:00 | `# overseer:warden_clean` |
 | Host hygiene | 01:30 | `# overseer:host_hygiene` |
 
-## Fase 2 — Implementada (2026-06-19)
+## Modelo Task Manager (produção)
 
-Objectivo: reduzir carga de cron fast mantendo latência alinhada ao `COLLECT_INTERVAL`.
-
-### Arquitectura actual
+Como o Task Manager do Windows: **amostragem** e **refresh da UI** em lanes separadas.
 
 ```text
-systemd warden.service
-        │
-        ├── collect + insert DB
-        └── pós-insert: export_payload.export(mode="fast")   (EXPORT_FAST_ON_COLLECT=1)
-        │
-cron fast fallback 1×/min  ──► export_fast_fallback.sh (só se snapshot >30s)
-cron heavy */5           ──► inalterado
-cron full */15           ──► inalterado
+Collector (2s)     → MariaDB apenas
+Cron fast (2s)   → warden_fast_snapshot.json (cache-only, <1s)
+Ops Center (1.2s)→ poll ops_fast
+Heavy (5 min)      → processos, histórico, disk top
 ```
 
-### Componentes
+| Lane | Intervalo | Notas |
+|---|---|---|
+| Collector | `COLLECT_INTERVAL=2` | Não exporta JSON (evita bloqueio de 12s) |
+| Export fast | 30×/min cron | `cache_only` — CPU/RAM/disco frescos |
+| Ops Center | `WARDEN_FAST_REFRESH_MS=1200` | HUB `frontend/ops-center.js` |
+| Heavy | */5 | Preenche caches de processos/disk top |
 
-| Componente | Ficheiro |
-|---|---|
-| Hook collector | `src/fast_snapshot.py`, `src/warden.py` |
-| Flag env | `EXPORT_FAST_ON_COLLECT=1` (default) |
-| Cron fallback | `scripts/export_fast_fallback.sh` |
-| Patch crontab prod | `scripts/patch-crontab-phase2-fast.sh` |
+### Porque não export inline no collector
 
-### Rollback
+O export fast com `force=True` em process tops demora **~12s** (cache fria) e bloqueava o loop — snapshot com 30–50s de atraso. Solução: lane cron dedicada + export fast só lê cache para extras pesados.
 
-1. `EXPORT_FAST_ON_COLLECT=0` em `.env` + `systemctl restart warden`
-2. Repor bloco cron fast de 30 linhas (ver git history de `crontab.example`)
-3. Ou `git revert` do commit Phase 2
+### Restaurar cron 2s em produção
 
-### Critérios de aceitação
-
-1. Idade do fast snapshot ≤ `COLLECT_INTERVAL + 10s` (`validate-pipeline.sh`)
-2. Redução ≥ 90% de execuções cron fast (30/min → ≤1/min efectiva)
-3. `ops_fast` sem regressão
+```bash
+WARDEN_RUNTIME_ROOT=/path WARDEN_EXPORT_FAST_LOCK=/tmp/maiatron_warden_export_fast.lock \
+  bash scripts/restore-crontab-fast-2s.sh
+```
 
 Ver ADR: [docs/adr/0001-warden-dual-snapshot-pipeline.md](adr/0001-warden-dual-snapshot-pipeline.md).
 

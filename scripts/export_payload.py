@@ -102,14 +102,17 @@ def _cache_write(path: Path, payload: dict[str, Any]) -> None:
     })
 
 
-def _collect_fast_live_extras() -> dict[str, Any]:
+def _collect_fast_live_extras(*, cache_only: bool = False) -> dict[str, Any]:
+    """
+    Optional process/disk extras for the fast snapshot lane.
+    cache_only=True keeps the 2s cadence fast (<1s); heavy/full lanes refresh caches.
+    """
     extras: dict[str, Any] = {}
 
     proc_ttl = max(2, int(getattr(settings, "process_top_scan_interval_seconds", 15) or 15))
     proc_payload = _cache_read(FAST_PROCESS_CACHE_PATH, proc_ttl)
-    if proc_payload is None:
+    if proc_payload is None and not cache_only:
         try:
-            # Fast lane keeps process tops fresh without forcing expensive full payload rebuilds.
             proc_payload = collect_process_tops(force=True, include_network=False)
             _cache_write(FAST_PROCESS_CACHE_PATH, proc_payload)
         except Exception as exc:
@@ -121,9 +124,8 @@ def _collect_fast_live_extras() -> dict[str, Any]:
             int(getattr(settings, "process_top_network_scan_interval_seconds", 15) or 15),
         )
         net_payload = _cache_read(FAST_PROCESS_NET_CACHE_PATH, net_ttl)
-        if net_payload is None:
+        if net_payload is None and not cache_only:
             try:
-                # Network process ranking is significantly heavier; keep it on a slower cache lane.
                 net_payload = collect_process_tops(force=True, include_network=True)
                 _cache_write(FAST_PROCESS_NET_CACHE_PATH, net_payload)
             except Exception as exc:
@@ -142,7 +144,7 @@ def _collect_fast_live_extras() -> dict[str, Any]:
 
     disk_ttl = max(30, int(getattr(settings, "disk_top_scan_interval_seconds", 300) or 300))
     disk_payload = _cache_read(FAST_DISK_TOP_CACHE_PATH, disk_ttl)
-    if disk_payload is None:
+    if disk_payload is None and not cache_only:
         try:
             disk_payload = collect_disk_top(force=True)
             _cache_write(FAST_DISK_TOP_CACHE_PATH, disk_payload)
@@ -675,7 +677,7 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
     generated_at = datetime.now(timezone.utc).isoformat()
 
     latest, current, db_current, alerts_current = _collect_base_state(latest_limit=220)
-    live_extras = _collect_fast_live_extras()
+    live_extras = _collect_fast_live_extras(cache_only=(mode == "fast"))
 
     if mode == "fast":
         fast_payload = _build_fast_payload(generated_at, latest, current, db_current, alerts_current, live_extras=live_extras)

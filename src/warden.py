@@ -33,7 +33,6 @@ from src.db_writer import ensure_table, insert_metric, fetch_latest, fetch_summa
 from src.warden_clean import cleanup
 from src.db_monitor import collect_db_metrics
 from src.alerts import evaluate_alerts
-from src.fast_snapshot import export_fast_snapshot_after_collect
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -127,8 +126,7 @@ def cmd_run():
     """
     ensure_table()
     interval = settings.collect_interval
-    logger.info("Warden collector started (interval=%ds, retention=%dd, export_fast_on_collect=%s).",
-                interval, settings.retention_days, settings.export_fast_on_collect)
+    logger.info("Warden collector started (interval=%ds, retention=%dd).", interval, settings.retention_days)
 
     last_cleanup_date = None
 
@@ -136,7 +134,9 @@ def cmd_run():
         try:
             payload = collect(include_heavy=False)
             insert_metric(payload)
-            export_fast_snapshot_after_collect()
+            if settings.export_fast_on_collect:
+                from src.fast_snapshot import export_fast_snapshot_after_collect
+                export_fast_snapshot_after_collect()
             logger.debug("Metric captured: CPU=%.1f%% MEM=%.1f%%",
                          payload["cpu"]["total_percent"],
                          payload["memory"]["percent"])

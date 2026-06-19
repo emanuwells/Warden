@@ -29,7 +29,8 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |
 | Host hygiene dry-run | `WARDEN_HUB_ROOT=/path/to/hub bash scripts/host-hygiene.sh --dry-run` |
 | Validar pipeline (prod) | `WARDEN_RUNTIME_ROOT=/path bash scripts/validate-pipeline.sh` |
-| Patch cron fast Fase 2 | `WARDEN_RUNTIME_ROOT=/path WARDEN_EXPORT_FAST_LOCK=/tmp/lock bash scripts/patch-crontab-phase2-fast.sh --dry-run` |
+| Patch cron fast Fase 2 | `WARDEN_RUNTIME_ROOT=/path bash scripts/patch-crontab-phase2-fast.sh --dry-run` |
+| Restaurar cron fast 2s | `WARDEN_RUNTIME_ROOT=/path WARDEN_EXPORT_FAST_LOCK=/tmp/lock bash scripts/restore-crontab-fast-2s.sh` |
 | Export fast fallback manual | `bash scripts/export_fast_fallback.sh` |
 
 ## Validação
