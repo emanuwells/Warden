@@ -11,6 +11,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../core/shared/maiatron-auth-session.php';
 require_once __DIR__ . '/../../core/shared/maiatron-authz.php';
 
+$wardenPathsLocal = __DIR__ . '/warden-paths.local.php';
+if (is_file($wardenPathsLocal)) {
+    require_once $wardenPathsLocal;
+}
+
 const WARDEN_API_SCHEMA_VERSION = 2;
 const WARDEN_API_APP_KEY = 'warden';
 const WARDEN_FAST_STALE_MS = 12000;

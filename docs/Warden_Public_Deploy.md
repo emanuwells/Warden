@@ -41,4 +41,6 @@ Frontend: `data-warden-dev="1"` + `dev-auth-stub.js`.
 
 ## Snapshots na API
 
-Ordem de resolução em `api.php`: env `WARDEN_*_SOURCE_PATH` → `$WARDEN_RUNTIME_ROOT/runtime/export/` → ficheiros ao lado do payload.
+Ordem de resolução em `api.php`: `warden-paths.local.php` (deploy) → env `WARDEN_*_SOURCE_PATH` → `$WARDEN_RUNTIME_ROOT/runtime/export/` → ficheiros ao lado do payload.
+
+No HUB de produção, copiar `warden-paths.local.php.example` para `warden-paths.local.php` com os paths reais do runtime (não versionar o `.local.php`).

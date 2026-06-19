@@ -5,7 +5,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [Unreleased] - 2026-06-19
 
 ### Adicionado
-- Variáveis agnósticas na API PHP: `WARDEN_RUNTIME_ROOT`, `WARDEN_HUB_ROOT`, `WARDEN_AUTH_DB_NAME`, `WARDEN_API_CACHE_DIR`.
+- `warden-paths.local.php.example` e loader em `api.php` para paths locais no HUB sem alterar php-fpm.
 - Secção "Warden Clean — o que nunca apaga" no README e runbook de produção.
 - Bloco PRESERVE em `scripts/warden_clean.sh`.
 - `EXPORT_FAST_PATH`, `EXPORT_HEAVY_PATH`, `WEEKLY_ARCHIVE_RETENTION_WEEKS` em `.env.example`.

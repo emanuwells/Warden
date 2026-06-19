@@ -1,0 +1,21 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Overrides locais de paths Warden (copiar para warden-paths.local.php no deploy).
+ * Não versionar warden-paths.local.php com valores reais de produção.
+ */
+
+$wardenPaths = [
+    'WARDEN_RUNTIME_ROOT' => '/opt/warden',
+    'WARDEN_SOURCE_PATH' => '/opt/warden/runtime/export/warden_payload.json',
+    'WARDEN_FAST_SOURCE_PATH' => '/opt/warden/runtime/export/warden_fast_snapshot.json',
+    'WARDEN_HEAVY_SOURCE_PATH' => '/opt/warden/runtime/export/warden_heavy_snapshot.json',
+    'WARDEN_AUTH_DB_NAME' => 'MAIATRON',
+];
+
+foreach ($wardenPaths as $key => $value) {
+    if ($value !== '' && getenv($key) === false) {
+        putenv($key . '=' . $value);
+    }
+}

@@ -134,10 +134,7 @@ foreach ($map in $publishMaps) {
 
     Write-Host "Backup remoto: $remote -> $remoteBackup"
     if (-not $DryRun) {
-        Invoke-Remote -SshArgs $sshScp.Ssh -Command @"
-set -e
-if [ -d '$remote' ]; then cp -a '$remote' '$remoteBackup'; else mkdir -p '$remote'; fi
-"@
+        Invoke-Remote -SshArgs $sshScp.Ssh -Command "if [ -d '$remote' ]; then cp -a '$remote' '$remoteBackup'; else mkdir -p '$remote'; fi"
     }
 
     Write-Host "Publicar: $localDir -> ${target}:$remote/"

@@ -26,8 +26,10 @@
 ## Produção
 
 - Pipeline: `$WARDEN_RUNTIME_ROOT` (valor real no `production.deploy.local.env` local)
-- HUB: `$WARDEN_HUB_ROOT` — publicar só `deploy/hub/` com `publish-public.ps1`
-- Git remoto: `27aca6a` (`main...origin/main` limpo)
+- HUB: `$WARDEN_HUB_ROOT` — publicado em 2026-06-19 (`publish-public.ps1`, backup `*.bak_20260619_115647`)
+- HUB `api.php`: novo + `warden-paths.local.php` com paths do runtime
+- ACL `www-data` em `runtime/` e `runtime/export/` para leitura dos snapshots
+- Git remoto: ver abaixo
 - Serviço `warden`: active
 - Cron `warden_clean`: 1 linha `# overseer:warden_clean`
 - Overseer manifest: `cwd` em `$WARDEN_RUNTIME_ROOT` — compatível com novo `warden_clean.sh` (fallback por diretório)
@@ -35,6 +37,16 @@
 - Export fast: OK (`export_payload.py --mode fast`)
 - Snapshots: `warden_fast_snapshot.json` (67K), `warden_heavy_snapshot.json` (17M) atualizados
 - API HUB: 403 sem sessão (esperado); ficheiro `api.php` presente no HUB
+
+### Smoke 2026-06-19 (HUB publish)
+
+| Verificação | Resultado |
+|---|---|
+| `publish-public.ps1` | OK — HUB `api.php` 19 Jun |
+| `warden-paths.local.php` no HUB | OK — paths para `runtime/export/` |
+| ACL `www-data` em `runtime/export` | OK |
+| Snapshot fast legível + `generated_at` | OK (2026-06-19T10:58Z) |
+| API `ops_fast` sem sessão | 403 (esperado) |
 
 ### Smoke 2026-06-19 (final)
 
@@ -54,9 +66,9 @@
 
 ## Próximo passo
 
-1. Monitorizar disco (90%) e log do cron `warden_clean` às 01:00.
-2. `publish-public.ps1` só após validação explícita, quando houver alterações em `public/` no HUB.
-3. Opcional: definir `WARDEN_CRONTAB_LOG_DIR` no runner Overseer para truncar logs de crontab do host.
+1. Validar Warden app e Ops Center no browser (com sessão) — dados devem refletir `generated_at` recente.
+2. Monitorizar cron `warden_clean` às 01:00 (log ainda vazio).
+3. Opcional: envs `WARDEN_*` no php-fpm pool (redundante se `warden-paths.local.php` existir).
 
 ## Skills / MCP (esta entrega)
 
