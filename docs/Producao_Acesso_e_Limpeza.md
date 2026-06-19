@@ -151,6 +151,14 @@ ssh USER@HOST 'df -h; systemctl is-active warden; \
   ls -lh $WARDEN_RUNTIME_ROOT/runtime/export/*.json | head -3'
 ```
 
+Validação do pipeline (snapshots frescos + serviço):
+
+```bash
+ssh USER@HOST 'cd $WARDEN_RUNTIME_ROOT && bash scripts/validate-pipeline.sh'
+```
+
+Ver também [`docs/Warden_Pipeline.md`](Warden_Pipeline.md) (Fase 1 checklist e Fase 2 desenho).
+
 Registar em `.agents/ops/HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
 
 ## 6. Host hygiene (logs SO e artefactos .bak)

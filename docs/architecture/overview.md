@@ -28,13 +28,15 @@ Runtime de monitorização agnóstico de plataforma. Recolhe métricas de sistem
 ## Fluxo Principal
 
 ```text
-src.warden (collector) --> MariaDB (warden_metrics)
-cron/systemd --> export_payload.py --> runtime/export/*.json
+src.warden (collector, COLLECT_INTERVAL) --> MariaDB (warden_metrics)
+cron fast/heavy/full --> export_payload.py --> runtime/export/*.json
 cron/systemd --> warden_clean.py --> MariaDB (cleanup)
 cron/systemd --> slack_alerts.py --> Slack webhooks
 cron/systemd --> slack_daily_digest.py --> Slack webhooks
-runtime/export/*.json --> api.php --> UI (frontend consumer)
+runtime/export/*.json --> api.php (ops_fast / ops_heavy) --> UI (polling)
 ```
+
+Detalhe do pipeline e roadmap Fase 2: `docs/Warden_Pipeline.md`.
 
 ## Fronteiras
 

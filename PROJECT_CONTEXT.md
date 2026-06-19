@@ -70,6 +70,7 @@ Todos os paths de produção são definidos por ambiente. Variáveis canónicas:
 | Frontend Warden | `$WARDEN_HUB_ROOT/frontend/apps/warden/` |
 | API Warden (canónica) | `$WARDEN_HUB_ROOT/backend/apps/warden/api.php` |
 | Snapshots export | `$WARDEN_RUNTIME_ROOT/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
+| Pipeline (Fase 1/2) | `docs/Warden_Pipeline.md`, ADR `docs/adr/0001-warden-dual-snapshot-pipeline.md` |
 | Runner `warden_clean` | Path do Overseer no host (ver runbook) |
 | Cron `warden_clean` | Uma linha `# overseer:warden_clean` no crontab real |
 | Legado templates | `/opt/warden` — evitar em instalações novas |

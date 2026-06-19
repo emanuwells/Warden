@@ -28,6 +28,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
 | Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |
 | Host hygiene dry-run | `WARDEN_HUB_ROOT=/path/to/hub bash scripts/host-hygiene.sh --dry-run` |
+| Validar pipeline (prod) | `WARDEN_RUNTIME_ROOT=/path bash scripts/validate-pipeline.sh` |
 
 ## Validação
 
@@ -36,6 +37,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Python compile | `python -m py_compile src/warden.py src/settings.py src/alerts.py src/collector.py src/db_monitor.py src/slack_notifier.py scripts/export_payload.py scripts/slack_alerts.py scripts/slack_daily_digest.py scripts/warden_clean.py scripts/weekly_archive.py` |
 | Bash syntax | `bash -n scripts/warden_clean.sh` |
 | Bash syntax host hygiene | `bash -n scripts/host-hygiene.sh` |
+| Bash syntax validate pipeline | `bash -n scripts/validate-pipeline.sh` |
 | PHP API local | `php -l public/www/api.php` |
 | PHP API canónica | `php -l public/backend/apps/warden/api.php` |
 | Compose web | `docker compose config` |

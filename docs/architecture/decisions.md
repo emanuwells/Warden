@@ -10,6 +10,7 @@ Resumo vivo das decisões arquiteturais principais. Para decisões relevantes, c
 | 2026-06-01 | Snapshots JSON em `runtime/export/` | Interface agnóstica com API PHP consumidora | N/A |
 | 2026-06-01 | `warden_clean` como único contrato de limpeza | Centralizar housekeeping no Overseer | N/A |
 | 2026-06-19 | Documentação e envs agnósticos de plataforma | Warden consumível por qualquer frontend | N/A |
+| 2026-06-19 | Pipeline dual snapshot fast/heavy/full (Fase 1) | Near-real-time sem WebSocket; Fase 2 planeada | [0001](../adr/0001-warden-dual-snapshot-pipeline.md) |
 
 ## Regras
 

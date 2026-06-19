@@ -5,6 +5,15 @@
 # Ajustar WARDEN_ROOT ao path de instalação do runtime no host:
 WARDEN_ROOT=/opt/warden
 # Legado: algumas instalações antigas usavam /opt/warden (symlink ou cópia).
+#
+# Alinhamento pipeline (Fase 1) — ver docs/Warden_Pipeline.md
+# | Lane   | Schedule        | Snapshot                         | Stale API (ms) |
+# |--------|-----------------|----------------------------------|----------------|
+# | fast   | 30×/min (~2s)   | runtime/export/warden_fast_*     | 12000          |
+# | heavy  | */5             | runtime/export/warden_heavy_*    | 600000         |
+# | full   | */15            | runtime/export/warden_payload.*  | 600000         |
+# Collector (systemd): COLLECT_INTERVAL=15 — independente dos exports fast.
+# Logs INFO do export vão para stdout (redireccionado para /dev/null); stderr → export_*.err.log
 
 # FAST snapshot (light lane, near-real-time)
 * * * * * sleep 0;  flock -n /tmp/warden_export_fast.lock -c 'cd $WARDEN_ROOT && /usr/bin/python3 scripts/export_payload.py --mode fast > /dev/null 2>> runtime/logs/export_fast.err.log'

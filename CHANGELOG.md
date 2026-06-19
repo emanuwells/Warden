@@ -5,6 +5,9 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [Unreleased] - 2026-06-19
 
 ### Adicionado
+- `docs/Warden_Pipeline.md` — Fase 1 (checklist operacional) e desenho Fase 2.
+- `docs/adr/0001-warden-dual-snapshot-pipeline.md` — ADR do pipeline dual snapshot.
+- `scripts/validate-pipeline.sh` — validação de frescura dos snapshots e serviço `warden`.
 - `warden-paths.local.php.example` e loader em `api.php` para paths locais no HUB sem alterar php-fpm.
 - Secção "Warden Clean — o que nunca apaga" no README e runbook de produção.
 - Bloco PRESERVE em `scripts/warden_clean.sh`.
