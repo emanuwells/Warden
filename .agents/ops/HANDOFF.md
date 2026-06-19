@@ -6,7 +6,7 @@
 |---|---|
 | Última atualização | 2026-06-19 |
 | Objetivo actual | Fase 1 pipeline dual snapshot + desenho Fase 2 |
-| Estado | Alinhado após validação prod |
+| Estado | Alinhado — local, origin e produção em `6730524` |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
 ## Pipeline Warden — Fase 1 (2026-06-19)
@@ -24,7 +24,7 @@
 
 | Componente | Valor |
 |---|---|
-| `COLLECT_INTERVAL` | 15s |
+| `COLLECT_INTERVAL` | 15s (default `.env.example`; produção: **2s**) |
 | Export fast | ~2s (30×/min cron) |
 | Export heavy | */5 |
 | Export full | */15 |
@@ -35,6 +35,17 @@
 - Collector invoca export fast após cada insert.
 - Cron fast reduzido a fallback 1×/min.
 - Ver `docs/Warden_Pipeline.md` e ADR `0001`.
+
+### Validação produção 2026-06-19 (commit `6730524`)
+
+```text
+validate-pipeline.sh: PASS
+  fast idade=1s, heavy=261s, full=546s
+  warden: active
+  COLLECT_INTERVAL=2s (prod)
+ops_fast localhost: HTTP 403 (auth — API acessível, não 5xx)
+df -h /: 82G/98G (88%)
+```
 
 ## Host hygiene (2026-06-19)
 
