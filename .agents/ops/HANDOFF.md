@@ -6,7 +6,7 @@
 |---|---|
 | Última atualização | 2026-06-19 |
 | Objetivo atual | Host hygiene diário (logs SO + artefactos .bak) |
-| Estado | Implementado em prod — scripts, sudoers, cron, 1ª execução |
+| Estado | Alinhado — local, origin e produção em `9ae9d85` |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
 ## Host hygiene (2026-06-19)
@@ -30,9 +30,15 @@
 - Journald vacuum 7d, truncagem logs SO >50M, `apt-get clean`.
 - API `ops_fast`: HTTP 200 pós-limpeza.
 
+### Warden Clean 2026-06-19 (pós-push)
+
+- `warden_clean.sh`: apagadas **8508 linhas** (>7 dias) em `warden_*`.
+- Docker prune: ~97 MB recuperados.
+- `df -h /`: 82G/98G (88%), serviço `warden` active.
+
 ### Pendente git
 
-Nenhum — alinhado após commit/push.
+Nenhum — `9ae9d85` em local, `origin/main` e produção.
 
 ## Produção (Warden)
 
