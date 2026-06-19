@@ -6,7 +6,7 @@
 |---|---|
 | Última atualização | 2026-06-19 |
 | Objetivo atual | Alinhamento prod/git, Warden Clean seguro e desacoplamento agnóstico de plataforma |
-| Estado | Produção alinhada em `b147e1f`; pipeline e export validados |
+| Estado | Concluído — local, origin e produção em `27aca6a` |
 | Última versão registada | 2.1.0 (`VERSION`) |
 
 ## Local genérico (Docker)
@@ -27,23 +27,24 @@
 
 - Pipeline: `$WARDEN_RUNTIME_ROOT` (valor real no `production.deploy.local.env` local)
 - HUB: `$WARDEN_HUB_ROOT` — publicar só `deploy/hub/` com `publish-public.ps1`
-- Git remoto: `b147e1f` (`main...origin/main` limpo após `git pull --ff-only`)
+- Git remoto: `27aca6a` (`main...origin/main` limpo)
 - Serviço `warden`: active
 - Cron `warden_clean`: 1 linha `# overseer:warden_clean`
-- Disco `/`: 91% (85G/98G) em 2026-06-19
+- Overseer manifest: `cwd` em `$WARDEN_RUNTIME_ROOT` — compatível com novo `warden_clean.sh` (fallback por diretório)
+- Disco `/`: 90% (84G/98G) em 2026-06-19 pós-limpeza
 - Export fast: OK (`export_payload.py --mode fast`)
 - Snapshots: `warden_fast_snapshot.json` (67K), `warden_heavy_snapshot.json` (17M) atualizados
 - API HUB: 403 sem sessão (esperado); ficheiro `api.php` presente no HUB
 
-### Smoke 2026-06-19
+### Smoke 2026-06-19 (final)
 
 | Verificação | Resultado |
 |---|---|
-| `git pull --ff-only origin main` | OK → `b147e1f` |
+| `git push` + `git pull --ff-only origin main` (prod) | OK → `27aca6a` |
 | `systemctl is-active warden` | active |
 | `export_payload.py --mode fast` | OK |
-| `warden_clean.sh --dry-run` | OK (sem WARN) |
-| `df -h /` | 91% |
+| `warden_clean.sh --dry-run` (só `cwd`, como Overseer) | OK (sem WARN) |
+| `df -h /` | 90% |
 
 ## Warden Clean
 
@@ -53,9 +54,9 @@
 
 ## Próximo passo
 
-1. Aplicar alterações agnósticas em prod após commit/push (novo `warden_clean.sh` requer `WARDEN_ROOT` no runner Overseer).
-2. `publish-public.ps1` só após validação explícita, quando houver alterações em `public/`.
-3. Monitorizar disco (91%) — considerar limpeza real com `run-production-cleanup.ps1` após deploy do script atualizado.
+1. Monitorizar disco (90%) e log do cron `warden_clean` às 01:00.
+2. `publish-public.ps1` só após validação explícita, quando houver alterações em `public/` no HUB.
+3. Opcional: definir `WARDEN_CRONTAB_LOG_DIR` no runner Overseer para truncar logs de crontab do host.
 
 ## Skills / MCP (esta entrega)
 
