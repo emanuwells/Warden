@@ -88,4 +88,18 @@
 ### Ações
 
 - `host-hygiene.sh`: purga de revisões snap `disabled` + `refresh.retain=2`.
-- Sincronização local ↔ prod (git) e execução imediata de `run-production-cleanup.ps1`.
+- Sincronização local ↔ prod (`61bea8c`) e execução imediata de `run-production-cleanup.ps1`.
+
+### Resultado
+
+| Métrica | Antes | Depois |
+|---|---:|---:|
+| `/` | 83% usado / 17G livres | 83% usado / 17G livres |
+| Revisão snap removida | chromium rev 3459 (disabled) | removida |
+| `refresh.retain` | não definido | `2` |
+| `warden.service` | active | active |
+
+### Notas
+
+- Apenas revisões `disabled` são removidas; snaps activos (chromium, docker, lxd, …) preservados.
+- O volume `/var/lib/snapd` (~3.1G) reflecte snaps em uso; a retenção limita crescimento futuro.
