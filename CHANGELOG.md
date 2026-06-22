@@ -4,6 +4,12 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ## [Unreleased] - 2026-06-22
 
+### Adicionado
+- `scripts/weekly_archive.py --prune-only`: retenção de arquivos semanais sem gerar novo arquivo.
+- `scripts/warden_clean.sh`: invoca prune semanal diário; remove `WARDEN_NGINX_TEMP_DIR` órfão (>1 dia).
+- `scripts/run-production-cleanup.ps1`: diagnóstico alargado (top consumers, binlogs, journald) e purga binlogs pós-limpeza.
+- `scripts/host-hygiene.sh`: remove revisões snap desactivadas e define `refresh.retain` (default 2) no cron diário.
+
 ### Corrigido
 - API Warden (`api.php`): bloco `operations` propagado em payloads `fast`, `heavy` e `full` para a aba Info do HUB.
 - Frontend HUB (`warden.js`): merge de `operations` nos snapshots fast/heavy.

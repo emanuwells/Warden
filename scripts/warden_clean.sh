@@ -16,6 +16,8 @@ DOCKER_BUILD_CACHE_UNTIL="${WARDEN_DOCKER_BUILD_CACHE_UNTIL:-168h}"
 TEMP_FILE_MTIME_DAYS="${WARDEN_TEMP_FILE_MTIME_DAYS:-1}"
 CACHE_MTIME_DAYS="${WARDEN_CACHE_MTIME_DAYS:-1}"
 SERVER_TEMP_MTIME_DAYS="${WARDEN_SERVER_TEMP_MTIME_DAYS:-2}"
+NGINX_TEMP_DIR="${WARDEN_NGINX_TEMP_DIR:-/tmp/nginx_backup_temp}"
+NGINX_TEMP_MTIME_DAYS="${WARDEN_NGINX_TEMP_MTIME_DAYS:-1}"
 DRY_RUN=0
 
 usage() {
@@ -106,6 +108,7 @@ fi
 
 if [[ -x "$PYTHON_BIN" ]]; then
   run "Executar retencao de dados Warden Clean" "$PYTHON_BIN" scripts/warden_clean.py "${CLEAN_ARGS[@]}"
+  run "Aplicar retencao de arquivos semanais Warden" "$PYTHON_BIN" scripts/weekly_archive.py --prune-only
 else
   log WARN "Python Warden nao encontrado ou sem execucao: $PYTHON_BIN"
 fi
@@ -173,7 +176,12 @@ for temp_dir in /tmp /var/tmp; do
   fi
 done
 
-# Logs SO, apt cache e artefactos .bak: scripts/host-hygiene.sh (cron # overseer:host_hygiene)
+if [[ -e "$NGINX_TEMP_DIR" ]]; then
+  run "Remover staging antigo de backup nginx" \
+    find "$NGINX_TEMP_DIR" -mindepth 0 -maxdepth 0 -mtime +"$NGINX_TEMP_MTIME_DAYS" -exec rm -rf {} +
+fi
+
+# Logs SO, apt cache, snaps desactivados e artefactos .bak: scripts/host-hygiene.sh (cron # overseer:host_hygiene)
 
 if command -v docker >/dev/null 2>&1; then
   run "Limpar cache Docker build antiga" docker builder prune -af --filter "until=$DOCKER_BUILD_CACHE_UNTIL"

@@ -14,6 +14,8 @@ HOST_HYGIENE_BAK_KEEP="${HOST_HYGIENE_BAK_KEEP:-1}"
 HOST_HYGIENE_JOURNAL_DAYS="${HOST_HYGIENE_JOURNAL_DAYS:-7}"
 HOST_HYGIENE_LOG_TRUNCATE_SIZE="${HOST_HYGIENE_LOG_TRUNCATE_SIZE:-50M}"
 HOST_HYGIENE_CRONTAB_LOG_MAX="${HOST_HYGIENE_CRONTAB_LOG_MAX:-5M}"
+HOST_HYGIENE_SNAP_PRUNE_ENABLED="${HOST_HYGIENE_SNAP_PRUNE_ENABLED:-1}"
+HOST_HYGIENE_SNAP_RETAIN="${HOST_HYGIENE_SNAP_RETAIN:-2}"
 WARDEN_CRONTAB_LOG_DIR="${WARDEN_CRONTAB_LOG_DIR:-}"
 HOST_HYGIENE_PRIVILEGED="${HOST_HYGIENE_PRIVILEGED:-0}"
 DRY_RUN=0
@@ -35,6 +37,8 @@ Variáveis:
   HOST_HYGIENE_BAK_KEEP        Cópias .bak a manter por diretório (default: 1)
   HOST_HYGIENE_JOURNAL_DAYS    Dias de journald a reter (default: 7)
   HOST_HYGIENE_LOG_TRUNCATE_SIZE Tamanho mínimo para truncar logs SO (default: 50M)
+  HOST_HYGIENE_SNAP_PRUNE_ENABLED  Remover revisões snap desactivadas (default: 1)
+  HOST_HYGIENE_SNAP_RETAIN         Revisões snap a reter por pacote (default: 2)
   WARDEN_CRONTAB_LOG_DIR       Diretório de logs crontab Overseer (opcional)
 
 Instalação sudoers: ver scripts/host-hygiene.sudoers
@@ -126,6 +130,34 @@ prune_crontab_logs() {
     find "$WARDEN_CRONTAB_LOG_DIR" -maxdepth 1 -type f -name '*.txt' -size +"$HOST_HYGIENE_CRONTAB_LOG_MAX" -exec truncate -s 0 {} +
 }
 
+prune_snap_revisions() {
+  if [[ "$HOST_HYGIENE_SNAP_PRUNE_ENABLED" != "1" ]]; then
+    log SKIP "HOST_HYGIENE_SNAP_PRUNE_ENABLED desactivado."
+    return 0
+  fi
+
+  if ! command -v snap >/dev/null 2>&1; then
+    log SKIP "snap nao disponivel."
+    return 0
+  fi
+
+  if [[ "$HOST_HYGIENE_SNAP_RETAIN" =~ ^[0-9]+$ ]] && (( HOST_HYGIENE_SNAP_RETAIN >= 2 )); then
+    run "Limitar revisões snap retidas (refresh.retain=${HOST_HYGIENE_SNAP_RETAIN})" \
+      snap set system refresh.retain="$HOST_HYGIENE_SNAP_RETAIN"
+  fi
+
+  local snapname revision
+  while read -r snapname revision; do
+    [[ -n "$snapname" && -n "$revision" ]] || continue
+    if (( DRY_RUN )); then
+      log DRYRUN "Removeria revisao snap desactivada: ${snapname} rev ${revision}"
+      continue
+    fi
+    run "Remover revisao snap desactivada ${snapname} rev ${revision}" \
+      snap remove "$snapname" --revision="$revision"
+  done < <(LANG=C snap list --all 2>/dev/null | awk '/disabled/{print $1, $3}')
+}
+
 host_log_hygiene_privileged() {
   if command -v journalctl >/dev/null 2>&1; then
     run "Vacuum journald (${HOST_HYGIENE_JOURNAL_DAYS} dias)" \
@@ -160,6 +192,8 @@ host_log_hygiene_privileged() {
   else
     log SKIP "apt-get nao disponivel."
   fi
+
+  prune_snap_revisions
 }
 
 run_privileged_section() {

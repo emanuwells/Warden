@@ -247,7 +247,27 @@ def main() -> None:
         default=int(os.getenv("WEEKLY_ARCHIVE_RETENTION_WEEKS", str(DEFAULT_RETENTION_WEEKS))),
         help="Number of weekly archives to keep.",
     )
+    parser.add_argument(
+        "--prune-only",
+        action="store_true",
+        help="Delete weekly archives beyond retention without building a new archive.",
+    )
     args = parser.parse_args()
+
+    if args.prune_only:
+        deleted = _prune_archives(args.retention_weeks)
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "prune_only": True,
+                    "retention_weeks": max(1, int(args.retention_weeks)),
+                    "deleted_old_archives": deleted,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return
 
     target = date.fromisoformat(args.target_date) if args.target_date else datetime.now(timezone.utc).date()
     start, end, week_id = _week_bounds(target)

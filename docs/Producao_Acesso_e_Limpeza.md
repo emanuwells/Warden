@@ -208,9 +208,11 @@ Script: [`scripts/host-hygiene.sh`](../scripts/host-hygiene.sh) — separado do 
 | `WARDEN_HUB_ROOT` | Limpeza `.bak_*` / `*.backup-*` no HUB |
 | `HOST_HYGIENE_NGINX_HTML` | Limpeza `.bak` em `/usr/share/nginx/html` (default) |
 | `HOST_HYGIENE_BAK_KEEP` | Cópias a manter por diretório (default: `1`) |
+| `HOST_HYGIENE_SNAP_PRUNE_ENABLED` | Remover revisões snap desactivadas (default: `1`) |
+| `HOST_HYGIENE_SNAP_RETAIN` | Revisões snap a reter por pacote via `refresh.retain` (default: `2`) |
 | `WARDEN_CRONTAB_LOG_DIR` | Truncar logs crontab Overseer >5 MB |
 
-**Não apaga:** `/BackupNGINX`, `/BackupDB`, snapshots `runtime/export/*.json`, dados de negócio. Binlogs MySQL são tratados apenas pelo Warden Clean quando configurado explicitamente.
+**Não apaga:** `/BackupNGINX`, `/BackupDB`, snapshots `runtime/export/*.json`, dados de negócio, snaps activos. Apenas revisões snap marcadas como `disabled`. Binlogs MySQL são tratados apenas pelo Warden Clean quando configurado explicitamente.
 
 ### 6.1 Instalar sudo NOPASSWD (uma vez, com sudo interactivo)
 

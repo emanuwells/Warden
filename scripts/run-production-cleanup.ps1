@@ -75,14 +75,34 @@ if ([string]::IsNullOrWhiteSpace($wardenRoot)) {
 $wardenHubRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_HUB_ROOT') -Default ''
 $wardenCrontabLogDir = Get-EnvValue -Values $envValues -Keys @('WARDEN_CRONTAB_LOG_DIR') -Default ''
 
-Write-Host "[Warden] Diagnóstico inicial..."
-Invoke-WardenRemote -Command @"
+function Invoke-WardenDiskDiagnosis {
+    param([string]$Label)
+
+    Write-Host "[Warden] Diagnóstico $Label..."
+    Invoke-WardenRemote -Command @"
 set -e
 echo '=== df ==='
 df -h / 2>/dev/null | tail -1
+echo '=== top consumers ==='
+du -xh /var/lib/mysql /var/log /home /var/cache /BackupDB /BackupNGINX $wardenRoot/runtime 2>/dev/null | sort -hr | head -20 || true
+echo '=== journald ==='
+journalctl --disk-usage 2>/dev/null || true
+echo '=== binlogs ==='
+cd $wardenRoot && .venv/bin/python - <<'PY'
+from src.db_writer import get_connection
+with get_connection() as c:
+    with c.cursor() as cur:
+        cur.execute('SHOW BINARY LOGS')
+        logs = cur.fetchall()
+        total = sum(int(r.get('File_size') or 0) for r in logs)
+        print(f'binlogs={len(logs)} total_gb={total / 1024 ** 3:.2f}')
+PY
 echo '=== Warden runtime ==='
 du -sh $wardenRoot/runtime/* 2>/dev/null || true
 "@
+}
+
+Invoke-WardenDiskDiagnosis -Label 'inicial'
 
 if (-not $SkipWarden) {
     Write-Host "[Warden] warden_clean..."
@@ -120,9 +140,17 @@ fi
 "@
 }
 
-Write-Host "[Warden] Validação final..."
+if (-not $DryRunOnly -and -not $SkipWarden) {
+    Write-Host "[Warden] Purga binlogs + optimize (pontual)..."
+    Invoke-WardenRemote -Command @"
+set -e
+cd $wardenRoot
+.venv/bin/python scripts/warden_clean.py --purge-binlogs-days 2 --optimize
+"@
+}
+
+Invoke-WardenDiskDiagnosis -Label 'final'
 Invoke-WardenRemote -Command @"
-df -h / 2>/dev/null | tail -1
 systemctl is-active warden 2>/dev/null || true
 "@
 

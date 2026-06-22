@@ -303,7 +303,7 @@ O runner `warden_clean` no Overseer deve exportar `WARDEN_ROOT`/`WARDEN_RUNTIME_
 
 ### Warden Clean — o que nunca apaga
 
-A limpeza operacional em `scripts/warden_clean.sh` cobre retenção de dados, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema, logs textuais SQL grandes e cache Docker antiga.
+A limpeza operacional em `scripts/warden_clean.sh` cobre retenção de dados, logs grandes, temporários atómicos antigos, cache regenerável, caches Python, ficheiros de editor/sistema, logs textuais SQL grandes e cache Docker antiga. O cron `host-hygiene` (01:30) complementa com journald, logs SO, cache apt e revisões snap desactivadas — nunca remove snaps activos.
 
 **Preserva sempre:** `.git/`, `.venv/`, `secrets/`, `.env`, snapshots ativos em `runtime/export/*.json`, arquivos semanais `runtime/archive/weekly/*.json.gz`, `runtime/cache/.gitkeep`, dados MySQL, binlogs, relay logs, volumes Docker, backups e dumps.
 

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Última atualização | 2026-06-19 |
+| Última atualização | 2026-06-22 |
 | Objetivo actual | Ops Center telemetria ~2s |
 | Estado | Alinhado — `8090f43` local/origin/prod |
 | Última versão registada | 2.1.0 (`VERSION`) |
@@ -55,3 +55,37 @@
 - Não foram limpos schemas de negócio (`d4maia`, `BAZE`, `GridVis_Torre_Lidador`).
 - A manutenção DB adicional foi adicionada ao Warden Clean, mas continua dependente de configuração explícita para binlogs e `OPTIMIZE`.
 - Confirmar política de backup/PITR antes de manter `WARDEN_CLEAN_BINLOG_RETENTION_DAYS=2` em produção.
+
+## Limpeza disco Produção 2026-06-22 (sessão 2)
+
+### Diagnóstico
+
+- `/` a **84%** (78G usados / 16G livres); binlogs MariaDB **83 ficheiros / ~7.87 GB**.
+- Principais consumidores fora do Warden: `/eRedes` (~11G, dados de negócio), `/BackupNGINX` (2.9G), `/var/lib/snapd` (3.1G).
+- `.env` produção já tinha `WARDEN_CLEAN_BINLOG_RETENTION_DAYS=2` e `WARDEN_CLEAN_OPTIMIZE_ENABLED=1`.
+
+### Ações executadas
+
+- `run-production-cleanup.ps1`: `warden_clean.sh` + `host-hygiene` + purga binlogs pontual.
+- Scripts actualizados em prod: `warden_clean.sh` (`--prune-only` semanal, temp nginx), `weekly_archive.py`.
+- Dry-run `warden_clean.sh` e `validate-pipeline.sh`: **PASS**.
+
+### Resultado
+
+| Métrica | Antes | Depois |
+|---|---:|---:|
+| `/` | 84% usado / 16G livres | 83% usado / 17G livres |
+| Binlogs MariaDB | 83 ficheiros / ~7.87G | 77 ficheiros / ~7.29G |
+| `warden.service` | active | active |
+
+### Notas operacionais
+
+- Libertação modesta (~1 GB): binlogs dentro da janela de 2 dias dominam o volume; não foram tocados `/eRedes`, schemas de negócio nem backups.
+- Warden Clean diário passa a incluir prune de arquivos semanais e limpeza de `WARDEN_NGINX_TEMP_DIR` órfão.
+
+## Limpeza snaps Produção 2026-06-22 (sessão 3)
+
+### Ações
+
+- `host-hygiene.sh`: purga de revisões snap `disabled` + `refresh.retain=2`.
+- Sincronização local ↔ prod (git) e execução imediata de `run-production-cleanup.ps1`.

@@ -26,6 +26,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Warden Clean retenção | `.venv/bin/python scripts/warden_clean.py` |
 | Warden Clean manutenção DB pontual | `.venv/bin/python scripts/warden_clean.py --purge-binlogs-days 2 --optimize` |
 | Warden Clean produção (cron) | `bash scripts/warden_clean.sh` — lê `WARDEN_CLEAN_*` do `.env` |
+| Arquivo semanal prune | `.venv/bin/python scripts/weekly_archive.py --prune-only` |
 | Slack alerts dry-run | `.venv/bin/python scripts/slack_alerts.py --dry-run` |
 | Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
 | Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |
