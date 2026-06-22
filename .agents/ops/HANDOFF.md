@@ -34,3 +34,24 @@
 - Pipeline: `/home/eferreira/MAIATRON/Warden`
 - HUB: `/usr/share/nginx/html/MAIATRON-HUB`
 - `COLLECT_INTERVAL=2`
+
+## Limpeza DB Produção 2026-06-22
+
+### Ações executadas
+
+- `warden_clean` produção: reteve 7 dias e removeu linhas antigas do schema Warden.
+- MariaDB binlogs: purga até `NOW() - INTERVAL 2 DAY`, sem replica ativa reportada por `SHOW REPLICA STATUS` / `SHOW SLAVE STATUS`.
+- Tabelas Warden compactadas: `warden_ingest_registry`, `warden_alert_events`, `warden_metrics`.
+
+### Resultado
+
+| Métrica | Antes | Depois |
+|---|---:|---:|
+| `/` | 97% usado / 3.4G livres | 79% usado / 20G livres |
+| Binlogs MariaDB | 194 ficheiros / ~18.58G | 98 ficheiros / ~9.39G |
+
+### Notas operacionais
+
+- Não foram limpos schemas de negócio (`d4maia`, `BAZE`, `GridVis_Torre_Lidador`).
+- A manutenção DB adicional foi adicionada ao Warden Clean, mas continua dependente de configuração explícita para binlogs e `OPTIMIZE`.
+- Confirmar política de backup/PITR antes de manter `WARDEN_CLEAN_BINLOG_RETENTION_DAYS=2` em produção.

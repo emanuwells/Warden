@@ -96,7 +96,45 @@ ssh USER@HOST 'cd $WARDEN_RUNTIME_ROOT && \
 
 Retenção por omissão: `RETENTION_DAYS=7` (`.env`).
 
-### 2.3 Arquivo semanal
+
+### 2.3 Manutenção DB opcional
+
+Usar apenas depois de confirmar que a política de backup/point-in-time recovery permite a janela escolhida. A purga de binlogs é global ao servidor MariaDB; a compactação é limitada às tabelas Warden configuradas.
+
+Diagnóstico read-only:
+
+```bash
+ssh USER@HOST 'cd $WARDEN_RUNTIME_ROOT && . .venv/bin/activate 2>/dev/null || true; python - <<"PY"
+from src.db_writer import get_connection
+with get_connection() as conn:
+    with conn.cursor() as cur:
+        cur.execute("SHOW BINARY LOGS")
+        logs = cur.fetchall()
+        total = sum(int(row.get("File_size") or 0) for row in logs)
+        print(f"binlogs={len(logs)} total_gb={total/1024/1024/1024:.2f}")
+PY'
+```
+
+Execução pontual conservadora:
+
+```bash
+ssh USER@HOST 'cd $WARDEN_RUNTIME_ROOT && \
+  . .venv/bin/activate 2>/dev/null || true; \
+  .venv/bin/python scripts/warden_clean.py --purge-binlogs-days 2 --optimize'
+```
+
+Automação por `.env`:
+
+```env
+WARDEN_CLEAN_BINLOG_RETENTION_DAYS=2
+WARDEN_CLEAN_OPTIMIZE_ENABLED=1
+WARDEN_CLEAN_OPTIMIZE_MIN_FREE_MB=512
+WARDEN_CLEAN_OPTIMIZE_TABLES=warden_metrics,warden_alert_events,warden_ingest_registry
+```
+
+Manter `WARDEN_CLEAN_BINLOG_RETENTION_DAYS=0` quando os binlogs forem necessários para recuperação granular ou replicação. Não aplicar `OPTIMIZE TABLE` a schemas de negócio sem plano de janela, backup e rollback.
+
+### 2.4 Arquivo semanal
 
 Política: `WEEKLY_ARCHIVE_RETENTION_WEEKS=6`. Antes de apagar manualmente, listar:
 
@@ -106,7 +144,7 @@ ssh USER@HOST 'du -sh $WARDEN_RUNTIME_ROOT/runtime/archive/weekly/* 2>/dev/null 
 
 Não apagar snapshots em `runtime/export/` — são regenerados pelos jobs de export mas a API pode depender do último ficheiro válido.
 
-### 2.4 O que nunca apaga
+### 2.5 O que nunca apaga
 
 `scripts/warden_clean.sh` remove apenas artefactos regeneráveis e scoped ao Warden:
 
@@ -115,7 +153,7 @@ Não apagar snapshots em `runtime/export/` — são regenerados pelos jobs de ex
 - `__pycache__`, `.pytest_cache`, `*.pyc` e `*.pyo`, excluindo `.git`, `.venv` e `secrets`;
 - ficheiros de editor/sistema antigos: `*~`, `.DS_Store`, `Thumbs.db`, `*.swp`, `*.swo`.
 
-**Nunca apaga:** snapshots JSON ativos (`runtime/export/*.json`), arquivos semanais (`runtime/archive/weekly/*.json.gz`), backups, dumps, diretórios de aplicação, volumes Docker, dados MySQL, binlogs, relay logs, secrets, virtualenvs nem `.env`.
+**Nunca apaga:** snapshots JSON ativos (`runtime/export/*.json`), arquivos semanais (`runtime/archive/weekly/*.json.gz`), backups, dumps, diretórios de aplicação, volumes Docker, dados de negócio, relay logs, secrets, virtualenvs nem `.env`. Binlogs MariaDB só são purgados quando `WARDEN_CLEAN_BINLOG_RETENTION_DAYS` está explicitamente configurado.
 
 Retenção de arquivos semanais: apenas `scripts/weekly_archive.py` — não o runner diário.
 
@@ -141,7 +179,7 @@ Só com aprovação explícita do responsável:
 
 - `rm -rf` em diretórios de aplicação ou dados de negócio;
 - `docker system prune`;
-- apagar binlogs MySQL manualmente;
+- apagar binlogs MySQL manualmente fora de `scripts/warden_clean.py --purge-binlogs-days N`;
 - `DELETE` SQL em massa fora do script versionado.
 
 ## 5. Validação pós-limpeza
@@ -172,7 +210,7 @@ Script: [`scripts/host-hygiene.sh`](../scripts/host-hygiene.sh) — separado do 
 | `HOST_HYGIENE_BAK_KEEP` | Cópias a manter por diretório (default: `1`) |
 | `WARDEN_CRONTAB_LOG_DIR` | Truncar logs crontab Overseer >5 MB |
 
-**Não apaga:** `/BackupNGINX`, `/BackupDB`, binlogs MySQL, snapshots `runtime/export/*.json`, dados de negócio.
+**Não apaga:** `/BackupNGINX`, `/BackupDB`, snapshots `runtime/export/*.json`, dados de negócio. Binlogs MySQL são tratados apenas pelo Warden Clean quando configurado explicitamente.
 
 ### 6.1 Instalar sudo NOPASSWD (uma vez, com sudo interactivo)
 

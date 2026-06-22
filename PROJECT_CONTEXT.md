@@ -62,6 +62,8 @@ Todos os paths de produção são definidos por ambiente. Variáveis canónicas:
 | `WARDEN_RUNTIME_ROOT` | Diretório raiz do runtime Warden no host |
 | `WARDEN_HUB_ROOT` | Raiz do HUB/plataforma onde a UI/API é publicada (opcional) |
 | `WARDEN_CRONTAB_LOG_DIR` | Logs do runner `warden_clean` no Overseer (opcional) |
+| `WARDEN_CLEAN_BINLOG_RETENTION_DAYS` | Purga opcional de binlogs MariaDB antigos (`0` desativa) |
+| `WARDEN_CLEAN_OPTIMIZE_ENABLED` | Compactação opcional de tabelas Warden com espaço livre interno |
 
 | Componente | Path típico (exemplo) |
 |---|---|

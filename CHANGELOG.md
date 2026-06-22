@@ -2,6 +2,15 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-06-22
+
+### Alterado
+- `src/warden_clean.py` passa a suportar manutenção DB opcional: purga configurável de binlogs e compactação de tabelas Warden com limiar mínimo de espaço livre interno.
+- `scripts/warden_clean.py` expõe `--purge-binlogs-days` e `--optimize` para execução pontual controlada.
+- `.env.example`, `README.md`, `COMMANDS.md` e runbook de produção documentam as novas opções de manutenção DB.
+
+### Operação
+- Produção: purga de binlogs MariaDB mantendo 2 dias e compactação de tabelas Warden; `/` passou de 97% para 79% usado.
 ## [Unreleased] - 2026-06-19
 
 ### Adicionado

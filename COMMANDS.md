@@ -24,6 +24,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Export heavy | `.venv/bin/python scripts/export_payload.py --mode heavy` |
 | Export full | `.venv/bin/python scripts/export_payload.py --mode full` |
 | Warden Clean retenção | `.venv/bin/python scripts/warden_clean.py` |
+| Warden Clean manutenção DB pontual | `.venv/bin/python scripts/warden_clean.py --purge-binlogs-days 2 --optimize` |
 | Slack alerts dry-run | `.venv/bin/python scripts/slack_alerts.py --dry-run` |
 | Slack digest dry-run | `.venv/bin/python scripts/slack_daily_digest.py --dry-run` |
 | Warden clean dry-run | `WARDEN_ROOT=$PWD bash scripts/warden_clean.sh --dry-run` |

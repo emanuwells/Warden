@@ -74,6 +74,10 @@ class Settings:
     # Collector
     collect_interval: int = 15        # seconds
     retention_days: int = 7
+    warden_clean_optimize_enabled: bool = False
+    warden_clean_optimize_min_free_mb: int = 512
+    warden_clean_optimize_tables: list[str] | None = None
+    warden_clean_binlog_retention_days: int = 0
     monitor_root_path: str = "/"
     disk_top_enabled: bool = True
     disk_top_root: str = "/"
@@ -137,6 +141,13 @@ class Settings:
             ssh_key_path=os.getenv("SSH_KEY_PATH", ""),
             collect_interval=int(os.getenv("COLLECT_INTERVAL", "15")),
             retention_days=int(os.getenv("RETENTION_DAYS", "7")),
+            warden_clean_optimize_enabled=_env_bool("WARDEN_CLEAN_OPTIMIZE_ENABLED", False),
+            warden_clean_optimize_min_free_mb=int(os.getenv("WARDEN_CLEAN_OPTIMIZE_MIN_FREE_MB", "512")),
+            warden_clean_optimize_tables=_env_csv(
+                "WARDEN_CLEAN_OPTIMIZE_TABLES",
+                ["warden_metrics", "warden_alert_events", "warden_ingest_registry"],
+            ),
+            warden_clean_binlog_retention_days=int(os.getenv("WARDEN_CLEAN_BINLOG_RETENTION_DAYS", "0")),
             monitor_root_path=os.getenv("MONITOR_ROOT_PATH", "/").strip() or "/",
             disk_top_enabled=_env_bool("DISK_TOP_ENABLED", True),
             disk_top_root=os.getenv("DISK_TOP_ROOT", "/"),
