@@ -26,6 +26,7 @@ from src.alerts import evaluate_alerts
 from src.collector import collect, collect_disk_top, collect_process_tops
 from src.db_monitor import HISTORY_PATH, collect_db_metrics
 from src.db_writer import fetch_latest, fetch_summary
+from src.operational_jobs import build_operations_payload
 from src.settings import BASE_DIR, settings
 
 logging.basicConfig(
@@ -525,6 +526,7 @@ def _build_fast_payload(
     current: dict[str, Any],
     db_current: dict[str, Any],
     alerts_current: list[dict[str, Any]],
+    operations: dict[str, Any],
     live_extras: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     realtime_rows = []
@@ -555,6 +557,7 @@ def _build_fast_payload(
             "current": alerts_current,
             "summary": _build_alert_summary(alerts_current),
         },
+        "operations": operations,
         "realtime": realtime_rows,
         "meta": {
             "kind": "fast",
@@ -572,6 +575,7 @@ def _build_heavy_payload(
     history_30d: list[dict[str, Any]],
     db_history: dict[str, list[dict[str, Any]]],
     alerts_history: list[dict[str, Any]],
+    operations: dict[str, Any],
     history_derivation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     history_map = {
@@ -602,6 +606,7 @@ def _build_heavy_payload(
         "alerts": {
             "history_recent": alerts_history,
         },
+        "operations": operations,
         "meta": {
             "kind": "heavy",
             "collector_interval_seconds": settings.collect_interval,
@@ -622,6 +627,7 @@ def _build_full_payload(
     history_24h: list[dict[str, Any]],
     history_7d: list[dict[str, Any]],
     history_30d: list[dict[str, Any]],
+    operations: dict[str, Any],
     history_derivation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     realtime = []
@@ -662,6 +668,7 @@ def _build_full_payload(
         "history_24h": history_24h,
         "history_7d": history_7d,
         "history_30d": history_30d,
+        "operations": operations,
         "meta": {
             "history_derivation": history_derivation or {},
         },
@@ -678,9 +685,18 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
 
     latest, current, db_current, alerts_current = _collect_base_state(latest_limit=220)
     live_extras = _collect_fast_live_extras(cache_only=(mode == "fast"))
+    operations = build_operations_payload()
 
     if mode == "fast":
-        fast_payload = _build_fast_payload(generated_at, latest, current, db_current, alerts_current, live_extras=live_extras)
+        fast_payload = _build_fast_payload(
+            generated_at,
+            latest,
+            current,
+            db_current,
+            alerts_current,
+            operations,
+            live_extras=live_extras,
+        )
         _write_json_atomic(out["fast"], fast_payload)
         logger.info("FAST snapshot exported -> %s (%d bytes)", out["fast"], out["fast"].stat().st_size)
         return
@@ -728,6 +744,7 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
         history_30d=summary_30d,
         db_history=db_history,
         alerts_history=alerts_history,
+        operations=operations,
         history_derivation=history_derivation,
     )
     _write_json_atomic(out["heavy"], heavy_payload)
@@ -739,7 +756,15 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
         return
 
     # Keep fast/full refreshed when explicitly running full mode.
-    fast_payload = _build_fast_payload(generated_at, latest, current, db_current, alerts_current, live_extras=live_extras)
+    fast_payload = _build_fast_payload(
+        generated_at,
+        latest,
+        current,
+        db_current,
+        alerts_current,
+        operations,
+        live_extras=live_extras,
+    )
     _write_json_atomic(out["fast"], fast_payload)
 
     full_payload = _build_full_payload(
@@ -754,6 +779,7 @@ def export(mode: str = "full", hours_overview: int = 24) -> None:
         history_24h=summary_24h,
         history_7d=summary_7d,
         history_30d=summary_30d,
+        operations=operations,
         history_derivation=history_derivation,
     )
     _write_json_atomic(out["full"], full_payload)

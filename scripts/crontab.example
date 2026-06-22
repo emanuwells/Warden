@@ -71,6 +71,11 @@ WARDEN_ROOT=/opt/warden
 # Overseer-visible Warden cleanup runner. Production crontab must contain this marker once.
 0 1 * * * /home/eferreira/overseer-runners/warden_clean/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_clean.txt 2>&1 # overseer:warden_clean
 
+# Overseer-visible operational jobs (Warden scripts)
+0 2 * * * /home/eferreira/overseer-runners/warden_db_backup/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_db_backup.txt 2>&1 # overseer:warden_db_backup
+0 2 * * 1 /home/eferreira/overseer-runners/warden_system_info/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_system_info.txt 2>&1 # overseer:warden_system_info
+0 3 * * * /home/eferreira/overseer-runners/warden_webserver_backup/run.sh >> /home/eferreira/D4MAIA/_crontab_logs/crontab_warden_nginx.txt 2>&1 # overseer:warden_webserver_backup
+
 # Host hygiene: logs SO, apt cache, artefactos .bak de deploy (após warden_clean).
 # Requer symlink /usr/local/sbin/warden-host-hygiene e scripts/host-hygiene.sudoers.
 30 1 * * * flock -n /tmp/host_hygiene.lock -c 'export WARDEN_HUB_ROOT=/usr/share/nginx/html/MAIATRON-HUB WARDEN_CRONTAB_LOG_DIR=/home/eferreira/D4MAIA/_crontab_logs && /usr/local/sbin/warden-host-hygiene >> /home/eferreira/D4MAIA/_crontab_logs/crontab_host_hygiene.txt 2>&1' # overseer:host_hygiene

@@ -4,6 +4,18 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ## [Unreleased] - 2026-06-22
 
+### Adicionado
+- Módulos operacionais `warden_db_backup`, `warden_system_info` e `warden_webserver_backup` em `scripts/`.
+- `src/operational_jobs.py`, `src/operational_paths.py` e `scripts/run_operational_job.py`.
+- Bloco `operations` nos snapshots `fast`/`heavy`/`full` via `export_payload.py`.
+- Tab **Info** no frontend HUB (`deploy/hub/`) com inventário de sistema e estado dos jobs.
+- Linhas Overseer no `scripts/crontab.example` para os três novos jobs.
+
+### Alterado
+- `.env.example` com variáveis de paths operacionais e exemplo `secrets/mariadb-dump.cnf.example`.
+
+## [Unreleased] - 2026-06-22
+
 ### Alterado
 - `src/warden_clean.py` passa a suportar manutenção DB opcional: purga configurável de binlogs e compactação de tabelas Warden com limiar mínimo de espaço livre interno.
 - `scripts/warden_clean.py` expõe `--purge-binlogs-days` e `--optimize` para execução pontual controlada.

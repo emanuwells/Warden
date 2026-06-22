@@ -2032,6 +2032,87 @@
 
     }
 
+    let _infoPreviewRaw = '';
+
+    function formatOpsJobStatus(status) {
+        const key = String(status || 'idle').toLowerCase();
+        if (key === 'ok') return { label: 'OK', className: 'ok' };
+        if (key === 'failed') return { label: 'Falhou', className: 'failed' };
+        if (key === 'running') return { label: 'A correr', className: 'running' };
+        if (key === 'dry_run') return { label: 'Dry-run', className: 'idle' };
+        return { label: 'Sem execução', className: 'idle' };
+    }
+
+    function renderInfoOpsCard(job) {
+        const status = formatOpsJobStatus(job?.status);
+        const duration = job?.duration_seconds != null ? `${job.duration_seconds}s` : '—';
+        const ended = job?.ended_at ? formatDateTime(job.ended_at) : '—';
+        const schedule = job?.schedule || '—';
+        const logTail = String(job?.log_tail || '').trim();
+        const logHint = logTail ? logTail.split('\n').slice(-2).join(' · ') : 'Sem log recente';
+        return `
+            <article class="info-ops-card">
+                <h4>${escapeHtml(job?.label || job?.job_id || 'Job')}</h4>
+                <div class="info-ops-status ${status.className}">${status.label}</div>
+                <div class="info-ops-meta">Agenda: ${escapeHtml(schedule)}</div>
+                <div class="info-ops-meta">Última execução: ${escapeHtml(ended)}</div>
+                <div class="info-ops-meta">Duração: ${escapeHtml(duration)}</div>
+                <div class="info-ops-meta">${escapeHtml(logHint)}</div>
+            </article>
+        `;
+    }
+
+    function applyInfoPackageFilter() {
+        const input = document.getElementById('infoPackageFilter');
+        const pre = document.getElementById('infoPackagePreview');
+        if (!pre) return;
+        const query = String(input?.value || '').trim().toLowerCase();
+        const source = _infoPreviewRaw || '';
+        if (!query) {
+            pre.textContent = source || 'Sem inventário disponível. Execute o job warden_system_info.';
+            return;
+        }
+        const filtered = source
+            .split('\n')
+            .filter((line) => line.toLowerCase().includes(query))
+            .join('\n');
+        pre.textContent = filtered || 'Nenhum pacote corresponde ao filtro.';
+    }
+
+    function renderInfoTab(data) {
+        const ops = data?.operations || {};
+        const sys = ops.warden_system_info || {};
+        const byId = ops.by_id || {};
+
+        setText('infoHostName', sys.host || '—');
+        setText('infoOsName', sys?.os?.name || '—');
+        setText('infoOsVersion', sys?.os?.version || '—');
+        const dpkg = Number(sys?.packages?.dpkg_count);
+        const snap = Number(sys?.packages?.snap_count);
+        const counts = (Number.isFinite(dpkg) || Number.isFinite(snap))
+            ? `${Number.isFinite(dpkg) ? dpkg : 0} dpkg · ${Number.isFinite(snap) ? snap : 0} snap`
+            : '—';
+        setText('infoPackageCounts', counts);
+        setText('infoGeneratedAt', sys.generated_at ? formatDateTime(sys.generated_at) : '—');
+
+        const jobsHost = document.getElementById('infoOpsJobs');
+        if (jobsHost) {
+            const jobIds = ['warden_system_info', 'warden_db_backup', 'warden_webserver_backup'];
+            jobsHost.innerHTML = jobIds
+                .map((id) => renderInfoOpsCard(byId[id] || { job_id: id, label: id }))
+                .join('');
+        }
+
+        _infoPreviewRaw = String(sys.preview || '').trim();
+        applyInfoPackageFilter();
+
+        const filter = document.getElementById('infoPackageFilter');
+        if (filter && !filter.dataset.bound) {
+            filter.dataset.bound = '1';
+            filter.addEventListener('input', applyInfoPackageFilter);
+        }
+    }
+
     function renderCpuTab(data) {
         const c = getChartColors();
         const rt = data.realtime || [];
@@ -2801,6 +2882,8 @@
         _lastPayload = data;
         if (key === 'overview') {
             safeRenderSection('overview', () => renderOverview(data));
+        } else if (key === 'info') {
+            safeRenderSection('info', () => renderInfoTab(data));
         } else if (key === 'cpu') {
             safeRenderSection('cpu', () => renderCpuTab(data));
         } else if (key === 'memory') {
@@ -2824,6 +2907,7 @@
         _lastUiRefreshAt = Date.now();
         _lastPayload = data;
         safeRenderSection('overview', () => renderOverview(data));
+        safeRenderSection('info', () => renderInfoTab(data));
         safeRenderSection('cpu', () => renderCpuTab(data));
         safeRenderSection('memory', () => renderMemoryTab(data));
         safeRenderSection('disk', () => renderDiskTab(data));

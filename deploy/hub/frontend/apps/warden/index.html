@@ -38,7 +38,7 @@
     <link rel="stylesheet" href="../../shared/maiatron-transition.css?v=20260525-v4">
     <link rel="stylesheet" href="../../shared/maiatron-app-switcher.css?v=20260525-v2">
     <!-- Styles -->
-    <link rel="stylesheet" href="warden.css?v=20260529-v1268">
+    <link rel="stylesheet" href="warden.css?v=20260622-v1">
     <script>try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];var b=n&&n.type==='back_forward';if(b){sessionStorage.removeItem('maiatron-tron-transition');document.documentElement.classList.remove('tron-entering')}else if(sessionStorage.getItem('maiatron-tron-transition')){document.documentElement.classList.add('tron-entering');window.setTimeout(function(){document.documentElement.classList.remove('tron-entering')},2500)}}catch(e){document.documentElement.classList.remove('tron-entering')}</script>
 </head>
 
@@ -311,6 +311,14 @@
                         </svg>
                         <span>Overview</span>
                     </button>
+                    <button class="tab-btn" data-tab="info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                        <span>Info</span>
+                    </button>
                     <button class="tab-btn" data-tab="cpu">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -505,6 +513,40 @@
                     </div>
                 </div>
 
+            </section>
+
+            <!-- ===================== INFO TAB ===================== -->
+            <section class="tab-content" id="tab-info">
+                <div class="info-cards-grid">
+                    <div class="info-card">
+                        <div class="info-label">Hostname</div>
+                        <div class="info-value" id="infoHostName">—</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Sistema</div>
+                        <div class="info-value" id="infoOsName">—</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Versão</div>
+                        <div class="info-value" id="infoOsVersion">—</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Inventário</div>
+                        <div class="info-value" id="infoPackageCounts">—</div>
+                    </div>
+                </div>
+                <div class="info-meta-row">
+                    <span class="info-meta-label">Última recolha:</span>
+                    <span class="info-meta-value" id="infoGeneratedAt">—</span>
+                </div>
+                <div class="info-ops-grid" id="infoOpsJobs"></div>
+                <div class="chart-card full info-preview-card">
+                    <div class="chart-header info-preview-header">
+                        <h3>Inventário de pacotes</h3>
+                        <input type="search" class="info-package-filter" id="infoPackageFilter" placeholder="Filtrar pacotes…" aria-label="Filtrar pacotes">
+                    </div>
+                    <pre class="info-preview" id="infoPackagePreview">Sem inventário disponível. Execute o job warden_system_info.</pre>
+                </div>
             </section>
 
             <!-- ===================== CPU TAB ===================== -->
@@ -870,7 +912,7 @@
     <script src="../../shared/maiatron-motion.js?v=20260518-prefix805"></script>
     <script src="../../shared/maiatron-ui-primitives.js?v=20260326-v1"></script>
     <script src="../../shared/maiatron-app-switcher.js?v=20260525-v2"></script>
-    <script src="warden.js?v=20260312-v55"></script>
+    <script src="warden.js?v=20260622-v1"></script>
 </body>
 
 </html>
