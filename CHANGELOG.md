@@ -4,6 +4,17 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ## [Unreleased] - 2026-06-22
 
+### Corrigido
+- API Warden (`api.php`): bloco `operations` propagado em payloads `fast`, `heavy` e `full` para a aba Info do HUB.
+- Frontend HUB (`warden.js`): merge de `operations` nos snapshots fast/heavy.
+
+### Alterado
+- `.env.example` e `secrets/mariadb-dump.cnf.example`: paths Warden nativos (sem `BaZe_Management`).
+- `scripts/warden_clean.sh`: lê `WARDEN_CLEAN_*` do `.env`, trunca `slack_alert_events.jsonl` e remove state antigo de `operational_jobs/`.
+- `COMMANDS.md`: documenta `warden_clean.sh` com flags via `.env`.
+
+## [Unreleased] - 2026-06-22
+
 ### Adicionado
 - Módulos operacionais `warden_db_backup`, `warden_system_info` e `warden_webserver_backup` em `scripts/`.
 - `src/operational_jobs.py`, `src/operational_paths.py` e `scripts/run_operational_job.py`.

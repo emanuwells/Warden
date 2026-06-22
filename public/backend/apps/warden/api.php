@@ -1262,6 +1262,12 @@ function warden_merge_dedicated_payloads(array $fastPayload, array $heavyPayload
         'schema_version' => WARDEN_API_SCHEMA_VERSION,
         'source' => 'dedicated_snapshots',
     ];
+    $opsFast = is_array($fastPayload['operations'] ?? null) ? $fastPayload['operations'] : [];
+    $opsHeavy = is_array($heavyPayload['operations'] ?? null) ? $heavyPayload['operations'] : [];
+    $ops = $opsFast ?: $opsHeavy;
+    if ($ops) {
+        $merged['operations'] = warden_sanitize_operations($ops);
+    }
     return $merged;
 }
 
@@ -1403,6 +1409,74 @@ function warden_alerts_summary(array $alerts): array
     ];
 }
 
+function warden_sanitize_operation_job(array $job): array
+{
+    $logTail = (string)($job['log_tail'] ?? '');
+    if (strlen($logTail) > 8000) {
+        $logTail = substr($logTail, -8000);
+    }
+
+    return [
+        'job_id' => $job['job_id'] ?? null,
+        'label' => $job['label'] ?? null,
+        'schedule' => $job['schedule'] ?? null,
+        'status' => $job['status'] ?? null,
+        'started_at' => $job['started_at'] ?? null,
+        'ended_at' => $job['ended_at'] ?? null,
+        'duration_seconds' => $job['duration_seconds'] ?? null,
+        'exit_code' => $job['exit_code'] ?? null,
+        'log_tail' => $logTail,
+        'artifacts' => is_array($job['artifacts'] ?? null) ? $job['artifacts'] : null,
+    ];
+}
+
+function warden_sanitize_operations(array $ops): array
+{
+    $out = [
+        'generated_at' => $ops['generated_at'] ?? null,
+        'jobs' => [],
+        'by_id' => [],
+        'warden_system_info' => null,
+    ];
+
+    $sys = is_array($ops['warden_system_info'] ?? null) ? $ops['warden_system_info'] : null;
+    if ($sys) {
+        $out['warden_system_info'] = [
+            'generated_at' => $sys['generated_at'] ?? null,
+            'host' => $sys['host'] ?? null,
+            'os' => is_array($sys['os'] ?? null) ? [
+                'name' => $sys['os']['name'] ?? null,
+                'version' => $sys['os']['version'] ?? null,
+            ] : null,
+            'packages' => is_array($sys['packages'] ?? null) ? [
+                'dpkg_count' => $sys['packages']['dpkg_count'] ?? null,
+                'snap_count' => $sys['packages']['snap_count'] ?? null,
+            ] : null,
+            'preview' => isset($sys['preview']) ? mb_substr((string)$sys['preview'], 0, 32000) : null,
+            'artifacts' => is_array($sys['artifacts'] ?? null) ? [
+                'text_path' => $sys['artifacts']['text_path'] ?? null,
+                'json_path' => $sys['artifacts']['json_path'] ?? null,
+            ] : null,
+        ];
+    }
+
+    foreach ((array)($ops['by_id'] ?? []) as $jobId => $job) {
+        if (!is_array($job)) {
+            continue;
+        }
+        $out['by_id'][(string)$jobId] = warden_sanitize_operation_job($job);
+    }
+
+    foreach ((array)($ops['jobs'] ?? []) as $job) {
+        if (!is_array($job)) {
+            continue;
+        }
+        $out['jobs'][] = warden_sanitize_operation_job($job);
+    }
+
+    return $out;
+}
+
 function warden_build_fast_payload(array $full): array
 {
     $current = is_array($full['current'] ?? null) ? $full['current'] : [];
@@ -1416,7 +1490,7 @@ function warden_build_fast_payload(array $full): array
         $realtime[] = warden_sanitize_realtime_row($row);
     }
 
-    return [
+    $payload = [
         'generated_at' => $full['generated_at'] ?? null,
         'current' => [
             'cpu' => $current['cpu'] ?? null,
@@ -1439,6 +1513,10 @@ function warden_build_fast_payload(array $full): array
             'schema_version' => WARDEN_API_SCHEMA_VERSION,
         ],
     ];
+    if (is_array($full['operations'] ?? null) && $full['operations']) {
+        $payload['operations'] = warden_sanitize_operations($full['operations']);
+    }
+    return $payload;
 }
 
 function warden_build_heavy_payload(array $full): array
@@ -1476,7 +1554,7 @@ function warden_build_heavy_payload(array $full): array
     $historyMap['30d'] = $hist30d;
     $dbHistoryMap['30d'] = warden_sanitize_db_history_rows($db30d);
 
-    return [
+    $payload = [
         'generated_at' => $full['generated_at'] ?? null,
         'current' => [
             'host' => $current['host'] ?? null,
@@ -1501,6 +1579,10 @@ function warden_build_heavy_payload(array $full): array
             'schema_version' => WARDEN_API_SCHEMA_VERSION,
         ],
     ];
+    if (is_array($full['operations'] ?? null) && $full['operations']) {
+        $payload['operations'] = warden_sanitize_operations($full['operations']);
+    }
+    return $payload;
 }
 
 function warden_current_split_cache(array $sourceStat): array

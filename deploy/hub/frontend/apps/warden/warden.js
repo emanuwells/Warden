@@ -2528,6 +2528,32 @@
         return _mergedPayload;
     }
 
+    function mergeOperationsFromFast(merged, fastPayload) {
+        const incoming = fastPayload?.operations;
+        if (!incoming || typeof incoming !== 'object') return merged;
+        const existing = (merged.operations && typeof merged.operations === 'object') ? merged.operations : {};
+        merged.operations = {
+            ...existing,
+            ...incoming,
+            by_id: { ...(existing.by_id || {}), ...(incoming.by_id || {}) },
+            warden_system_info: incoming.warden_system_info || existing.warden_system_info,
+        };
+        return merged;
+    }
+
+    function mergeOperationsFromHeavy(merged, heavyPayload) {
+        const incoming = heavyPayload?.operations;
+        if (!incoming || typeof incoming !== 'object') return merged;
+        const existing = (merged.operations && typeof merged.operations === 'object') ? merged.operations : {};
+        merged.operations = {
+            ...existing,
+            ...incoming,
+            by_id: { ...(incoming.by_id || {}), ...(existing.by_id || {}) },
+            warden_system_info: existing.warden_system_info || incoming.warden_system_info,
+        };
+        return merged;
+    }
+
     function applyFullBaseline(fullPayload) {
         _fullSnapshot = fullPayload;
         _mergedPayload = fullPayload;
@@ -2570,6 +2596,8 @@
             if (heavyPayload.alerts.current !== undefined) merged.alerts.current = heavyPayload.alerts.current;
             if (heavyPayload.alerts.summary !== undefined) merged.alerts.summary = heavyPayload.alerts.summary;
         }
+
+        mergeOperationsFromHeavy(merged, heavyPayload);
 
         _lastPayload = merged;
         if (_lastSampleAtMs === 0) {
@@ -2621,6 +2649,8 @@
             if (fastPayload.alerts.current !== undefined) merged.alerts.current = fastPayload.alerts.current;
             if (fastPayload.alerts.summary !== undefined) merged.alerts.summary = fastPayload.alerts.summary;
         }
+
+        mergeOperationsFromFast(merged, fastPayload);
 
         _lastPayload = merged;
         liveIngestFromPayload(merged, {

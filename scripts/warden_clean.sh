@@ -86,8 +86,26 @@ fi
 
 cd "$WARDEN_ROOT"
 
+WARDEN_ENV_FILE="${WARDEN_ROOT}/.env"
+if [[ -f "$WARDEN_ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$WARDEN_ENV_FILE"
+  set +a
+fi
+
+CLEAN_ARGS=()
+if [[ -n "${WARDEN_CLEAN_BINLOG_RETENTION_DAYS:-}" ]] \
+  && [[ "${WARDEN_CLEAN_BINLOG_RETENTION_DAYS}" =~ ^[0-9]+$ ]] \
+  && (( WARDEN_CLEAN_BINLOG_RETENTION_DAYS > 0 )); then
+  CLEAN_ARGS+=(--purge-binlogs-days "${WARDEN_CLEAN_BINLOG_RETENTION_DAYS}")
+fi
+if [[ "${WARDEN_CLEAN_OPTIMIZE_ENABLED:-0}" == "1" ]]; then
+  CLEAN_ARGS+=(--optimize)
+fi
+
 if [[ -x "$PYTHON_BIN" ]]; then
-  run "Executar retencao de dados Warden Clean" "$PYTHON_BIN" scripts/warden_clean.py
+  run "Executar retencao de dados Warden Clean" "$PYTHON_BIN" scripts/warden_clean.py "${CLEAN_ARGS[@]}"
 else
   log WARN "Python Warden nao encontrado ou sem execucao: $PYTHON_BIN"
 fi
@@ -100,6 +118,15 @@ fi
 
 run "Truncar historico db_monitor se exceder 20M" \
   find "$WARDEN_ROOT/runtime" -maxdepth 1 -type f -name 'db_monitor_history.jsonl' -size +20M -exec truncate -s 0 {} +
+
+run "Truncar slack_alert_events.jsonl se exceder 20M" \
+  find "$WARDEN_ROOT/runtime" -maxdepth 1 -type f -name 'slack_alert_events.jsonl' -size +20M -exec truncate -s 0 {} +
+
+OP_JOBS_MTIME_DAYS="${WARDEN_OPERATIONAL_JOBS_RETENTION_DAYS:-30}"
+if [[ -d "$WARDEN_ROOT/runtime/operational_jobs" ]]; then
+  run "Remover state antigo de operational_jobs" \
+    find "$WARDEN_ROOT/runtime/operational_jobs" -maxdepth 1 -type f -name '*.json' -mtime +"$OP_JOBS_MTIME_DAYS" -delete
+fi
 
 if [[ -d "$WARDEN_ROOT/runtime/export" ]]; then
   run "Remover temporarios antigos de export Warden" \
