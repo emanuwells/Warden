@@ -2,6 +2,11 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-06-25
+
+### Alterado
+- Jobs operacionais (`warden_db_backup`, `warden_system_info`, `warden_webserver_backup`): notificações Slack só em falha, no canal Overseer (`#overseer`), alinhado com o padrão do Overseer.
+
 ## [Unreleased] - 2026-06-22
 
 ### Adicionado
