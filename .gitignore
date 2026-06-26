@@ -2,6 +2,7 @@
 .env
 .env.docker
 .env.*
+!docs/resources/templates/.env.example
 
 # Dependencias
 node_modules/
