@@ -1,3 +1,0 @@
-# Stack web local (UI/API em :8080). Implementação em docker/compose.dev.yml.
-include:
-  - docker/compose.dev.yml

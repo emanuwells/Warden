@@ -31,7 +31,7 @@ python -m pytest
 ```bash
 docker compose config
 docker compose build
-docker compose up -d
+docker compose -f docker/compose.dev.yml up -d
 ```
 
 ## Regras

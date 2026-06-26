@@ -22,7 +22,7 @@ Registo operacional por iteração. Atualizar em tarefas não triviais.
 
 **Estado:** concluído  
 **Risco:** médio  
-**Objetivo:** Adaptar o template de governança IA sénior ao repo Warden, preservando a estrutura `.agents/` existente e adicionando `docs/ai/`, `docs/architecture/` e `tasks/`.  
+**Objetivo:** Adaptar o template de governança IA sénior ao repo Warden, preservando a estrutura `docs/ai/` existente e adicionando `docs/ai/`, `docs/architecture/` e `tasks/`.  
 **Alterações:**
 - `docs/ai/DAILY_AGENT_WORKFLOW.md`: criado — workflow diário universal.
 - `docs/ai/README.md`: criado — camada IA neutra.

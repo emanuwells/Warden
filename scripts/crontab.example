@@ -6,7 +6,7 @@
 WARDEN_ROOT=/opt/warden
 # Legado: algumas instalações antigas usavam /opt/warden (symlink ou cópia).
 #
-# Alinhamento pipeline — ver docs/Warden_Pipeline.md
+# Alinhamento pipeline — ver docs/architecture/warden-pipeline.md
 # | Lane   | Schedule        | Snapshot                         | Stale API (ms) |
 # |--------|-----------------|----------------------------------|----------------|
 # | fast   | 30×/min (~2s)   | runtime/export/warden_fast_*     | 12000          |

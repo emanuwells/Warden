@@ -20,14 +20,13 @@
 |---|---|---|
 | Host Linux | `systemd` + `cron` | Path via `WARDEN_RUNTIME_ROOT` |
 | Docker Pipeline | `docker/compose.pipeline.yml` | Collector + scheduler |
-| Docker Dev | `docker-compose.yml` | UI/API local (Nginx + PHP-FPM) |
+| Docker Dev | `docker/compose.dev.yml` | UI/API local (Nginx + PHP-FPM) |
 
 ## Docker
 
 | Ficheiro | Serviço | Função |
 |---|---|---|
-| `docker-compose.yml` | web (nginx + php-fpm) | UI/API local |
-| `docker/compose.dev.yml` | web (include) | Configuração dev |
+| `docker/compose.dev.yml` | web (nginx + php-fpm) | UI/API local |
 | `docker/compose.pipeline.yml` | warden-collector, warden-scheduler | Pipeline |
 | `docker/compose.sync.yml` | warden-sync | SCP snapshots de produção |
 | `docker/Dockerfile` | pipeline | Collector + scheduler |
@@ -46,6 +45,6 @@
 ## Regras
 
 - Nunca commitar `.env` real.
-- Validar compose antes de deploy: `docker compose config`.
+- Validar compose antes de deploy: `docker compose -f docker/compose.dev.yml config`.
 - Documentar rollback antes de mexer em produção.
 - Separar segredos de configuração versionada (`secrets/*.example`).

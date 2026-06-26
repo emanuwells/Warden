@@ -24,7 +24,7 @@ function Read-EnvFile {
     param([string]$Path)
 
     if (-not (Test-Path -LiteralPath $Path)) {
-        throw "Ficheiro de deploy não encontrado: $Path. Copie secrets/production.deploy.local.env.example."
+        throw "Ficheiro de deploy não encontrado: $Path. Copie docs/resources/examples/secrets/production.deploy.local.env.example."
     }
 
     $values = @{}

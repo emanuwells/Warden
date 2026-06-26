@@ -1,0 +1,6 @@
+{
+  "username": "admin",
+  "password": "mtron2026!",
+  "sessionKey": "warden_session_v1",
+  "sessionTtlMinutes": 480
+}

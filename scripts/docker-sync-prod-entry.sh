@@ -68,7 +68,7 @@ validate_ssh_prereqs() {
   fi
 
   if [ -z "$host" ] || [ -z "$user" ]; then
-    die "Definir WARDEN_DEPLOY_SSH_HOST e WARDEN_DEPLOY_SSH_USER em secrets/production.deploy.local.env (ver secrets/production.deploy.local.env.example)."
+    die "Definir WARDEN_DEPLOY_SSH_HOST e WARDEN_DEPLOY_SSH_USER em secrets/production.deploy.local.env (ver docs/resources/examples/secrets/production.deploy.local.env.example)."
   fi
 
   if [ ! -f "$SSH_KEY" ]; then
@@ -118,7 +118,7 @@ validate_local_snapshots() {
     log "OK ${name} (${size} bytes, mtime $(date -r "$path" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || stat -c '%y' "$path" 2>/dev/null || echo '?'))"
   done
 
-  log "Sync concluído. Montar runtime/export no stack dev: docker compose -f docker-compose.yml up -d"
+  log "Sync concluído. Montar runtime/export no stack dev: docker compose -f docker/compose.dev.yml up -d"
 }
 
 main() {

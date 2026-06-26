@@ -2,7 +2,6 @@
 .env
 .env.docker
 .env.*
-!.env.example
 
 # Dependencias
 node_modules/
@@ -26,11 +25,9 @@ tmp/
 .nuxt/
 .vite/
 
-# Secrets (real credentials) — ver secrets/README.md
+# Secrets (real credentials) — ver secrets/README.md; exemplos em docs/resources/examples/secrets/
 secrets/*
 !secrets/README.md
-!secrets/*.example
-!secrets/*.example.json
 secrets/database.json
 secrets/slack.json
 secrets/ssh_key

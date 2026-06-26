@@ -36,7 +36,7 @@ cron/systemd --> slack_daily_digest.py --> Slack webhooks
 runtime/export/*.json --> api.php (ops_fast / ops_heavy) --> UI (polling)
 ```
 
-Detalhe do pipeline e roadmap Fase 2: `docs/Warden_Pipeline.md`.
+Detalhe do pipeline e roadmap Fase 2: `docs/architecture/warden-pipeline.md`.
 
 ## Fronteiras
 
@@ -65,4 +65,4 @@ Detalhe do pipeline e roadmap Fase 2: `docs/Warden_Pipeline.md`.
 
 - CI/CD não configurado.
 - Sem suite de testes automatizada.
-- Validar `User`/`Group` em `systemd/warden.service` no deploy real.
+- Validar `User`/`Group` em `deploy/systemd/warden.service` no deploy real.

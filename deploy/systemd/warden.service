@@ -1,0 +1,29 @@
+# Template systemd — substituir WorkingDirectory, ReadWritePaths e EnvironmentFile
+# pelos paths reais do deploy (ex.: valor de WARDEN_RUNTIME_ROOT no host).
+[Unit]
+Description=Warden System Resource Monitor
+Documentation=https://github.com/emanuwells/Warden
+After=network.target mariadb.service
+
+[Service]
+Type=simple
+User=warden
+Group=warden
+WorkingDirectory=/opt/warden
+ExecStart=/usr/bin/python3 -m src.warden
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=warden
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/warden/runtime
+
+# Environment
+EnvironmentFile=/opt/warden/.env
+
+[Install]
+WantedBy=multi-user.target

@@ -2,7 +2,7 @@
 
 Este ficheiro descreve o contexto específico do projeto Warden (runtime de monitorização agnóstico de plataforma).
 
-Deve ser lido em conjunto com `AGENTS.md`, `.agents/ops/HANDOFF.md`, `.agents/skills/README.md` e `.agents/policies/CHANGELOG_POLICY.md`.
+Deve ser lido em conjunto com `AGENTS.md`, `docs/ai/ops/HANDOFF.md`, `docs/ai/skills/README.md` e `docs/ai/policies/CHANGELOG_POLICY.md`.
 
 ## Identidade Do Projeto
 
@@ -38,17 +38,16 @@ Recolher métricas de sistema e MariaDB, persistir em `Warden.warden_metrics`, e
 VERSION, LICENSE          # Versão SemVer e licença MIT
 public/www/, public/backend/
 deploy/hub/               # Fatia para publicação no HUB do host
+deploy/systemd/           # Template warden.service
 src/warden.py             # CLI principal (collector)
 src/                      # collector, db_writer, db_monitor, warden_clean, settings, alerts
 scripts/                  # export, warden_clean, slack, publish-public, import-public, SSH
 docker/                   # Dockerfiles, Compose especializados e nginx dev local
-systemd/warden.service    # Template — ajustar paths no deploy
-config/
-secrets/                  # *.example — credenciais reais não versionadas
+secrets/                  # Segredos reais (gitignored); exemplos em docs/resources/examples/secrets/
 runtime/                  # artefactos gerados (gitignored exceto .gitkeep)
-docs/                     # produção, Warden_Public_Deploy, adr/
-.agents/                  # policies, ops, mcp, templates e skills canónicas
-docker-compose.yml        # wrapper web local (include docker/compose.dev.yml)
+docs/                     # architecture/, adr/, resources/, ai/
+docs/resources/           # templates/ (.env.example) e examples/ (config, secrets)
+docker/compose.dev.yml    # stack web local (UI/API :8080)
 docker/compose.pipeline.yml
 docker/compose.sync.yml
 ```
@@ -72,7 +71,7 @@ Todos os paths de produção são definidos por ambiente. Variáveis canónicas:
 | Frontend Warden | `$WARDEN_HUB_ROOT/frontend/apps/warden/` |
 | API Warden (canónica) | `$WARDEN_HUB_ROOT/backend/apps/warden/api.php` |
 | Snapshots export | `$WARDEN_RUNTIME_ROOT/runtime/export/warden_{fast,heavy}_snapshot.json`, `warden_payload.json` |
-| Pipeline (Fase 1/2) | `docs/Warden_Pipeline.md`, ADR `docs/adr/0001-warden-dual-snapshot-pipeline.md` |
+| Pipeline (Fase 1/2) | `docs/architecture/warden-pipeline.md`, ADR `docs/adr/0001-warden-dual-snapshot-pipeline.md` |
 | Runner `warden_clean` | Path do Overseer no host (ver runbook) |
 | Cron `warden_clean` | Uma linha `# overseer:warden_clean` no crontab real |
 | Legado templates | `/opt/warden` — evitar em instalações novas |
@@ -97,7 +96,7 @@ Todos os paths de produção são definidos por ambiente. Variáveis canónicas:
 
 ## Skills Do Projeto
 
-Inventário completo: `.agents/skills/README.md`.
+Inventário completo: `docs/ai/skills/README.md`.
 
 ## Política De Git Do Projeto
 
@@ -154,4 +153,4 @@ Template em `docs/adr/0000-template.md` — sem ADRs aplicados ainda.
 ## Dívida Técnica / Pendências
 
 - CI/CD não configurado; avaliar pipeline leve quando houver necessidade de gates automáticos.
-- Validar `User`/`Group` em `systemd/warden.service` no deploy real.
+- Validar `User`/`Group` em `deploy/systemd/warden.service` no deploy real.

@@ -36,7 +36,7 @@ O collector (`systemd`) persiste na DB; crons exportam JSON; a API faz merge e e
 
 - Collector invoca export fast após cada insert (`EXPORT_FAST_ON_COLLECT=1`).
 - Cron fast: fallback 1×/min via `export_fast_fallback.sh`.
-- Ver `docs/Warden_Pipeline.md`.
+- Ver `docs/architecture/warden-pipeline.md`.
 
 ## Alternativas consideradas
 

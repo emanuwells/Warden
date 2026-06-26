@@ -19,7 +19,9 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY . /app
+COPY src /app/src
+COPY scripts /app/scripts
+COPY VERSION /app/VERSION
 
 RUN mkdir -p /app/runtime/logs /app/runtime/cache /app/runtime/export /app/runtime/archive/weekly \
     && touch /app/runtime/logs/.gitkeep /app/runtime/cache/.gitkeep /app/runtime/export/.gitkeep /app/runtime/archive/.gitkeep \

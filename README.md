@@ -74,13 +74,15 @@ Warden/
 ├── AGENTS.md, PROJECT_CONTEXT.md, COMMANDS.md
 ├── CHANGELOG.md
 ├── README.md
-├── .agents/                       # Políticas, runbook, handoff, MCP, templates e Skills
+├── docs/ai/                       # Políticas, runbook, handoff, MCP e Skills
+├── docs/resources/                # templates/ e examples/ (secrets, config)
+├── docs/architecture/             # Deploy, pipeline, produção
 ├── public/www/                    # UI/API local (Docker :8080)
 ├── public/backend/                # API PHP canónica + adaptador auth do host
 ├── deploy/hub/                    # Fatia para publicação no HUB do host
 ├── src/, scripts/, requirements.txt
-├── docker-compose.yml             # Wrapper web local (include → docker/compose.dev.yml)
-├── docker/                        # Dockerfiles, Compose especializados e nginx dev
+├── docker/                        # Dockerfiles, Compose, .dockerignore, nginx
+│   ├── compose.dev.yml            # Stack web local (UI/API :8080)
 │   ├── compose.pipeline.yml       # Collector + scheduler
 │   └── compose.sync.yml           # SCP snapshots de produção
 ├── secrets/, runtime/, docs/
@@ -101,8 +103,8 @@ cd "$WARDEN_RUNTIME_ROOT"   # ex.: /opt/warden
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-cp secrets/database.json.example secrets/database.json
+cp docs/resources/templates/.env.example .env
+cp docs/resources/examples/secrets/database.json.example secrets/database.json
 # Editar .env e secrets/database.json com valores reais (não commitar)
 .venv/bin/python -m src.warden --setup
 ```
@@ -118,7 +120,7 @@ Definir `WARDEN_RUNTIME_ROOT` no ambiente ou em `secrets/production.deploy.local
 | `secrets/slack.json` | Webhooks Slack |
 | `secrets/production.deploy.local.env` | SSH produção (local, gitignored) |
 
-Variáveis principais (ver `.env.example`):
+Variáveis principais (ver `docs/resources/templates/.env.example`):
 
 | Variável | Descrição |
 |---|---|
@@ -156,8 +158,8 @@ Recolha única e export:
 Serviço systemd + cron:
 
 ```bash
-# Ajustar paths em systemd/warden.service ao deploy real
-sudo cp systemd/warden.service /etc/systemd/system/
+# Ajustar paths em deploy/systemd/warden.service ao deploy real
+sudo cp deploy/systemd/warden.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now warden
 systemctl --user stop warden.service || true
@@ -246,7 +248,7 @@ Snapshots em `runtime/export/`: copiar de produção com `sync-prod-snapshots.ps
 ### Pipeline em Docker (sem PHP)
 
 ```bash
-cp config/env.docker.example .env.docker
+cp docs/resources/examples/config/env.docker.example .env.docker
 docker compose -f docker/compose.pipeline.yml up -d --build
 ```
 
@@ -261,16 +263,16 @@ Host metrics: `MONITOR_ROOT_PATH=/hostfs`, mount `/:/hostfs:ro`, `pid: host`, `n
 
 ### Publicação do `public/` em produção
 
-Ver [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md). **Não altera** o pipeline em `$WARDEN_RUNTIME_ROOT` até pedido explícito.
+Ver [`docs/architecture/warden-public-deploy.md`](docs/architecture/warden-public-deploy.md). **Não altera** o pipeline em `$WARDEN_RUNTIME_ROOT` até pedido explícito.
 
-Deploy pipeline (host): [`docs/Guia_Producao_Step_by_Step.md`](docs/Guia_Producao_Step_by_Step.md).
+Deploy pipeline (host): [`docs/architecture/production-step-by-step.md`](docs/architecture/production-step-by-step.md).
 
 ## Produção — operações
 
 | Runbook | Conteúdo |
 |---|---|
-| [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md) | `public/`, Docker dev, publish |
-| [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) | SSH, diagnóstico e `warden_clean` |
+| [`docs/architecture/warden-public-deploy.md`](docs/architecture/warden-public-deploy.md) | `public/`, Docker dev, publish |
+| [`docs/architecture/production-access-cleanup.md`](docs/architecture/production-access-cleanup.md) | SSH, diagnóstico e `warden_clean` |
 
 ```powershell
 .\scripts\setup-secrets-from-wells-api.ps1
@@ -293,7 +295,7 @@ O runner `warden_clean` no Overseer deve exportar `WARDEN_ROOT`/`WARDEN_RUNTIME_
 | API 401 em Docker local | Auth do host; esperado sem sessão — validar UI estática e PHP a responder |
 | `public/` vazio | `.\scripts\import-public-from-prod.ps1` |
 | `snapshot_unavailable` em dev | `.\scripts\sync-prod-snapshots.ps1` ou gerar JSON localmente |
-| SCP sync: bad permissions | `icacls` na chave em `secrets/.ssh/id_ed25519` (ver `docs/Warden_Public_Deploy.md`) |
+| SCP sync: bad permissions | `icacls` na chave em `secrets/.ssh/id_ed25519` (ver `docs/architecture/warden-public-deploy.md`) |
 
 ## Segurança e gestão de segredos
 
@@ -314,7 +316,7 @@ Retenção de arquivos semanais: `scripts/weekly_archive.py` com `WEEKLY_ARCHIVE
 | Item | Estado |
 |---|---|
 | MCP no repo | **N/A** — sem `.cursor/mcp.json` / `.mcp.json` versionado; configurar no IDE se necessário |
-| Skills | Pacote canónico em `.agents/skills/`; compatibilidade Claude Code em `tools/ai-adapters/claude/.claude/skills/` — inventário em [`.agents/skills/README.md`](.agents/skills/README.md) |
+| Skills | Pacote canónico em `docs/ai/skills/`; compatibilidade Claude Code em `tools/ai-adapters/claude/.claude/skills/` — inventário em [`docs/ai/skills/README.md`](docs/ai/skills/README.md) |
 | Regras para IAs | [`AGENTS.md`](AGENTS.md) |
 
 Documentação de governança:
@@ -322,7 +324,7 @@ Documentação de governança:
 | Documento | Uso |
 |---|---|
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, comandos, riscos |
-| [`.agents/ops/HANDOFF.md`](.agents/ops/HANDOFF.md) | Estado operacional e próximos passos |
+| [`docs/ai/ops/HANDOFF.md`](docs/ai/ops/HANDOFF.md) | Estado operacional e próximos passos |
 
 ## Métricas de crescimento (v2.x)
 
@@ -330,7 +332,7 @@ O payload expõe crescimento por janela para disco e DB (`disk_*_gb_avg`, `disk_
 
 ## Changelog
 
-Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`.agents/policies/CHANGELOG_POLICY.md`](.agents/policies/CHANGELOG_POLICY.md)).
+Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`docs/ai/policies/CHANGELOG_POLICY.md`](docs/ai/policies/CHANGELOG_POLICY.md)).
 
 ## Licença e versão
 

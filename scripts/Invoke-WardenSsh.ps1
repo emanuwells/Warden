@@ -24,7 +24,7 @@ function Read-EnvFile {
     param([string]$Path)
 
     if (-not (Test-Path -LiteralPath $Path)) {
-        throw "Ficheiro de deploy não encontrado: $Path. Copie secrets/production.deploy.local.env.example ou o ficheiro homólogo de WELLS_API."
+        throw "Ficheiro de deploy não encontrado: $Path. Copie docs/resources/examples/secrets/production.deploy.local.env.example ou o ficheiro homólogo de WELLS_API."
     }
 
     $values = @{}
@@ -103,6 +103,15 @@ if ($hostName -eq '' -or $userName -eq '') {
 $target = "$userName@$hostName"
 $sshArgs = Get-SshArgs -EnvValues $envValues -Target $target
 $normalized = ($RemoteCommand -replace "`r`n", "`n" -replace "`r", "").Trim()
+
+$runtimeRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_RUNTIME_ROOT') 
+$hubRoot = Get-EnvValue -Values $envValues -Keys @('WARDEN_HUB_ROOT')
+if ($runtimeRoot -ne '') {
+    $normalized = $normalized.Replace('$WARDEN_RUNTIME_ROOT', $runtimeRoot)
+}
+if ($hubRoot -ne '') {
+    $normalized = $normalized.Replace('$WARDEN_HUB_ROOT', $hubRoot)
+}
 
 & ssh @sshArgs $normalized
 if ($LASTEXITCODE -ne 0) {

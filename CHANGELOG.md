@@ -2,6 +2,14 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-06-26
+
+### Alterado
+- Removido shim legacy `scripts/warden-legacy-entry.py`; entrypoint único: `python -m src.warden`.
+- Documentado que `.gitignore` e `.gitattributes` são obrigatórios na raiz (Git não lê em `.github/`).
+- Estrutura alinhada com Repo template: `.agents/` → `docs/ai/`; exemplos em `docs/resources/`; produção em `docs/architecture/`; `systemd/` → `deploy/systemd/`.
+- Runtime de produção preservado: volumes Docker, `secrets/` runtime e CLI `python -m src.warden` inalterados.
+
 ## [Unreleased] - 2026-06-25
 
 ### Alterado
@@ -20,7 +28,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Frontend HUB (`warden.js`): merge de `operations` nos snapshots fast/heavy.
 
 ### Alterado
-- `.env.example` e `secrets/mariadb-dump.cnf.example`: paths Warden nativos (sem `BaZe_Management`).
+- `.env.example` e `docs/resources/examples/secrets/mariadb-dump.cnf.example`: paths Warden nativos (sem `BaZe_Management`).
 - `scripts/warden_clean.sh`: lê `WARDEN_CLEAN_*` do `.env`, trunca `slack_alert_events.jsonl` e remove state antigo de `operational_jobs/`.
 - `COMMANDS.md`: documenta `warden_clean.sh` com flags via `.env`.
 
@@ -34,7 +42,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Linhas Overseer no `scripts/crontab.example` para os três novos jobs.
 
 ### Alterado
-- `.env.example` com variáveis de paths operacionais e exemplo `secrets/mariadb-dump.cnf.example`.
+- `.env.example` com variáveis de paths operacionais e exemplo `docs/resources/examples/secrets/mariadb-dump.cnf.example`.
 
 ## [Unreleased] - 2026-06-22
 
@@ -51,7 +59,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Pipeline Fase 2: `src/fast_snapshot.py` exporta fast após cada collect (`EXPORT_FAST_ON_COLLECT`).
 - `scripts/export_fast_fallback.sh` — cron fallback inteligente (só se snapshot >30s).
 - `scripts/patch-crontab-phase2-fast.sh` — migração idempotente do cron fast.
-- `docs/Warden_Pipeline.md` — Fase 1 (checklist operacional) e desenho Fase 2.
+- `docs/architecture/warden-pipeline.md` — Fase 1 (checklist operacional) e desenho Fase 2.
 - `docs/adr/0001-warden-dual-snapshot-pipeline.md` — ADR do pipeline dual snapshot.
 - `scripts/validate-pipeline.sh` — validação de frescura dos snapshots e serviço `warden`.
 - `warden-paths.local.php.example` e loader em `api.php` para paths locais no HUB sem alterar php-fpm.
@@ -77,8 +85,8 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Documentação (README, PROJECT_CONTEXT, COMMANDS, docs/*) desacoplada de branding de plataforma específica.
 - `scripts/warden_clean.sh` exige `WARDEN_ROOT`/`WARDEN_RUNTIME_ROOT` (fallback: diretório atual com `scripts/warden_clean.py`).
 - `api.php` resolve snapshots via `WARDEN_RUNTIME_ROOT` em vez de paths hardcoded.
-- `systemd/warden.service` passa a template genérico com paths de exemplo.
-- `secrets/production.deploy.local.env.example` usa paths genéricos configuráveis.
+- `deploy/systemd/warden.service` passa a template genérico com paths de exemplo.
+- `docs/resources/examples/secrets/production.deploy.local.env.example` usa paths genéricos configuráveis.
 
 ### Mantido (integração host)
 - Libs `maiatron-auth*.php` como adaptador opcional da plataforma host.
@@ -88,7 +96,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ### Adicionado
 - `src/warden.py` como implementação canónica e única do CLI Python.
-- Dockerfiles e Compose especializados centralizados em `docker/`, mantendo `docker-compose.yml` na raiz como wrapper do stack web local.
+- Dockerfiles e Compose especializados centralizados em `docker/`, mantendo `docker/compose.dev.yml` na raiz como wrapper do stack web local.
 - `scripts/warden_clean.sh` passa a cobrir temporários seguros do servidor, cache apt, logs textuais SQL grandes e limpeza Docker conservadora.
 - Alertas Slack imediatos passam a suportar warnings e criticals com limite de `SLACK_ALERT_MAX_NOTIFICATIONS` por incidente.
 - Digest Slack diário passa a incluir alertas ainda ativos, destacando incidentes que já atingiram o limite de notificações.
@@ -96,16 +104,16 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - `warden_clean` passa a remover temporários atómicos antigos, cache runtime regenerável, caches Python, bytecode e ficheiros de editor/sistema dentro de `WARDEN_ROOT`, preservando snapshots ativos, backups, secrets, virtualenvs e dados.
 
 ### Alterado
-- `systemd/warden.service`, Compose pipeline e documentação passam a usar `python -m src.warden`.
+- `deploy/systemd/warden.service`, Compose pipeline e documentação passam a usar `python -m src.warden`.
 - Retenção de dados antiga fica exposta como `scripts/warden_clean.py`, removendo referências operacionais paralelas.
 - A limpeza operacional fica concentrada no runner `warden_clean`, agendado pelo Overseer.
 - `scripts/warden_clean.sh` passa a estar versionado como executável para uso direto em Linux/produção.
 - Runbook de produção documenta o caso real em que o runner existe mas o crontab não contém `# overseer:warden_clean`, com correção por backup e inserção idempotente.
 - Slack digest diário ajustado para `08:30` nos exemplos de cron, scheduler Docker e defaults de configuração.
-- Estrutura de agentes consolidada em `.agents/`, com documentação a apontar para o handoff, políticas e Skills canónicas.
+- Estrutura de agentes consolidada em `docs/ai/`, com documentação a apontar para o handoff, políticas e Skills canónicas.
 - Crontab real em BAZE2 atualizado para executar `scripts/slack_daily_digest.py` às `08:30`, com backup remoto antes da alteração.
 - `COMMANDS.md` reescrito com comandos reais do Warden, removendo placeholders genéricos.
-- Inventário de Skills consolidado em `.agents/skills/README.md`.
+- Inventário de Skills consolidado em `docs/ai/skills/README.md`.
 
 ### Removido
 - Script e documentação do housekeeping antigo; `warden_clean` é agora o único contrato de limpeza do Warden.
@@ -121,18 +129,18 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
 ### Alterado
 - Estrutura `public/`: removido wrapper legado `public/backend/public/`; dev local só `public/www/` + `public/backend/`.
-- `docker-compose.yml` passa a incluir `docker/compose.dev.yml` (um comando `docker compose up`).
+- `docker/compose.dev.yml` passa a incluir `docker/compose.dev.yml` (um comando `docker compose up`).
 - Documentação e badges atualizados para 2.1.0.
 
 ## [2.0.9] - 2026-06-01
 
 ### Adicionado
 - `docker/compose.sync.yml`, `docker/Dockerfile.sync`, `scripts/docker-sync-prod-entry.sh` — serviço one-shot com venv, pip e SCP read-only dos snapshots de produção para `runtime/export/`.
-- `scripts/sync-prod-snapshots.ps1`, `config/env.prod-sync.example` — orquestração Windows para validar UI local com JSON reais.
+- `scripts/sync-prod-snapshots.ps1`, `docs/resources/examples/config/env.prod-sync.example` — orquestração Windows para validar UI local com JSON reais.
 
 ### Alterado
 - `scripts/start-warden-dev.ps1` — aviso a sugerir `sync-prod-snapshots.ps1` quando snapshots em falta.
-- Documentação: `README.md`, `PROJECT_CONTEXT.md`, `HANDOFF.md`, `docs/Warden_Public_Deploy.md`.
+- Documentação: `README.md`, `PROJECT_CONTEXT.md`, `HANDOFF.md`, `docs/architecture/warden-public-deploy.md`.
 
 ## [2.0.8] - 2026-06-01
 
@@ -151,14 +159,14 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 - Pasta [`public/`](public/) com UI/API Warden (import de `MAIATRON-HUB`).
 - Docker dev: `docker/compose.dev.yml`, `docker/Dockerfile.php`, `docker/nginx/`, `scripts/start-warden-dev.ps1`.
 - `docker/compose.pipeline.yml` (collector/scheduler, separado do web).
-- `scripts/import-public-from-prod.ps1`, `scripts/publish-public.ps1`, [`docs/Warden_Public_Deploy.md`](docs/Warden_Public_Deploy.md).
+- `scripts/import-public-from-prod.ps1`, `scripts/publish-public.ps1`, [`docs/architecture/warden-public-deploy.md`](docs/architecture/warden-public-deploy.md).
 
 ### Removido
 - `scripts/archive-d4maia-pre2024.ps1`, `docs/Arquivo_d4maia_pre2024.md` (operação d4maia concluída).
 
 ### Alterado
 - README, PROJECT_CONTEXT, HANDOFF: paths MAIATRON-HUB; sem referências operacionais a d4maia.
-- `docker-compose.yml` passa a stack web local (pipeline em ficheiro dedicado).
+- `docker/compose.dev.yml` passa a stack web local (pipeline em ficheiro dedicado).
 
 ## [2.0.6] - 2026-06-01
 
@@ -186,23 +194,23 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [2.0.3] - 2026-06-01
 
 ### Adicionado
-- Acesso SSH a produção alinhado com WELLS_API: `secrets/production.deploy.local.env.example`, `secrets/environments.local.json.example`, `secrets/README.md`.
+- Acesso SSH a produção alinhado com WELLS_API: `docs/resources/examples/secrets/production.deploy.local.env.example`, `docs/resources/examples/secrets/environments.local.json.example`, `secrets/README.md`.
 - Scripts `scripts/Invoke-WardenSsh.ps1`, `scripts/run-production-cleanup.ps1`, `scripts/setup-secrets-from-wells-api.ps1`.
 
 ### Alterado
 - `.gitignore`: ignora `secrets/` exceto `README.md` e `*.example`.
-- `docs/Producao_Acesso_e_Limpeza.md` e `README.md`: fluxo PowerShell com chave em `secrets/.ssh/`.
+- `docs/architecture/production-access-cleanup.md` e `README.md`: fluxo PowerShell com chave em `secrets/.ssh/`.
 
 ## [2.0.2] - 2026-06-01
 
 ### Adicionado
 - `PROJECT_CONTEXT.md` com stack, paths oficiais e políticas do projeto.
 - Estrutura `runtime/{cache,export,archive,logs}/.gitkeep` no repositório.
-- Runbook [`docs/Producao_Acesso_e_Limpeza.md`](docs/Producao_Acesso_e_Limpeza.md) para diagnóstico SSH e limpeza segura de disco.
+- Runbook [`docs/architecture/production-access-cleanup.md`](docs/architecture/production-access-cleanup.md) para diagnóstico SSH e limpeza segura de disco.
 
 ### Alterado
-- `systemd/warden.service` e `scripts/crontab.example`: path canónico `/home/eferreira/MAIATRON/Warden` (variável `WARDEN_ROOT` no cron).
-- `README.md` e `docs/Guia_Producao_Step_by_Step.md`: ligações ao runbook e nota sobre legado `/opt/warden`.
+- `deploy/systemd/warden.service` e `scripts/crontab.example`: path canónico `/home/eferreira/MAIATRON/Warden` (variável `WARDEN_ROOT` no cron).
+- `README.md` e `docs/architecture/production-step-by-step.md`: ligações ao runbook e nota sobre legado `/opt/warden`.
 
 ## [2.0.1] - 2026-03-12
 

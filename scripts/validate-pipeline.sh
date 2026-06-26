@@ -15,7 +15,7 @@ fi
 
 cd "$ROOT"
 
-# Limites alinhados com docs/Warden_Pipeline.md (Fase 2)
+# Limites alinhados com docs/architecture/warden-pipeline.md (Fase 2)
 FAST_MAX_AGE="${WARDEN_VALIDATE_FAST_MAX_AGE:-}"
 HEAVY_MAX_AGE="${WARDEN_VALIDATE_HEAVY_MAX_AGE:-360}"
 FULL_MAX_AGE="${WARDEN_VALIDATE_FULL_MAX_AGE:-960}"

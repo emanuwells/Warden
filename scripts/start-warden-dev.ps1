@@ -32,7 +32,7 @@ if (-not (Test-Path -LiteralPath $publicWarden)) {
 Push-Location $repoRoot
 try {
     $devPort = if ($env:WARDEN_DEV_PORT) { $env:WARDEN_DEV_PORT } else { '8080' }
-    $composeArgs = @('-f', 'docker-compose.yml', 'up')
+    $composeArgs = @('-f', 'docker/compose.dev.yml', 'up')
     if (-not $SkipBuild) { $composeArgs += '--build' }
     $composeArgs += '-d'
     & docker compose @composeArgs
@@ -63,7 +63,7 @@ try {
         }
     }
 
-    Write-Host "Dev stack ativo em http://127.0.0.1:$devPort/. Parar: docker compose -f docker-compose.yml down"
+    Write-Host "Dev stack ativo em http://127.0.0.1:$devPort/. Parar: docker compose -f docker/compose.dev.yml down"
 } finally {
     Pop-Location
 }

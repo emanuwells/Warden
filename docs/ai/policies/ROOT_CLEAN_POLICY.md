@@ -6,57 +6,25 @@ Manter a raiz do repositório o mais limpa possível, preservando apenas ficheir
 
 ## Permitido na raiz
 
-- `README.md`
-- `AGENTS.md`
-- `PROJECT_CONTEXT.md`, apenas quando preenchido no projeto real
-- `COMMANDS.md`
-- `CHANGELOG.md`
-- `VERSION`
-- `LICENSE`
-- `.gitignore`
-- `.gitignore.template`
-- `.editorconfig`
-- `.env.example`
-- `.gitattributes`
-- `.github/` para templates, workflows e metadados GitHub
-- `docs/`
-- `tasks/`
-- `scripts/`
-- `tools/`
-- pastas reais do produto, como `src/`, `app/`, `api/`, `frontend/`, `backend/`, `infra/`, `tests/`, quando existirem
+- `README.md`, `AGENTS.md`, `PROJECT_CONTEXT.md`, `COMMANDS.md`, `CHANGELOG.md`
+- `VERSION`, `LICENSE`, `requirements.txt`
+- `.gitattributes`, `.gitignore`
+- `.github/`, `docs/`, `tasks/`, `scripts/`, `tools/`
+- pastas do produto: `src/`, `public/`, `docker/`, `deploy/`, `runtime/`, `secrets/`
 
-## Localizações fora da raiz
+## Fora da raiz
 
-- `docs/templates/PROJECT_CONTEXT.template.md` para o template de contexto.
-- `docs/governance/CONTRIBUTING.md` para contribuição e processo.
-- `.github/SECURITY.md` para política de segurança reconhecida pelo GitHub.
+- `docs/resources/templates/.env.example` — template de variáveis de ambiente
+- `docs/resources/templates/.gitignore.template` — template de `.gitignore`
+- `docker/compose.dev.yml`, `docker/.dockerignore` — stack Docker
+- `docs/governance/CONTRIBUTING.md`, `.github/SECURITY.md`
 
 ## Evitar na raiz
 
-- ficheiros específicos de ferramentas IA que não estejam ativos;
-- múltiplos contratos concorrentes de agentes;
-- dumps, exports, logs, caches e ficheiros temporários;
-- documentação longa que pertence a `docs/`;
-- exemplos de segredos ou credenciais fictícias fora de `docs/examples/`;
-- adaptadores de IDE não utilizados.
+- `.env.example`, `docker-compose.yml`, `warden.py`, `.dockerignore`, `warden-legacy-entry.py`
+- adaptadores IA activos (`.cursor/`, `CLAUDE.md`, …)
+- documentação longa, dumps, logs, caches
 
 ## Adaptadores
 
-Adaptadores específicos devem ficar em:
-
-```text
-tools/ai-adapters/
-```
-
-Só devem ser copiados para a raiz quando a ferramenta for realmente usada no projeto.
-
-## Critério sénior
-
-Um novo programador deve conseguir abrir a raiz do repo e perceber rapidamente:
-
-1. o que é o projeto;
-2. como arrancar;
-3. como testar;
-4. como a IA deve operar;
-5. onde está a documentação detalhada;
-6. onde encontrar contribuição e segurança quando necessário.
+Ficam em `tools/ai-adapters/`; activar só quando necessário.

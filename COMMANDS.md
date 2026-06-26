@@ -1,6 +1,6 @@
 # COMMANDS.md
 
-Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `.agents/ops/HANDOFF.md`.
+Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `docs/ai/ops/HANDOFF.md`.
 
 Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de comandos SSH remotos.
 
@@ -11,8 +11,8 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Criar venv | `python3 -m venv .venv` |
 | Ativar venv Linux | `. .venv/bin/activate` |
 | Instalar dependências | `pip install -r requirements.txt` |
-| Criar `.env` local | `cp .env.example .env` |
-| Criar config DB local | `cp secrets/database.json.example secrets/database.json` |
+| Criar `.env` local | `cp docs/resources/templates/.env.example .env` |
+| Criar config DB local | `cp docs/resources/examples/secrets/database.json.example secrets/database.json` |
 | Setup schema | `.venv/bin/python -m src.warden --setup` |
 
 ## Runtime E Jobs
@@ -48,7 +48,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Bash syntax export fast fallback | `bash -n scripts/export_fast_fallback.sh` |
 | PHP API local | `php -l public/www/api.php` |
 | PHP API canónica | `php -l public/backend/apps/warden/api.php` |
-| Compose web | `docker compose config` |
+| Compose web | `docker compose -f docker/compose.dev.yml config` |
 | Compose pipeline | `docker compose -f docker/compose.pipeline.yml config` |
 
 ## Docker
@@ -56,8 +56,8 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 | Ação | Comando |
 |---|---|
 | UI/API local | `.\scripts\start-warden-dev.ps1` |
-| Subir web local | `docker compose up -d --build` |
-| Logs web local | `docker compose logs -f` |
+| Subir web local | `docker compose -f docker/compose.dev.yml up -d --build` |
+| Logs web local | `docker compose -f docker/compose.dev.yml logs -f` |
 | Subir pipeline | `docker compose -f docker/compose.pipeline.yml up -d --build` |
 | Logs pipeline | `docker compose -f docker/compose.pipeline.yml logs -f` |
 | Sync snapshots prod | `.\scripts\sync-prod-snapshots.ps1` |
@@ -100,9 +100,9 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 
 | Ação | Comando |
 |---|---|
-| Ver política MCP | `Get-Content .agents/mcp/MCP_POLICY.md` |
-| Ver exemplos MCP | `Get-ChildItem .agents/mcp` |
-| Ver inventário de Skills | `Get-Content .agents/skills/README.md` |
+| Ver política MCP | `Get-Content docs/ai/mcp/MCP_POLICY.md` |
+| Ver exemplos MCP | `Get-ChildItem docs/ai/mcp` |
+| Ver inventário de Skills | `Get-Content docs/ai/skills/README.md` |
 
 ## Comandos Proibidos Sem Confirmação
 
@@ -110,7 +110,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 git reset --hard
 git clean -fd
 git push --force
-docker compose down -v
+docker compose -f docker/compose.dev.yml down -v
 rm -rf
 DROP DATABASE
 TRUNCATE TABLE
