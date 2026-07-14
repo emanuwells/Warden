@@ -3,7 +3,7 @@
 ![Stack](https://img.shields.io/badge/stack-Python%203.10%2B%20%7C%20MariaDB%20%7C%20Docker%20%7C%20systemd-3776ab)
 ![Status](https://img.shields.io/badge/status-produ%C3%A7%C3%A3o-2ecc71)
 ![Version](https://img.shields.io/badge/version-2.1.0-blue)
-![License](https://img.shields.io/badge/license-MIT-2ecc71)
+![License](https://img.shields.io/badge/license-Propriet%C3%A1ria-9b59b6)
 
 Runtime de monitorização agnóstico de plataforma: collector Python, export JSON, alertas configuráveis e UI/API PHP publicável no HUB do host. Recolhe métricas de sistema e MariaDB, persiste no schema `Warden` e expõe snapshots para consumo externo (incluindo proxy no [WELLS_API](../WELLS_API) via `GET /api/warden.php`).
 
@@ -70,7 +70,7 @@ Fluxo resumido:
 ```text
 Warden/
 ├── VERSION                        # Versão SemVer canónica (fonte para releases)
-├── LICENSE                        # MIT
+├── LICENSE                        # Proprietária — todos os direitos reservados
 ├── AGENTS.md, PROJECT_CONTEXT.md, COMMANDS.md
 ├── CHANGELOG.md
 ├── README.md
@@ -337,4 +337,4 @@ Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`docs/ai
 ## Licença e versão
 
 - Versão canónica: [`VERSION`](VERSION) (SemVer; alinhar com `CHANGELOG.md` e badge acima).
-- Licença: [MIT](LICENSE)
+- Licença: proprietária — ver [LICENSE](LICENSE)

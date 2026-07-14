@@ -5,6 +5,7 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [Unreleased] - 2026-07-14
 
 ### Alterado
+- Licença alterada de MIT para proprietária (todos os direitos reservados).
 - `requirements.txt` movido para `src/requirements.txt`; Docker, scripts e documentação actualizados.
 - Documentação agnóstica para publicação GitHub; paths de produção removidos de exemplos versionados.
 - `docs/ai/SKILLS.md`, `docs/AI_TEAM_WORKFLOW.md` e `tasks/template.md` removidos (duplicados).

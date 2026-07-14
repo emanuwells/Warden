@@ -1,21 +1,19 @@
-MIT License
+Licença Proprietária — Todos os Direitos Reservados
 
 Copyright (c) 2026 Emanuel Ferreira
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Todos os direitos reservados.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Este software, respetivo código-fonte, documentação, configuração, scripts, exemplos e artefactos associados são propriedade de Emanuel Ferreira, salvo indicação expressa em contrário.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+É proibida a cópia, modificação, distribuição, sublicenciamento, publicação, venda, aluguer, disponibilização pública ou utilização comercial deste material sem autorização prévia e escrita do titular dos direitos.
+
+A utilização interna ou de avaliação só é permitida quando autorizada pelo titular do projeto e deve respeitar as políticas de segurança, confidencialidade, proteção de dados e gestão de segredos aplicáveis.
+
+Antes de publicar, distribuir ou reutilizar este projeto fora do âmbito autorizado, confirmar:
+
+1. titular dos direitos;
+2. licença pretendida;
+3. compatibilidade com dependências externas;
+4. obrigações de atribuição, redistribuição e divulgação de código-fonte;
+5. existência de segredos, dados pessoais ou material confidencial.

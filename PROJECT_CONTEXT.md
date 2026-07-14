@@ -11,7 +11,7 @@ Ler com `AGENTS.md`, `COMMANDS.md` e, em tarefas operacionais, `docs/ai/ops/HAND
 | Nome | Warden |
 | Tipo | Collector + export + alertas + fatia UI/API publicável no HUB do host |
 | Versão | `VERSION` (SemVer) |
-| Licença | MIT |
+| Licença | Proprietária (todos os direitos reservados) |
 | Estado | Activo em produção (paths via env, não versionados) |
 
 ## Objetivo
