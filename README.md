@@ -5,7 +5,7 @@
 ![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-2ecc71)
 
-Runtime de monitorização (collector + export + alertas) agnóstico de plataforma. Recolhe métricas de sistema e MariaDB, persiste em `Warden.warden_metrics`, exporta snapshots JSON para qualquer API/UI consumidora e envia alertas Slack.
+Runtime de monitorização agnóstico de plataforma: collector Python, export JSON, alertas configuráveis e UI/API PHP publicável no HUB do host. Recolhe métricas de sistema e MariaDB, persiste no schema `Warden` e expõe snapshots para consumo externo (incluindo proxy no [WELLS_API](../WELLS_API) via `GET /api/warden.php`).
 
 ## Funcionalidades principais
 
@@ -13,7 +13,7 @@ Runtime de monitorização (collector + export + alertas) agnóstico de platafor
 - Monitorização de schemas MariaDB (tamanhos, crescimento).
 - Export de snapshots `fast`, `heavy` e `full` para consumo por API PHP no host ou frontend externo.
 - Warden Clean com retenção configurável (`RETENTION_DAYS`).
-- Alertas Slack imediatos e digest diário, com limite de notificações por incidente.
+- Alertas imediatos e digest diário (Slack via `secrets/slack.json` ou `SLACK_WEBHOOK_URL`, nunca versionados).
 - Arquivo semanal agregado (`runtime/archive/weekly`).
 - Housekeeping conservador via runner `warden_clean`, visível no Overseer.
 - Pasta [`public/`](public/) com UI/API Warden (fatia publicável no HUB do host), importável e publicável de forma controlada.
@@ -24,7 +24,7 @@ Runtime de monitorização (collector + export + alertas) agnóstico de platafor
 | Área | Tecnologia |
 |---|---|
 | Runtime | Python 3.10+, venv (`.venv`) |
-| Dependências | `psutil`, `PyMySQL`, `python-dotenv`, `requests`, … — ver [`requirements.txt`](requirements.txt) |
+| Dependências | `psutil`, `PyMySQL`, `python-dotenv`, `requests`, … — ver [`src/requirements.txt`](src/requirements.txt) |
 | Base de dados | MariaDB/MySQL — schema `Warden`, tabela `warden_metrics` |
 | Deploy host | systemd + cron |
 | Deploy alternativo | Docker Compose (pipeline only; DB externa) |
@@ -54,7 +54,7 @@ flowchart LR
     ui --> api
   end
   snapshots --> api
-  slack --> slackExt[Slack webhooks]
+  slack --> alertChannel[Canal de alertas]
   warden --> monitor[Host filesystem]
 ```
 
@@ -63,7 +63,7 @@ Fluxo resumido:
 1. `src.warden` recolhe métricas e grava em `Warden.warden_metrics`.
 2. `scripts/export_payload.py` gera `warden_fast_snapshot.json`, `warden_heavy_snapshot.json`, `warden_payload.json`.
 3. `api.php` (no HUB do host ou Docker local) serve `ops_fast`, `ops_heavy`, `full`.
-4. Jobs auxiliares: Warden Clean, Slack e arquivo semanal.
+4. Jobs auxiliares: Warden Clean, alertas e arquivo semanal.
 
 ## Estrutura do projeto
 
@@ -80,7 +80,7 @@ Warden/
 ├── public/www/                    # UI/API local (Docker :8080)
 ├── public/backend/                # API PHP canónica + adaptador auth do host
 ├── deploy/hub/                    # Fatia para publicação no HUB do host
-├── src/, scripts/, requirements.txt
+├── src/requirements.txt, src/, scripts/
 ├── docker/                        # Dockerfiles, Compose, .dockerignore, nginx
 │   ├── compose.dev.yml            # Stack web local (UI/API :8080)
 │   ├── compose.pipeline.yml       # Collector + scheduler
@@ -102,7 +102,7 @@ Warden/
 cd "$WARDEN_RUNTIME_ROOT"   # ex.: /opt/warden
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -r requirements.txt
+pip install -r src/requirements.txt
 cp docs/resources/templates/.env.example .env
 cp docs/resources/examples/secrets/database.json.example secrets/database.json
 # Editar .env e secrets/database.json com valores reais (não commitar)
@@ -117,7 +117,7 @@ Definir `WARDEN_RUNTIME_ROOT` no ambiente ou em `secrets/production.deploy.local
 |---|---|
 | `.env` | Host, DB, retenção, paths de export, alertas, Slack |
 | `secrets/database.json` | Credenciais MariaDB do collector |
-| `secrets/slack.json` | Webhooks Slack |
+| `secrets/slack.json` | Alertas Slack (local; ou usar `SLACK_WEBHOOK_URL`) |
 | `secrets/production.deploy.local.env` | SSH produção (local, gitignored) |
 
 Variáveis principais (ver `docs/resources/templates/.env.example`):

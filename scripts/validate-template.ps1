@@ -30,7 +30,7 @@ function Assert-Dir {
     'docs/resources/templates/.gitignore.template',
     'docs/resources/templates/.env.example',
     'docs/resources/examples/secrets/README.md',
-    'PROJECT_CONTEXT.md','requirements.txt',
+    'PROJECT_CONTEXT.md','src/requirements.txt',
     'docker/compose.dev.yml','docker/.dockerignore'
 ) | ForEach-Object { Assert-File $_ }
 

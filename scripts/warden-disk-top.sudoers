@@ -1,2 +1,2 @@
 # Allow only the Warden disk-top helper to be executed by the Warden service user.
-eferreira ALL=(root) NOPASSWD: /usr/local/sbin/warden-disk-top-helper
+# deploy ALL=(root) NOPASSWD: /usr/local/sbin/warden-disk-top-helper

@@ -31,7 +31,7 @@ Para tarefas não triviais, ler:
 | Base de dados | `docs/architecture/database.md`, skill de DB se existir |
 | Segurança | `.github/SECURITY.md`, `docs/ai/policies/SECRETS_POLICY.md` |
 | Dependências | `docs/ai/policies/DEPENDENCY_POLICY.md` |
-| README/docs | `docs/ai/policies/README_BADGES_POLICY.md`, `docs/resources/templates/README.template.md` |
+| README/docs | `docs/resources/templates/README.template.md`, skill `professional-documentation` |
 | MCP | `docs/ai/mcp/README.md`, `docs/ai/mcp/MCP_POLICY.md` |
 | Release | `docs/ai/workflows/50-release-handoff.md`, `CHANGELOG.md`, `VERSION` |
 

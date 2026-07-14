@@ -12,7 +12,7 @@ Não instalar dependências manualmente sem deixar o projeto reprodutível.
 
 | Ecossistema | Manifesto |
 |---|---|
-| Python simples | `requirements.txt` |
+| Python simples | `src/requirements.txt` |
 | Python moderno | `pyproject.toml` |
 | Python com Poetry/uv | `poetry.lock`, `uv.lock` |
 | Node.js | `package.json` + lockfile |
@@ -22,7 +22,7 @@ Não instalar dependências manualmente sem deixar o projeto reprodutível.
 | Docker | `Dockerfile`, `compose.yml` |
 | CI/CD | manifestos versionados |
 
-## `requirements.txt`
+## `src/requirements.txt`
 
 Criar ou atualizar quando houver:
 

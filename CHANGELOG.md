@@ -2,6 +2,17 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-07-14
+
+### Alterado
+- `requirements.txt` movido para `src/requirements.txt`; Docker, scripts e documentação actualizados.
+- Documentação agnóstica para publicação GitHub; paths de produção removidos de exemplos versionados.
+- `docs/ai/SKILLS.md`, `docs/AI_TEAM_WORKFLOW.md` e `tasks/template.md` removidos (duplicados).
+- Slack: exemplo sem URL pública; suporte a `SLACK_WEBHOOK_URL`; `setup-secrets-from-wells-api.ps1` sem hosts hardcoded.
+
+### Adicionado
+- Integração documentada com WELLS_API `GET /api/warden.php` (proxy estado da máquina).
+
 ## [Unreleased] - 2026-06-26
 
 ### Alterado

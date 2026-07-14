@@ -7,7 +7,7 @@ Manter a raiz do repositório o mais limpa possível, preservando apenas ficheir
 ## Permitido na raiz
 
 - `README.md`, `AGENTS.md`, `PROJECT_CONTEXT.md`, `COMMANDS.md`, `CHANGELOG.md`
-- `VERSION`, `LICENSE`, `requirements.txt`
+- `VERSION`, `LICENSE`
 - `.gitattributes`, `.gitignore`
 - `.github/`, `docs/`, `tasks/`, `scripts/`, `tools/`
 - pastas do produto: `src/`, `public/`, `docker/`, `deploy/`, `runtime/`, `secrets/`

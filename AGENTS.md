@@ -25,7 +25,7 @@ Ver `docs/ROOT_STRUCTURE.md`.
 Permitido na raiz:
 
 - `README.md`, `AGENTS.md`, `COMMANDS.md`, `CHANGELOG.md`, `PROJECT_CONTEXT.md`;
-- `VERSION`, `LICENSE`, `requirements.txt`;
+- `VERSION`, `LICENSE`;
 - `.gitattributes`, `.gitignore` — **obrigatórios na raiz** (Git não suporta outro path)
 - `.github/`, `docs/`, `tasks/`, `scripts/`, `tools/`;
 - pastas do produto: `src/`, `public/`, `docker/`, `deploy/`, `runtime/`, `secrets/`.

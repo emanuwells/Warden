@@ -7,7 +7,7 @@ Estrutura do repositório Warden, alinhada com o template em `docs/ROOT_STRUCTUR
 ```text
 .
 ├── AGENTS.md, README.md, PROJECT_CONTEXT.md, COMMANDS.md, CHANGELOG.md
-├── VERSION, LICENSE, requirements.txt
+├── VERSION, LICENSE, src/requirements.txt
 ├── .gitattributes, .gitignore
 ├── .github/, docs/, tasks/, scripts/, tools/
 ├── src/                    # Runtime Python (collector, alerts, settings)

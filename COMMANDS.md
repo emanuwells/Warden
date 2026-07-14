@@ -10,7 +10,7 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 |---|---|
 | Criar venv | `python3 -m venv .venv` |
 | Ativar venv Linux | `. .venv/bin/activate` |
-| Instalar dependências | `pip install -r requirements.txt` |
+| Instalar dependências | `pip install -r src/requirements.txt` |
 | Criar `.env` local | `cp docs/resources/templates/.env.example .env` |
 | Criar config DB local | `cp docs/resources/examples/secrets/database.json.example secrets/database.json` |
 | Setup schema | `.venv/bin/python -m src.warden --setup` |

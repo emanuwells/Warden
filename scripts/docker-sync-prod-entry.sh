@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_ROOT="/app"
 VENV_DIR="${APP_ROOT}/.venv"
-REQ_FILE="${APP_ROOT}/requirements.txt"
+REQ_FILE="${APP_ROOT}/src/requirements.txt"
 REQ_MARKER="${VENV_DIR}/.requirements-installed"
 EXPORT_DIR="${APP_ROOT}/runtime/export"
 SSH_KEY="/app/secrets/.ssh/id_ed25519"
@@ -43,12 +43,12 @@ ensure_venv_and_requirements() {
   . "${VENV_DIR}/bin/activate"
 
   if [ ! -f "$REQ_FILE" ]; then
-    log "Sem requirements.txt; a ignorar pip."
+    log "Sem src/requirements.txt; a ignorar pip."
     return 0
   fi
 
   if [ ! -f "$REQ_MARKER" ] || [ "$REQ_FILE" -nt "$REQ_MARKER" ]; then
-    log "A instalar dependências de requirements.txt..."
+    log "A instalar dependências de src/requirements.txt..."
     pip install --disable-pip-version-check -q -r "$REQ_FILE"
     touch "$REQ_MARKER"
   else

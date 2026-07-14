@@ -5,6 +5,7 @@ Small helper around Slack incoming webhooks.
 
 from __future__ import annotations
 
+import os
 import json
 import logging
 from pathlib import Path
@@ -33,15 +34,21 @@ class SlackNotifier:
         return bool(settings.slack_enabled and self.webhook_url)
 
     def _load(self, path: Path) -> None:
-        if not path.exists():
-            logger.warning("Slack config not found at %s", path)
-            return
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except Exception as exc:
-            logger.error("Failed to parse Slack config %s: %s", path, exc)
-            return
-        self.webhook_url = str(payload.get("webhook_url") or "").strip() or None
+        env_webhook = os.getenv("SLACK_WEBHOOK_URL", "").strip()
+        if env_webhook:
+            self.webhook_url = env_webhook
+        if path.exists():
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except Exception as exc:
+                logger.error("Failed to parse Slack config %s: %s", path, exc)
+                payload = {}
+        else:
+            if not env_webhook:
+                logger.warning("Slack config not found at %s", path)
+            payload = {}
+        if not self.webhook_url:
+            self.webhook_url = str(payload.get("webhook_url") or "").strip() or None
         self.channel = str(payload.get("channel") or "").strip() or None
         if "notify_on_recovery" in payload:
             self.notify_on_recovery = bool(payload.get("notify_on_recovery"))

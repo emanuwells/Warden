@@ -18,6 +18,22 @@ Registo operacional por iteração. Atualizar em tarefas não triviais.
 
 ---
 
+## 2026-07-14T15:05:00+01:00 — Repo público + WELLS_API warden
+
+**Estado:** concluído (local) / prod pendente  
+**Risco:** médio  
+**Objetivo:** Limpeza conservadora, sanitização GitHub, `src/requirements.txt`, proxy `GET /api/warden.php`.  
+**Alterações:**
+- `src/requirements.txt`: movido da raiz; Docker e docs actualizados.
+- Removidos duplicados: `docs/ai/SKILLS.md`, `docs/AI_TEAM_WORKFLOW.md`, `tasks/template.md`.
+- Slack: `SLACK_WEBHOOK_URL`, exemplo sem URL; `setup-secrets-from-wells-api.ps1` sem hosts hardcoded.
+- Docs agnósticos: README, PROJECT_CONTEXT, HANDOFF, architecture.
+- WELLS_API: `api/warden.php`, config examples, explorer, publish scripts.
+**Validação:** `py_compile` OK; `php -l` OK; smoke `warden.php?help=1` local OK.  
+**Pendente:** commit + push; `git pull` prod Warden; publish WELLS_API com `apis.warden.api_url`; smoke remoto.
+
+---
+
 ## 2026-06-18T14:50:00+01:00 — Integração do template de governança IA sénior (Fase 1)
 
 **Estado:** concluído  

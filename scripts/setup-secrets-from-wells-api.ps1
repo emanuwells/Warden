@@ -6,6 +6,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $dst = Join-Path $repoRoot 'secrets'
 $src = $WellsApiRoot
+$exampleEnv = Join-Path $repoRoot 'docs\resources\examples\secrets\production.deploy.local.env.example'
 
 if (-not (Test-Path -LiteralPath (Join-Path $src 'secrets\production.deploy.local.env'))) {
     throw "WELLS_API não encontrado ou sem secrets: $src"
@@ -32,14 +33,10 @@ foreach ($item in $files) {
 $deployEnv = Join-Path $dst 'production.deploy.local.env'
 $content = Get-Content -LiteralPath $deployEnv -Raw
 if ($content -notmatch 'WARDEN_RUNTIME_ROOT=') {
-    Add-Content -LiteralPath $deployEnv -Value @(
-        '',
-        'WARDEN_DEPLOY_SSH_HOST=195.23.9.32',
-        'WARDEN_DEPLOY_SSH_USER=eferreira',
-        'WARDEN_DEPLOY_SSH_PORT=22',
-        'WARDEN_RUNTIME_ROOT=/home/eferreira/MAIATRON/Warden'
+    Write-Warning @(
+        'WARDEN_RUNTIME_ROOT em falta no ficheiro copiado.',
+        "Adicionar manualmente ou copiar de: $exampleEnv"
     )
-    Write-Host 'Adicionadas variáveis WARDEN_* ao production.deploy.local.env'
 }
 
 Write-Host 'Concluído. Testar: .\scripts\Invoke-WardenSsh.ps1 -RemoteCommand "hostname"'

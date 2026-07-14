@@ -14,7 +14,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY requirements.txt /app/requirements.txt
+COPY src/requirements.txt /app/src/requirements.txt
 COPY scripts/docker-sync-prod-entry.sh /app/scripts/docker-sync-prod-entry.sh
 
 RUN chmod +x /app/scripts/docker-sync-prod-entry.sh \

@@ -7,8 +7,8 @@ from pathlib import Path
 
 from src.settings import BASE_DIR
 
-_DEFAULT_CRONTAB_LOG_DIR = "/home/eferreira/D4MAIA/_crontab_logs"
-_DEFAULT_MARIADB_EXTRA = "/home/eferreira/MAIATRON/Warden/secrets/mariadb-dump.cnf"
+_DEFAULT_CRONTAB_LOG_DIR = "/var/log/overseer"
+_DEFAULT_MARIADB_EXTRA = str(BASE_DIR / "secrets" / "mariadb-dump.cnf")
 
 
 def _path(key: str, default: str) -> Path:
@@ -32,7 +32,7 @@ BACKUP_RETENTION_DAYS = int(os.getenv("WARDEN_BACKUP_DB_RETENTION_DAYS", "3"))
 MARIADB_EXTRA_FILE = _path("WARDEN_MARIADB_EXTRA_FILE", _DEFAULT_MARIADB_EXTRA)
 
 NGINX_SOURCE_DIR = _path("WARDEN_NGINX_SOURCE_DIR", "/usr/share/nginx/html")
-NGINX_EXCLUDE_DIR = _path("WARDEN_NGINX_EXCLUDE_DIR", "/usr/share/nginx/html/D4CMMaia/gdrive")
+NGINX_EXCLUDE_DIR = _path("WARDEN_NGINX_EXCLUDE_DIR", "/usr/share/nginx/html/exclude")
 NGINX_BACKUP_DIR = _path("WARDEN_NGINX_BACKUP_DIR", "/BackupNGINX")
 NGINX_TEMP_DIR = _path("WARDEN_NGINX_TEMP_DIR", "/tmp/nginx_backup_temp")
 NGINX_BACKUP_KEEP = int(os.getenv("WARDEN_NGINX_BACKUP_KEEP", "3"))

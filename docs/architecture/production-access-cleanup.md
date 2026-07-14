@@ -226,8 +226,8 @@ sudo visudo -cf /etc/sudoers.d/warden-host-hygiene
 ### 6.2 Dry-run e execução
 
 ```bash
-export WARDEN_HUB_ROOT=/usr/share/nginx/html/MAIATRON-HUB
-export WARDEN_CRONTAB_LOG_DIR=/home/eferreira/D4MAIA/_crontab_logs
+export WARDEN_HUB_ROOT=/usr/share/nginx/html/hub
+export WARDEN_CRONTAB_LOG_DIR=/var/log/overseer
 /usr/local/sbin/warden-host-hygiene --dry-run
 /usr/local/sbin/warden-host-hygiene
 ```

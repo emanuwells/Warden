@@ -38,7 +38,7 @@
 | Área | Ferramenta | Observações |
 |---|---|---|
 | Logs | `runtime/logs/` | Gitignored |
-| Alertas | Slack webhooks | Imediatos + digest diário |
+| Alertas | Configuração Slack local (`secrets/slack.json` ou `SLACK_WEBHOOK_URL`) | Imediatos + digest diário |
 | Métricas | Dashboard UI | Auto-refresh 30s |
 | Health | `python -m src.warden --once` | Smoke manual |
 

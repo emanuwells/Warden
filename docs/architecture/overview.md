@@ -10,7 +10,7 @@ Runtime de monitorização agnóstico de plataforma. Recolhe métricas de sistem
 |---|---|
 | Domínio | Monitorização de infraestrutura e base de dados |
 | Utilizadores principais | Operadores de sistemas, equipa de infraestrutura |
-| Sistemas externos | MariaDB, Slack (webhooks), HUB/plataforma host (API/UI opcional) |
+| Sistemas externos | MariaDB, canal de alertas (Slack), HUB/plataforma host (API/UI opcional) |
 | Dados críticos | Métricas de sistema, snapshots JSON, eventos de alerta |
 | Restrições técnicas | Python 3.10+, MariaDB, systemd/cron, Docker opcional |
 
@@ -31,8 +31,8 @@ Runtime de monitorização agnóstico de plataforma. Recolhe métricas de sistem
 src.warden (collector, COLLECT_INTERVAL) --> MariaDB (warden_metrics)
 cron fast/heavy/full --> export_payload.py --> runtime/export/*.json
 cron/systemd --> warden_clean.py --> MariaDB (cleanup)
-cron/systemd --> slack_alerts.py --> Slack webhooks
-cron/systemd --> slack_daily_digest.py --> Slack webhooks
+cron/systemd --> slack_alerts.py --> canal de alertas
+cron/systemd --> slack_daily_digest.py --> canal de alertas
 runtime/export/*.json --> api.php (ops_fast / ops_heavy) --> UI (polling)
 ```
 

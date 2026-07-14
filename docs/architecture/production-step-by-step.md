@@ -16,7 +16,7 @@
 cd "$WARDEN_RUNTIME_ROOT"
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -r requirements.txt
+pip install -r src/requirements.txt
 cp docs/resources/templates/.env.example .env
 cp docs/resources/examples/secrets/database.json.example secrets/database.json
 ```

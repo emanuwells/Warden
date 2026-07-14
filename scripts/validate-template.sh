@@ -21,7 +21,7 @@ require_dir() {
 
 for f in \
   AGENTS.md README.md COMMANDS.md CHANGELOG.md VERSION LICENSE \
-  .gitattributes .gitignore PROJECT_CONTEXT.md requirements.txt \
+  .gitattributes .gitignore PROJECT_CONTEXT.md src/requirements.txt \
   .github/SECURITY.md docs/governance/CONTRIBUTING.md \
   docs/ROOT_STRUCTURE.md \
   docs/resources/README.md \
