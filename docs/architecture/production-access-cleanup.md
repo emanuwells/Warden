@@ -197,7 +197,7 @@ ssh USER@HOST 'cd $WARDEN_RUNTIME_ROOT && bash scripts/validate-pipeline.sh'
 
 Ver também [`warden-pipeline.md`](warden-pipeline.md) (Fase 1 checklist e Fase 2 desenho).
 
-Registar em `docs/ai/ops/HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
+Registar em `.agents/state/HANDOFF.md`: uso de disco antes/depois, ações executadas, serviços verificados.
 
 ## 6. Host hygiene (logs SO e artefactos .bak)
 

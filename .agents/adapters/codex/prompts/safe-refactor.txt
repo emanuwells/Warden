@@ -1,0 +1,1 @@
+Lê .agents/AGENTS.md e executa o refactor de forma faseada, preservando comportamento e validando regressões.

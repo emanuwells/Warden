@@ -115,4 +115,4 @@ Ver ADR: [docs/adr/0001-warden-dual-snapshot-pipeline.md](adr/0001-warden-dual-s
 - `scripts/crontab.example` — schedule canónico
 - `scripts/validate-pipeline.sh` — smoke do pipeline
 - `docs/architecture/production-access-cleanup.md` — runbook de limpeza
-- `docs/ai/ops/HANDOFF.md` — estado operacional
+- `.agents/state/HANDOFF.md` — estado operacional

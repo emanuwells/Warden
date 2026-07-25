@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Valida a estrutura essencial do repositório Warden (alinhada com Repo template).
+Valida a estrutura essencial do repositório Warden (WELLS Agent Runtime 0.5.0).
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -22,39 +22,43 @@ function Assert-Dir {
 }
 
 @(
-    'AGENTS.md','README.md','COMMANDS.md','CHANGELOG.md','VERSION','LICENSE',
+    'README.md','COMMANDS.md','CHANGELOG.md','VERSION','LICENSE',
+    'CONTRIBUTING.md','SECURITY.md','PROJECT_CONTEXT.md',
     '.gitattributes','.gitignore',
+    '.agents/AGENTS.md','.agents/INDEX.md','.agents/manifest.json',
+    '.agents/toolkit-lock.json',
     '.github/SECURITY.md','docs/governance/CONTRIBUTING.md',
     'docs/ROOT_STRUCTURE.md',
-    'docs/resources/templates/PROJECT_CONTEXT.template.md',
     'docs/resources/templates/.gitignore.template',
     'docs/resources/templates/.env.example',
     'docs/resources/examples/secrets/README.md',
-    'PROJECT_CONTEXT.md','src/requirements.txt',
+    'src/requirements.txt',
     'docker/compose.dev.yml','docker/.dockerignore'
 ) | ForEach-Object { Assert-File $_ }
 
 @(
-    '.github','docs','docs/ai','docs/architecture','docs/adr','docs/governance',
+    '.agents','.agents/core','.agents/skills','.agents/workflows',
+    '.agents/roles','.agents/policies','.agents/ops','.agents/mcp',
+    '.agents/adapters','.agents/state','.agents/tools',
+    '.github','docs','docs/architecture','docs/adr','docs/governance',
     'docs/resources','docs/resources/templates','docs/resources/examples',
     'docs/resources/examples/secrets','docs/resources/examples/config',
-    'tasks','scripts','tools','tools/ai-adapters',
-    'src','public','docker','deploy','deploy/systemd','runtime','secrets'
+    'scripts','src','public','docker','deploy','deploy/systemd','runtime','secrets'
 ) | ForEach-Object { Assert-Dir $_ }
 
 @(
-    'docs/ai/DAILY_AGENT_WORKFLOW.md',
-    'docs/ai/policies/CONTEXT_BUDGET_POLICY.md',
-    'docs/ai/policies/SECRETS_POLICY.md',
-    'docs/ai/ops/HANDOFF.md',
-    'docs/ai/ops/RUNBOOK.md',
+    '.agents/core/DAILY_AGENT_WORKFLOW.md',
+    '.agents/policies/CONTEXT_BUDGET_POLICY.md',
+    '.agents/policies/SECRETS_POLICY.md',
+    '.agents/state/HANDOFF.md',
+    '.agents/ops/RUNBOOK.md',
     'docs/architecture/overview.md',
     'docs/architecture/deployment.md',
     'deploy/systemd/warden.service'
 ) | ForEach-Object { Assert-File $_ }
 
 @(
-    'CONTRIBUTING.md','SECURITY.md','PROJECT_CONTEXT.template.md',
+    'AGENTS.md','PROJECT_CONTEXT.template.md',
     '.gitignore.template','.env.example','docker-compose.yml','warden.py','.dockerignore'
 ) | ForEach-Object {
     if (Test-Path $_) {
@@ -62,7 +66,7 @@ function Assert-Dir {
     }
 }
 
-@('.cursor','.claude','.codex','.devin','.vscode','.cursorrules','.windsurfrules','CLAUDE.md','GEMINI.md','.agents') | ForEach-Object {
+@('.cursor','.claude','.codex','.devin','.vscode','.cursorrules','.windsurfrules','CLAUDE.md','GEMINI.md') | ForEach-Object {
     if (Test-Path $_) {
         throw "Item não deve estar na raiz por defeito: $_"
     }
@@ -72,9 +76,14 @@ if (Test-Path '.github/copilot-instructions.md') {
     throw 'Adaptador Copilot ativo na raiz por defeito.'
 }
 
-$AgentsLines = (Get-Content 'AGENTS.md').Count
-if ($AgentsLines -gt 220) {
-    throw "AGENTS.md demasiado longo: $AgentsLines linhas. Objetivo: <= 220."
+$Manifest = Get-Content '.agents/manifest.json' -Raw | ConvertFrom-Json
+if ($Manifest.version -ne '0.5.0') {
+    throw "Toolkit esperado 0.5.0; encontrado: $($Manifest.version)"
+}
+
+$AgentsWords = ((Get-Content '.agents/AGENTS.md' -Raw) -split '\s+').Where({ $_ }).Count
+if ($AgentsWords -gt 700) {
+    throw ".agents/AGENTS.md demasiado longo: $AgentsWords palavras. Objetivo: <= 700."
 }
 
 $Version = (Get-Content 'VERSION' -Raw).Trim()
@@ -82,4 +91,11 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     throw "VERSION não usa SemVer: $Version"
 }
 
-Write-Host "Estrutura válida. Versão: $Version. AGENTS.md: $AgentsLines linhas."
+if (Get-Command node -ErrorAction SilentlyContinue) {
+    node .agents/tools/validate-project.mjs | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw 'validate-project.mjs falhou.'
+    }
+}
+
+Write-Host "Estrutura válida. Warden: $Version. Toolkit: $($Manifest.version). AGENTS.md: $AgentsWords palavras."

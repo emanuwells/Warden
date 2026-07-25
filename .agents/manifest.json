@@ -1,0 +1,38 @@
+{
+  "name": "WELLS Agent Runtime",
+  "version": "0.5.0",
+  "entrypoint": ".agents/AGENTS.md",
+  "prompt": "Lê .agents/AGENTS.md e <tarefa>.",
+  "counts": {
+    "skills": 28,
+    "roles": 11,
+    "policies": 14,
+    "workflows": 7
+  },
+  "state": [
+    ".agents/state/TODO.md",
+    ".agents/state/HANDOFF.md",
+    ".agents/state/LESSONS.md",
+    ".agents/state/DECISIONS.md",
+    ".agents/state/EVIDENCE.md"
+  ],
+  "managedRoots": [
+    ".agents/core",
+    ".agents/skills",
+    ".agents/workflows",
+    ".agents/roles",
+    ".agents/policies",
+    ".agents/ops",
+    ".agents/mcp",
+    ".agents/adapters",
+    ".agents/handoffs",
+    ".agents/templates"
+  ],
+  "contextPolicy": {
+    "automatic": [
+      ".agents/AGENTS.md"
+    ],
+    "defaultMaxWorkflows": 1,
+    "defaultMaxSkills": 2
+  }
+}

@@ -71,10 +71,9 @@ Fluxo resumido:
 Warden/
 ├── VERSION                        # Versão SemVer canónica (fonte para releases)
 ├── LICENSE                        # Proprietária — todos os direitos reservados
-├── AGENTS.md, PROJECT_CONTEXT.md, COMMANDS.md
-├── CHANGELOG.md
-├── README.md
-├── docs/ai/                       # Políticas, runbook, handoff, MCP e Skills
+├── PROJECT_CONTEXT.md, COMMANDS.md, CHANGELOG.md, README.md
+├── CONTRIBUTING.md, SECURITY.md
+├── .agents/                       # WELLS Agent Runtime (contrato, skills, estado)
 ├── docs/resources/                # templates/ e examples/ (secrets, config)
 ├── docs/architecture/             # Deploy, pipeline, produção
 ├── public/www/                    # UI/API local (Docker :8080)
@@ -85,8 +84,7 @@ Warden/
 │   ├── compose.dev.yml            # Stack web local (UI/API :8080)
 │   ├── compose.pipeline.yml       # Collector + scheduler
 │   └── compose.sync.yml           # SCP snapshots de produção
-├── secrets/, runtime/, docs/
-└── tools/ai-adapters/             # Adaptadores de IDE/agentes
+└── secrets/, runtime/, docs/
 ```
 
 ## Requisitos
@@ -316,15 +314,15 @@ Retenção de arquivos semanais: `scripts/weekly_archive.py` com `WEEKLY_ARCHIVE
 | Item | Estado |
 |---|---|
 | MCP no repo | **N/A** — sem `.cursor/mcp.json` / `.mcp.json` versionado; configurar no IDE se necessário |
-| Skills | Pacote canónico em `docs/ai/skills/`; compatibilidade Claude Code em `tools/ai-adapters/claude/.claude/skills/` — inventário em [`docs/ai/skills/README.md`](docs/ai/skills/README.md) |
-| Regras para IAs | [`AGENTS.md`](AGENTS.md) |
+| Skills | Pacote canónico em [`.agents/skills/`](.agents/skills/); inventário em [`.agents/skills/README.md`](.agents/skills/README.md) |
+| Regras para IAs | [`.agents/AGENTS.md`](.agents/AGENTS.md) |
 
 Documentação de governança:
 
 | Documento | Uso |
 |---|---|
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Stack, paths, comandos, riscos |
-| [`docs/ai/ops/HANDOFF.md`](docs/ai/ops/HANDOFF.md) | Estado operacional e próximos passos |
+| [`.agents/state/HANDOFF.md`](.agents/state/HANDOFF.md) | Estado operacional e próximos passos |
 
 ## Métricas de crescimento (v2.x)
 
@@ -332,7 +330,7 @@ O payload expõe crescimento por janela para disco e DB (`disk_*_gb_avg`, `disk_
 
 ## Changelog
 
-Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`docs/ai/policies/CHANGELOG_POLICY.md`](docs/ai/policies/CHANGELOG_POLICY.md)).
+Alterações versionadas: [`CHANGELOG.md`](CHANGELOG.md) (política em [`.agents/policies/CHANGELOG_POLICY.md`](.agents/policies/CHANGELOG_POLICY.md)).
 
 ## Licença e versão
 

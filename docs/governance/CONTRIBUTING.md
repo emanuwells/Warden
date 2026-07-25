@@ -4,7 +4,7 @@ Este projeto é orientado a desenvolvimento solo com apoio de IA. Ainda assim, t
 
 ## Fluxo
 
-1. Ler `AGENTS.md`.
+1. Ler `.agents/AGENTS.md`.
 2. Confirmar contexto em `PROJECT_CONTEXT.md`.
 3. Trabalhar em branch ou worktree para alterações relevantes.
 4. Fazer alterações pequenas e reversíveis.

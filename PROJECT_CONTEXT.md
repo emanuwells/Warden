@@ -2,7 +2,7 @@
 
 Contexto do projeto Warden: runtime de monitorização agnóstico de plataforma.
 
-Ler com `AGENTS.md`, `COMMANDS.md` e, em tarefas operacionais, `docs/ai/ops/HANDOFF.md`.
+Ler com `.agents/AGENTS.md`, `COMMANDS.md` e, em tarefas operacionais, `.agents/state/HANDOFF.md`.
 
 ## Identidade
 

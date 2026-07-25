@@ -2,6 +2,14 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-07-26
+
+### Alterado
+- Migração para WELLS Agent Runtime **0.5.0** em `.agents/` (entrada canónica `.agents/AGENTS.md`).
+- Removidos legados `docs/ai/`, `tools/ai-adapters/`, `AGENTS.md` na raiz e `tasks/` (estado transportado para `.agents/state/`).
+- `README.md`, `COMMANDS.md`, `PROJECT_CONTEXT.md`, `docs/ROOT_STRUCTURE.md` e `scripts/validate-template.ps1` alinhados com o novo layout.
+- Adicionados `CONTRIBUTING.md` e `SECURITY.md` na raiz.
+
 ## [Unreleased] - 2026-07-14
 
 ### Alterado

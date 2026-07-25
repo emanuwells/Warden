@@ -73,7 +73,7 @@ A confirmar.
 
 - Segredos reais não são versionados.
 - Usar `.env.example`.
-- Consultar `docs/ai/policies/SECRETS_POLICY.md`.
+- Consultar `.agents/policies/SECRETS_POLICY.md`.
 
 ## Troubleshooting
 

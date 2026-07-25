@@ -1,6 +1,6 @@
 # COMMANDS.md
 
-Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `docs/ai/ops/HANDOFF.md`.
+Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `.agents/state/HANDOFF.md`.
 
 Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de comandos SSH remotos.
 
@@ -100,9 +100,11 @@ Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de 
 
 | Ação | Comando |
 |---|---|
-| Ver política MCP | `Get-Content docs/ai/mcp/MCP_POLICY.md` |
-| Ver exemplos MCP | `Get-ChildItem docs/ai/mcp` |
-| Ver inventário de Skills | `Get-Content docs/ai/skills/README.md` |
+| Ver política MCP | `Get-Content .agents/mcp/MCP_POLICY.md` |
+| Ver exemplos MCP | `Get-ChildItem .agents/mcp` |
+| Ver inventário de Skills | `Get-Content .agents/skills/README.md` |
+| Validar toolkit WELLS | `node .agents/tools/validate-project.mjs` |
+| Validar estrutura do repo | `.\scripts\validate-template.ps1` |
 
 ## Comandos Proibidos Sem Confirmação
 

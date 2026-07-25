@@ -1,0 +1,1 @@
+Lê .agents/AGENTS.md e entrega a funcionalidade pedida com alterações mínimas, validação relevante e handoff proporcional.
