@@ -20,14 +20,14 @@ Registo operacional por iteração. Atualizar em tarefas não triviais.
 
 ## 2026-07-26T00:30:00+01:00 — WELLS toolkit 0.5.0 → main/prod
 
-**Estado:** em progresso  
+**Estado:** concluído  
 **Risco:** médio  
 **Objetivo:** Confirmar toolkit 0.5.0, validar repo, merge para `main`, alinhar git local e produção.  
 **Alterações:**
 - `.agents/`: runtime WELLS 0.5.0; legado `docs/ai/`, `tools/ai-adapters/`, `AGENTS.md`, `tasks/` removidos.
 - Docs e `scripts/validate-template.ps1` alinhados ao novo layout.
-**Validação:** `node .agents/tools/validate-project.mjs` OK; `.\scripts\validate-template.ps1` OK; `py_compile` OK; `php -l` OK; `compose.dev` OK.  
-**Pendente:** commit na branch, merge `main`, push, `git pull --ff-only` em prod + `validate-pipeline.sh`.
+**Validação:** toolkit OK; template OK; `py_compile` OK; `php -l` OK; prod `validate-pipeline.sh` PASS; SHAs local/origin/prod = `33ce878`.  
+**Pendente:** N/A.
 
 ---
 

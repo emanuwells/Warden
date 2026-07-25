@@ -5,8 +5,8 @@
 | Campo | Valor |
 |---|---|
 | Última atualização | 2026-07-26 |
-| Objetivo actual | Merge WELLS toolkit 0.5.0 em main + alinhar prod |
-| Estado | Pronto para merge — ver `.agents/state/TODO.md` |
+| Objetivo actual | Operação normal pós-merge WELLS 0.5.0 |
+| Estado | Concluído — local/origin/prod em `33ce878` |
 | Versão registada | 2.1.0 (`VERSION`); toolkit 0.5.0 |
 
 ## Estado operacional (resumo)

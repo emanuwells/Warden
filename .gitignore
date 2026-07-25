@@ -3,6 +3,7 @@
 .env.docker
 .env.*
 !docs/resources/templates/.env.example
+!.agents/templates/.env.example
 
 # Dependencias
 node_modules/
