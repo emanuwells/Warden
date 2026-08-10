@@ -18,6 +18,19 @@ Registo operacional por iteração. Atualizar em tarefas não triviais.
 
 ---
 
+## 2026-08-10T15:06:58+01:00 — Auditoria de limpeza em produção
+
+**Estado:** concluído
+**Risco:** crítico
+**Objetivo:** Diagnosticar a pressão de disco, executar limpeza conservadora e garantir recorrência.
+**Alterações:**
+- `.agents/state/EVIDENCE.md`: evidência do dry-run e dos diagnósticos read-only.
+- `.agents/state/HANDOFF.md`: estado operacional e candidatos de limpeza.
+**Validação:** espaço livre 4,4 → 5,7 GB; serviço e cron activos; pipeline PASS; últimas dez runs `warden_clean` OK; zero Snaps desactivados e zero cache/imagens Docker recuperáveis.
+**Pendente:** N/A; redução da janela PITR ou retenção de backups requer decisão operacional separada.
+
+---
+
 ## 2026-07-26T00:30:00+01:00 — WELLS toolkit 0.5.0 → main/prod
 
 **Estado:** concluído  

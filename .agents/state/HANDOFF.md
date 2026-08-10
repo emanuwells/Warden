@@ -40,3 +40,16 @@ Paths concretos de host, utilizador SSH e URLs internas **não** pertencem ao re
 4. Publicar `warden.php` no WELLS_API e validar `GET /api/warden.php`.
 
 Ver [`docs/architecture/production-access-cleanup.md`](../../docs/architecture/production-access-cleanup.md) e [`COMMANDS.md`](../../COMMANDS.md).
+
+## Limpeza de disco em produção (2026-08-10)
+
+- Auditoria inicial e limpeza conservadora executadas com os scripts versionados e comandos SSH delimitados.
+- `/` passou de 96%/4,4 GB livres para 94%/5,7 GB livres; inodes sem pressão (23%).
+- `warden` activo; runtime Warden pequeno e sem temporários antigos relevantes.
+- 96 binlogs ocupam 9,26 GB; não existem réplicas; `.env` define purga a 2 dias, mas o servidor mantém 7 dias por defeito.
+- Removidos: sete Snaps desactivados, `.bak` excedentes, imagem/cache Docker, 25 760 registos Warden expirados e seis bundles antigos em `/tmp`.
+- `/BackupNGINX` (4,3 GB) e `/BackupDB` (853 MB) contêm backups recentes e foram preservados.
+- `warden_clean` diário está saudável no Overseer: últimas dez runs `ok`; o HTTP 500 observado era histórico/transitório.
+- `host_hygiene` foi reactivado no crontab às 01:30; `cron` activo e script validado por execução real e dry-run final.
+- Validação final: `warden` activo, `validate-pipeline.sh` PASS, zero Snaps desactivados e zero espaço Docker recuperável.
+- Não limpar automaticamente: binlogs dentro da janela PITR, backups recentes, logs de auditoria ou áreas de aplicação externas ao Warden.
