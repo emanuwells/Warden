@@ -56,9 +56,13 @@ runtime/logs/*.err.log
 runtime/cache/**
 runtime/export/**
 runtime/archive/**
+runtime/operational/**
+runtime/operational_jobs/**
 !runtime/cache/.gitkeep
 !runtime/export/.gitkeep
 !runtime/archive/.gitkeep
+!runtime/operational/.gitkeep
+!runtime/operational_jobs/.gitkeep
 
 # Frontend payloads (generated)
 frontend/warden_payload.json
