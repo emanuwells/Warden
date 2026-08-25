@@ -1,41 +1,21 @@
 ---
 name: api-contract-guardian
-description: Protege endpoints, payloads, status codes e autenticação.
+description: Protege contratos HTTP/API: rotas, payloads, autenticação, códigos de estado e compatibilidade. Usar ao criar ou alterar endpoints; não usar para mudanças internas sem impacto externo.
 ---
 
-# Guardião de Contratos de API
-
-## Quando usar
-
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Protege endpoints, payloads, status codes e autenticação.
+# Guardião de contratos de API
 
 ## Procedimento
 
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
+1. Identificar consumidores, versão e comportamento atual.
+2. Comparar request, response, erros, autenticação e códigos de estado.
+3. Preservar compatibilidade; quando não for possível, documentar breaking change e migração.
+4. Validar inputs no limite da aplicação e produzir erros consistentes.
+5. Atualizar especificação, exemplos e testes de contrato quando existirem.
 
-## Regras
+## Critérios
 
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+- Não expor campos internos, segredos ou detalhes de stack.
+- Distinguir `400`, `401`, `403`, `404`, `409`, `422` e `500` de forma coerente.
+- Confirmar serialização, nullability, paginação, filtros e idempotência.
+- Testar pelo menos sucesso, input inválido e autorização.

@@ -1,0 +1,31 @@
+{
+  "version": 5,
+  "skillsPath": ".agents/skills",
+  "hooksPath": ".agents/extensions/hooks",
+  "pluginsPath": ".agents/extensions/plugins",
+  "claudeAdapter": ".agents/adapters/claude",
+  "defaults": {
+    "executableExtensionsEnabled": false,
+    "maxSelectedSkills": 2,
+    "maxSelectedWorkflows": 1,
+    "automaticOutputProfiles": [
+      "headroom",
+      "ponytail"
+    ],
+    "automaticProseProfiles": [
+      "humanizer",
+      "stop-the-slop"
+    ],
+    "modelRoutingPolicy": ".agents/core/MODEL_ROUTING.md",
+    "contextLayers": [
+      "core",
+      "on-demand"
+    ],
+    "managedBuiltinHooks": [
+      "safe-output-hygiene"
+    ]
+  },
+  "notes": "Skills são carregadas pelo router; hooks/plugins personalizados começam desativados. O único hook executável built-in ativo por defeito é safe-output-hygiene, determinístico, sem LLM e limitado a higiene textual conservadora.",
+  "integrationsPath": ".agents/integrations",
+  "knowledgePath": ".agents/knowledge"
+}

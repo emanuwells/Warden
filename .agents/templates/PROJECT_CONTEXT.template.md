@@ -6,7 +6,7 @@ Contexto técnico vivo do projeto. Este ficheiro deve ser criado a partir deste 
 
 - Nome do projeto:
 - Descrição curta:
-- Responsável:
+- Responsável: Emanuel Ferreira (`@emanuwells`)
 - Versão atual:
 - Estado: planeamento / desenvolvimento / produção / manutenção
 

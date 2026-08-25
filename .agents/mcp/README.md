@@ -28,3 +28,7 @@ independente de MCP, IDE e fornecedor.
 
 Os exemplos são neutros e devem ser adaptados fora do Git. Segredos reais nunca
 podem ser colocados em `.agents/mcp/`.
+
+## Integrações on-demand
+
+As receitas atuais estão em `.agents/integrations/recipes/`: Context7, GitHub MCP read-only, Docker MCP Toolkit e Sentry MCP. Nenhuma é ativada automaticamente pelo projeto.

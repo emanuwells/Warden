@@ -1,41 +1,15 @@
 ---
 name: repo-onboarding
-description: Mapeia o projeto antes de alterações não triviais.
+description: Mapeia rapidamente um repositório desconhecido: stack, entrypoints, comandos, arquitetura e riscos. Usar antes de alterações não triviais sem contexto suficiente.
 ---
 
-# Integração Inicial do Repositório
+# Onboarding de repositório
 
-## Quando usar
+1. Ler `AGENTS.md`, árvore de topo e manifests principais.
+2. Identificar entrypoints, módulos, dados, testes e deployment.
+3. Ler apenas secções relevantes de README, PROJECT_CONTEXT e COMMANDS.
+4. Confirmar convenções reais em dois ou três ficheiros representativos.
+5. Produzir mapa curto com caminhos e incógnitas.
+6. Parar a exploração quando existir contexto suficiente para a tarefa.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Mapeia o projeto antes de alterações não triviais.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Não gerar documentação extensa nem inventariar todos os ficheiros por defeito.

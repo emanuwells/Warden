@@ -1,13 +1,13 @@
 {
   "name": "WELLS Agent Runtime",
-  "version": "0.5.0",
+  "version": "1.3.0",
   "entrypoint": ".agents/AGENTS.md",
   "prompt": "Lê .agents/AGENTS.md e <tarefa>.",
   "counts": {
-    "skills": 28,
+    "skills": 59,
     "roles": 11,
-    "policies": 14,
-    "workflows": 7
+    "policies": 21,
+    "workflows": 12
   },
   "state": [
     ".agents/state/TODO.md",
@@ -26,13 +26,121 @@
     ".agents/mcp",
     ".agents/adapters",
     ".agents/handoffs",
-    ".agents/templates"
+    ".agents/templates",
+    ".agents/extensions",
+    ".agents/hooks",
+    ".agents/setup",
+    ".agents/tools",
+    ".agents/knowledge",
+    ".agents/integrations",
+    ".agents/vendor",
+    ".agents/evals"
   ],
   "contextPolicy": {
-    "automatic": [
+    "automatic": [],
+    "canonicalOnDemand": [
       ".agents/AGENTS.md"
     ],
     "defaultMaxWorkflows": 1,
-    "defaultMaxSkills": 2
-  }
+    "defaultMaxSkills": 2,
+    "maxBootstrapWords": 140,
+    "maxRuntimeWords": 650,
+    "layers": {
+      "core": [
+        ".agents/AGENTS.md",
+        "request",
+        "direct-files"
+      ],
+      "onDemand": [
+        "INDEX",
+        "workflow",
+        "skills",
+        "roles",
+        "policies",
+        "state",
+        "integrations"
+      ],
+      "evals": "never-during-normal-work"
+    }
+  },
+  "canonicalRuntime": ".agents/AGENTS.md",
+  "nativeEntrypoints": {},
+  "universalSkillsPath": ".agents/skills",
+  "claudeAdapter": {
+    "plugin": ".agents/adapters/claude/plugin",
+    "personalSkills": ".agents/adapters/claude/user-skills",
+    "marketplaceTarget": "~/.wells-ai/claude-marketplace",
+    "install": "claude plugin install wells-runtime@wells-ai"
+  },
+  "knowledgeGraph": {
+    "root": ".agents/knowledge",
+    "index": ".agents/knowledge/INDEX.md",
+    "graph": ".agents/knowledge/GRAPH.json",
+    "sources": ".agents/knowledge/SOURCES.yml"
+  },
+  "outputProfiles": {
+    "automatic": [
+      "headroom",
+      "ponytail"
+    ],
+    "prose": [
+      "humanizer",
+      "stop-the-slop"
+    ]
+  },
+  "modelRouting": {
+    "policy": ".agents/core/MODEL_ROUTING.md",
+    "profiles": [
+      "free",
+      "economical",
+      "premium"
+    ],
+    "providerAgnostic": true
+  },
+  "evals": {
+    "root": ".agents/evals",
+    "tasks": 10,
+    "scoring": ".agents/evals/SCORING.md"
+  },
+  "outputHygiene": {
+    "policy": ".agents/policies/OUTPUT_HYGIENE_POLICY.md",
+    "finalizer": ".agents/tools/wells-finalize.mjs",
+    "mode": "safe-deterministic",
+    "automaticClaudeStopHook": ".agents/extensions/hooks/safe-output-hygiene",
+    "llmCalls": 0,
+    "excludes": [
+      "C2PA",
+      "authorship metadata",
+      "visual watermarks",
+      "ZWJ/ZWNJ",
+      "bidi controls"
+    ]
+  },
+  "currentDocs": {
+    "skill": ".agents/skills/context7-current-docs/SKILL.md",
+    "integration": "context7-cli",
+    "onDemand": true
+  },
+  "securityGate": {
+    "skill": ".agents/skills/security-quality-gate/SKILL.md",
+    "tool": ".agents/tools/security-gate.mjs",
+    "automatic": false
+  },
+  "owner": {
+    "name": "Emanuel Ferreira",
+    "github": "emanuwells"
+  },
+  "githubAutomation": {
+    "policy": ".agents/policies/GITHUB_AUTOMATION_POLICY.md",
+    "workflow": ".agents/workflows/60-github-automation.md",
+    "generator": ".agents/tools/lib/github.mjs",
+    "defaultMode": "dry-run",
+    "preserveExisting": true,
+    "shaPinActions": true
+  },
+  "immutableRuntimeFiles": [
+    ".agents/AGENTS.md",
+    ".agents/INDEX.md",
+    ".agents/manifest.json"
+  ]
 }

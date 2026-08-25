@@ -1,22 +1,15 @@
 ---
 name: docs-maintainer
-description: Atualiza README, COMMANDS, CHANGELOG, PROJECT_CONTEXT, tasks e docs em PT-PT com rigor técnico.
+description: Atualiza documentação técnica e de utilização após mudanças reais. Usar quando comandos, comportamento, configuração, arquitetura ou API mudam; não alterar docs por rotina.
 ---
 
+# Manutenção de documentação
 
-# Docs Maintainer
+1. Confirmar a alteração no código e nos comandos reais.
+2. Atualizar apenas as secções afetadas.
+3. Preservar terminologia, exemplos executáveis e caminhos corretos.
+4. Separar documentação pública de contexto interno.
+5. Atualizar changelog apenas para alterações versionáveis.
+6. Remover afirmações desatualizadas sem inventar substitutos.
 
-## Processo
-
-1. Identificar documentação afetada.
-2. Atualizar conteúdo com factos reais.
-3. Corrigir PT-PT e acentuação.
-4. Manter badges honestos.
-5. Atualizar changelog append-only.
-6. Atualizar .agents/state/TODO.md e lessons quando aplicável.
-
-## Regras
-
-- Não inventar comandos.
-- Não declarar stack não confirmada.
-- Não usar linguagem comercial vaga.
+Documentação deve ser verificável, não promocional nem genérica.

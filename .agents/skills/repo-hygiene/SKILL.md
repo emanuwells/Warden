@@ -1,41 +1,15 @@
 ---
 name: repo-hygiene
-description: Audita e remove com segurança ficheiros desnecessários.
+description: Audita estrutura e remove ficheiros temporários, duplicados ou obsoletos com prova de não utilização. Usar em limpeza explícita; não misturar com feature/bugfix.
 ---
 
-# Higiene do Repositório
+# Higiene do repositório
 
-## Quando usar
+1. Listar candidatos e respetivas referências.
+2. Confirmar uso em imports, scripts, CI, documentação e build.
+3. Distinguir gerado, cache, artefacto, fonte e configuração.
+4. Remover em lotes pequenos e reversíveis.
+5. Atualizar `.gitignore` apenas para padrões realmente gerados.
+6. Executar testes/build após remoção.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Audita e remove com segurança ficheiros desnecessários.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Nunca apagar ficheiros apenas por nome ou data sem verificar dependências.

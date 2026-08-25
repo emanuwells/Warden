@@ -1,0 +1,681 @@
+{
+  "version": 4,
+  "verifiedAt": "2026-08-16",
+  "profiles": {
+    "core": [
+      "headroom-lite",
+      "safe-output-hygiene",
+      "humanizer",
+      "stop-the-slop",
+      "ponytail",
+      "wells-knowledge-graph"
+    ],
+    "recommended": [
+      "graphify",
+      "codeburn",
+      "anthropic-official-skills",
+      "anthropic-code-review",
+      "playwright-cli",
+      "context7-cli"
+    ],
+    "frontend": [
+      "anthropic-frontend-design",
+      "impeccable",
+      "emil-design-engineering",
+      "taste-frontend",
+      "vercel-web-design-guidelines",
+      "shadcn-ui-skill",
+      "image-to-code",
+      "awesome-design-md",
+      "vercel-react-best-practices",
+      "playwright-cli"
+    ],
+    "knowledge": [
+      "graphify",
+      "obsidian-skills"
+    ],
+    "observability": [
+      "codeburn"
+    ],
+    "experimental": [
+      "headroom-proxy",
+      "omniroute",
+      "claude-mem"
+    ],
+    "utilities": [
+      "remove-ai-marks"
+    ],
+    "docs": [
+      "context7-cli"
+    ],
+    "security": [
+      "gitleaks",
+      "trivy"
+    ],
+    "security-deep": [
+      "gitleaks",
+      "trivy",
+      "semgrep-ce"
+    ],
+    "mcp-optional": [
+      "github-mcp",
+      "docker-mcp-toolkit",
+      "sentry-mcp"
+    ]
+  },
+  "integrations": [
+    {
+      "id": "headroom-lite",
+      "kind": "built-in",
+      "source": ".agents/tools/headroom.mjs",
+      "license": "project",
+      "risk": "low",
+      "activation": "automatic-large-output",
+      "scope": "project",
+      "installed": true,
+      "testedVersion": "1.0.0",
+      "testedRef": "local",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "with-toolkit-release",
+      "autoInstall": true,
+      "notes": "Compressor determinístico local; não usa proxy nem reduz a janela de contexto do provider."
+    },
+    {
+      "id": "safe-output-hygiene",
+      "kind": "built-in",
+      "source": ".agents/tools/watermark-hygiene.mjs",
+      "license": "project",
+      "risk": "low",
+      "activation": "automatic-safe-text-only",
+      "scope": "project",
+      "installed": true,
+      "testedVersion": "1.3.0",
+      "testedRef": "local",
+      "verifiedAt": "2026-08-24",
+      "updatePolicy": "with-toolkit-release",
+      "autoInstall": true,
+      "notes": "Determinístico e sem LLM; apenas caracteres invisíveis conservadores. Exclui metadata/C2PA/marcas visuais."
+    },
+    {
+      "id": "headroom-proxy",
+      "kind": "external-proxy",
+      "source": "https://github.com/roman-ryzenadvanced/headroom-skill",
+      "license": "Apache-2.0",
+      "risk": "high",
+      "activation": "explicit-only",
+      "scope": "user",
+      "testedVersion": "verified-main",
+      "testedRef": "main",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "conflicts": [
+        "Pode alterar routing/contexto e limitar capacidades do plano/subscrição"
+      ],
+      "notes": "Não necessário para o runtime WELLS; manter experimental."
+    },
+    {
+      "id": "humanizer",
+      "kind": "embedded-guidance",
+      "source": "https://github.com/blader/humanizer",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "automatic-prose",
+      "scope": "project",
+      "installed": true,
+      "testedVersion": "2.9.1",
+      "testedRef": "v2.9.1",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false
+    },
+    {
+      "id": "stop-the-slop",
+      "kind": "embedded-guidance",
+      "source": "https://github.com/hardikpandya/stop-slop",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "automatic-prose",
+      "scope": "project",
+      "installed": true,
+      "testedVersion": "verified-main",
+      "testedRef": "main",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false
+    },
+    {
+      "id": "ponytail",
+      "kind": "embedded-guidance",
+      "source": "https://github.com/DietrichGebert/ponytail",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "automatic-output",
+      "scope": "project",
+      "installed": true,
+      "testedVersion": "4.8.4",
+      "testedRef": "bc9ee94",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false
+    },
+    {
+      "id": "wells-knowledge-graph",
+      "kind": "built-in",
+      "source": ".agents/knowledge",
+      "license": "project",
+      "risk": "low",
+      "activation": "automatic-durable-knowledge",
+      "scope": "project",
+      "installed": true,
+      "testedVersion": "1.0.0",
+      "testedRef": "local",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "with-toolkit-release",
+      "autoInstall": true
+    },
+    {
+      "id": "graphify",
+      "kind": "external-cli",
+      "source": "https://github.com/Graphify-Labs/graphify",
+      "license": "Apache-2.0",
+      "risk": "medium",
+      "activation": "project-conditional",
+      "scope": "project",
+      "testedVersion": "0.9.26",
+      "testedRef": "66d8110",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "prerequisites": [
+        "Python 3.10+",
+        "uv ou pipx"
+      ],
+      "install": [
+        "uv tool install graphifyy==0.9.26"
+      ],
+      "verify": [
+        "graphify --help",
+        "graphify .",
+        "graphify query \"pergunta concreta\""
+      ],
+      "notes": "Usar graphify-out/ como índice estrutural descartável; o grafo WELLS continua a fonte de conhecimento durável."
+    },
+    {
+      "id": "codeburn",
+      "kind": "external-cli",
+      "source": "https://github.com/getagentseal/codeburn",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "manual-observability",
+      "scope": "user",
+      "testedVersion": ">=0.9.8-verified",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "prerequisites": [
+        "Node.js 22.13+"
+      ],
+      "install": [
+        "npm install -g codeburn@0.9.8"
+      ],
+      "verify": [
+        "codeburn overview --no-color"
+      ],
+      "notes": "Local-first; não usa proxy nem API keys."
+    },
+    {
+      "id": "anthropic-official-skills",
+      "kind": "claude-marketplace",
+      "source": "https://github.com/anthropics/skills",
+      "license": "mixed-see-upstream",
+      "risk": "low",
+      "activation": "manual-by-skill",
+      "scope": "user",
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "marketplace-reviewed",
+      "autoInstall": false,
+      "install": [
+        "/plugin marketplace add anthropics/skills",
+        "/plugin install document-skills@anthropic-agent-skills"
+      ],
+      "notes": "Instalar apenas packs necessários; licenças variam por skill."
+    },
+    {
+      "id": "anthropic-frontend-design",
+      "kind": "claude-plugin-skill",
+      "source": "https://github.com/anthropics/skills/tree/main/skills/frontend-design",
+      "license": "see-upstream",
+      "risk": "low",
+      "activation": "frontend-conditional",
+      "scope": "user",
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "marketplace-reviewed",
+      "autoInstall": false,
+      "notes": "Direção de criação frontend; wrapper WELLS mantém routing multi-agent."
+    },
+    {
+      "id": "anthropic-code-review",
+      "kind": "claude-plugin",
+      "source": "https://github.com/anthropics/claude-code/tree/main/plugins/code-review",
+      "license": "see-upstream",
+      "risk": "low",
+      "activation": "manual-review",
+      "scope": "user",
+      "testedVersion": "bundled-current",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "with-claude-code",
+      "autoInstall": false,
+      "verify": [
+        "/code-review"
+      ]
+    },
+    {
+      "id": "impeccable",
+      "kind": "agent-skills-pack",
+      "source": "https://github.com/pbakaus/impeccable",
+      "license": "Apache-2.0",
+      "risk": "low",
+      "activation": "frontend-product-or-audit",
+      "scope": "user-or-project",
+      "testedVersion": "4.0.2",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "install": [
+        "npx skills add https://github.com/pbakaus/impeccable --skill impeccable"
+      ],
+      "notes": "Base recomendada para aplicações, dashboards, polish e auditoria por passes limitados."
+    },
+    {
+      "id": "emil-design-engineering",
+      "kind": "agent-skills-pack",
+      "source": "https://github.com/emilkowalski/skills",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "frontend-motion-conditional",
+      "scope": "user-or-project",
+      "testedVersion": "verified-main",
+      "testedRef": "e695d13",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "notes": "Motion e microinterações; não carregar em UI estática trivial."
+    },
+    {
+      "id": "taste-frontend",
+      "kind": "agent-skill",
+      "source": "https://github.com/Leonxlnx/taste-skill",
+      "license": "MIT",
+      "risk": "medium",
+      "activation": "marketing-portfolio-only",
+      "scope": "user-or-project",
+      "testedVersion": "v2-experimental",
+      "testedRef": "main@2026-08-16",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "install": [
+        "npx skills add https://github.com/Leonxlnx/taste-skill --skill design-taste-frontend"
+      ],
+      "notes": "Não usar em dashboards, data tables ou fluxos multi-step."
+    },
+    {
+      "id": "vercel-web-design-guidelines",
+      "kind": "agent-skill",
+      "source": "https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines",
+      "license": "MIT",
+      "risk": "medium",
+      "activation": "frontend-review-only",
+      "scope": "user-or-project",
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-08-16",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "notes": "Wrapper WELLS usa referência revista; não faz fetch remoto automático em cada sessão."
+    },
+    {
+      "id": "shadcn-ui-skill",
+      "kind": "agent-skill",
+      "source": "https://github.com/shadcn-ui/ui/tree/main/skills/shadcn",
+      "license": "MIT",
+      "risk": "medium",
+      "activation": "detect-components-json",
+      "scope": "project",
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "conflicts": [
+        "O upstream usa shadcn@latest e um probe load-time; WELLS exige versão fixada e aprovação",
+        "Monorepos exigem workspace explícito"
+      ],
+      "notes": "Usar wrapper WELLS; comandos read-only antes de mutações."
+    },
+    {
+      "id": "obsidian-skills",
+      "kind": "agent-skills-pack",
+      "source": "https://github.com/kepano/obsidian-skills",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "detect-.obsidian",
+      "scope": "user-or-vault",
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-07-27",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "install": [
+        "/plugin marketplace add kepano/obsidian-skills",
+        "/plugin install obsidian@obsidian-skills"
+      ],
+      "notes": "Ativar apenas em vaults ou por pedido explícito."
+    },
+    {
+      "id": "omniroute",
+      "kind": "local-gateway",
+      "source": "https://github.com/diegosouzapw/OmniRoute",
+      "license": "MIT",
+      "risk": "high",
+      "activation": "explicit-provider-fallback",
+      "scope": "user",
+      "testedVersion": "3.8.49",
+      "testedRef": "release/v3.8.49",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "install": [
+        "npm install -g omniroute@3.8.49"
+      ],
+      "verify": [
+        "omniroute --help"
+      ],
+      "conflicts": [
+        "Altera endpoint, autenticação e routing",
+        "Não transfere automaticamente estado entre CLIs/agentes"
+      ],
+      "notes": "Fallback de providers/modelos; continuidade cross-agent depende de HANDOFF e grafo WELLS."
+    },
+    {
+      "id": "claude-mem",
+      "kind": "claude-plugin-service",
+      "source": "https://github.com/thedotmack/claude-mem",
+      "license": "Apache-2.0",
+      "risk": "high",
+      "activation": "explicit-persistent-memory",
+      "scope": "user",
+      "testedVersion": "13.0.0",
+      "testedRef": "v13.0.0",
+      "verifiedAt": "2026-07-27",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "install": [
+        "npx claude-mem@13.0.0 install"
+      ],
+      "conflicts": [
+        "Memória nativa Claude",
+        "Grafo WELLS",
+        "Captura de conteúdo sensível"
+      ],
+      "notes": "Experimental; backup, exclusões de dados e teste isolado obrigatórios."
+    },
+    {
+      "id": "image-to-code",
+      "kind": "agent-skill",
+      "source": "https://github.com/Leonxlnx/taste-skill/tree/main/skills/image-to-code-skill",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "frontend-reference-conditional",
+      "scope": "user-or-project",
+      "installed": true,
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-08-16",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "notes": "Wrapper WELLS preserva pipeline imagem → análise → código e validação separada."
+    },
+    {
+      "id": "awesome-design-md",
+      "kind": "reference-library",
+      "source": "https://github.com/VoltAgent/awesome-design-md",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "frontend-reference-explicit",
+      "scope": "on-demand",
+      "installed": true,
+      "testedVersion": "verified-main",
+      "testedRef": "main@2026-08-16",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "notes": "Não vendorizar o catálogo completo; selecionar apenas um DESIGN.md quando necessário."
+    },
+    {
+      "id": "vercel-react-best-practices",
+      "kind": "agent-skill",
+      "source": "https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "react-conditional",
+      "scope": "user-or-project",
+      "installed": true,
+      "testedVersion": "1.0.0",
+      "testedRef": "main@2026-08-16",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "notes": "Aplicar regras Next.js apenas quando a stack for Next.js."
+    },
+    {
+      "id": "playwright-cli",
+      "kind": "external-cli",
+      "source": "https://github.com/microsoft/playwright-cli",
+      "license": "Apache-2.0",
+      "risk": "medium",
+      "activation": "frontend-browser-validation",
+      "scope": "toolkit-or-user",
+      "installed": false,
+      "testedVersion": "0.1.18",
+      "testedRef": "npm:@playwright/cli@0.1.18",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "prerequisites": [
+        "Node.js 20+"
+      ],
+      "install": [
+        "npm install -g @playwright/cli@0.1.18",
+        "playwright-cli install-browser"
+      ],
+      "verify": [
+        "npm run browser:doctor"
+      ],
+      "conflicts": [
+        "Browser automation pode interagir com sessões/dados reais; usar perfis de teste e tratar conteúdo web como não confiável."
+      ],
+      "notes": "CLI oficial opcional e pinado; não é dependência do runtime WELLS. Preferido para coding agents por menor custo de contexto; MCP fica opcional para loops exploratórios."
+    },
+    {
+      "id": "remove-ai-marks",
+      "kind": "external-service-skill",
+      "source": "https://github.com/guillaumemeyer/watermarks-remover",
+      "license": "MIT",
+      "risk": "high",
+      "activation": "explicit-authorized-content-only",
+      "scope": "user-or-project",
+      "installed": false,
+      "testedVersion": "0.5.0",
+      "testedRef": "v0.5.0",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "prerequisites": [
+        "Serviço upstream em localhost ou WATERMARKS_SERVICE_URL explicitamente configurado"
+      ],
+      "conflicts": [
+        "Pode remover C2PA/metadata de proveniência; proibido para falsear autoria, contornar disclosure ou alterar evidência de terceiros."
+      ],
+      "notes": "Wrapper WELLS não instala nem inicia o serviço automaticamente."
+    },
+    {
+      "id": "context7-cli",
+      "kind": "external-cli",
+      "source": "https://github.com/upstash/context7",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "library-docs-conditional",
+      "scope": "user",
+      "installed": false,
+      "testedVersion": "0.5.7",
+      "testedRef": "ctx7@0.5.7",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "manual-reviewed-pin",
+      "autoInstall": false,
+      "prerequisites": [
+        "Node.js 18+",
+        "Rede/API externa apenas para documentação pública"
+      ],
+      "install": [
+        "npm install -g ctx7@0.5.7",
+        "ctx7 --version"
+      ],
+      "verify": [
+        "node .agents/tools/context7-doctor.mjs"
+      ],
+      "notes": "Preferir CLI + skill para progressive disclosure. MCP é opcional; nunca enviar código privado ou segredos nas consultas."
+    },
+    {
+      "id": "trivy",
+      "kind": "external-cli",
+      "source": "https://github.com/aquasecurity/trivy",
+      "license": "Apache-2.0",
+      "risk": "low",
+      "activation": "security-gate-conditional",
+      "scope": "user-or-ci",
+      "installed": false,
+      "testedVersion": "docs-latest-2026-08-16",
+      "testedRef": "main",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "package-manager-reviewed",
+      "autoInstall": false,
+      "verify": [
+        "trivy --version",
+        "node .agents/tools/security-gate.mjs --project . --mode quick"
+      ],
+      "notes": "Filesystem scanner para vuln, misconfig, secrets e licenças. O gate WELLS usa HIGH/CRITICAL e não instala a ferramenta."
+    },
+    {
+      "id": "gitleaks",
+      "kind": "external-cli",
+      "source": "https://github.com/gitleaks/gitleaks",
+      "license": "MIT",
+      "risk": "low",
+      "activation": "security-gate-conditional",
+      "scope": "user-or-ci",
+      "installed": false,
+      "testedVersion": "v8-interface-2026-08-16",
+      "testedRef": "master",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "package-manager-reviewed",
+      "autoInstall": false,
+      "verify": [
+        "gitleaks version",
+        "node .agents/tools/security-gate.mjs --project . --mode quick"
+      ],
+      "notes": "Deteção determinística de passwords, API keys e tokens em Git/ficheiros."
+    },
+    {
+      "id": "semgrep-ce",
+      "kind": "external-cli",
+      "source": "https://github.com/semgrep/semgrep",
+      "license": "LGPL-2.1-only",
+      "risk": "medium",
+      "activation": "deep-security-review-only",
+      "scope": "user-or-ci",
+      "installed": false,
+      "testedVersion": "cli-current-2026-08-16",
+      "testedRef": "develop",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "package-manager-reviewed",
+      "autoInstall": false,
+      "prerequisites": [
+        "Python/uv/pipx conforme plataforma",
+        "Regras/configuração revistas antes de bloquear release"
+      ],
+      "verify": [
+        "semgrep --version",
+        "node .agents/tools/security-gate.mjs --project . --mode deep"
+      ],
+      "notes": "SAST on-demand. `semgrep scan --config auto --error` pode necessitar rede para regras; não corre no fecho normal."
+    },
+    {
+      "id": "github-mcp",
+      "kind": "external-mcp",
+      "source": "https://github.com/github/github-mcp-server",
+      "license": "MIT",
+      "risk": "medium",
+      "activation": "github-context-on-demand",
+      "scope": "user",
+      "installed": false,
+      "testedVersion": "official-current-2026-08-16",
+      "testedRef": "main",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "official-client-reviewed",
+      "autoInstall": false,
+      "prerequisites": [
+        "Credencial GitHub fora do repositório",
+        "Read-only e toolsets mínimos por defeito"
+      ],
+      "notes": "Servidor MCP oficial. WELLS recomenda read-only por defeito e escrita apenas por pedido explícito."
+    },
+    {
+      "id": "docker-mcp-toolkit",
+      "kind": "mcp-gateway",
+      "source": "https://docs.docker.com/ai/mcp-catalog-and-toolkit/",
+      "license": "vendor-product",
+      "risk": "medium",
+      "activation": "multi-mcp-user-optional",
+      "scope": "user",
+      "installed": false,
+      "testedVersion": "Docker-Desktop-4.62+-docs",
+      "testedRef": "docs-current-2026-08-16",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "vendor-reviewed",
+      "autoInstall": false,
+      "prerequisites": [
+        "Docker Desktop com MCP Toolkit disponível"
+      ],
+      "notes": "Gestão/isolamento de MCPs em perfis. Não é requisito WELLS nem deve expor filesystem/sockets sem necessidade."
+    },
+    {
+      "id": "sentry-mcp",
+      "kind": "external-mcp",
+      "source": "https://docs.sentry.io/product/sentry-mcp/",
+      "license": "vendor-service",
+      "risk": "medium",
+      "activation": "existing-sentry-project-only",
+      "scope": "user",
+      "installed": false,
+      "testedVersion": "official-current-2026-08-16",
+      "testedRef": "docs-current",
+      "verifiedAt": "2026-08-16",
+      "updatePolicy": "vendor-reviewed",
+      "autoInstall": false,
+      "prerequisites": [
+        "Projeto já usa Sentry",
+        "Permissões mínimas e contexto da organização/projeto"
+      ],
+      "notes": "Apenas para incidentes/performance quando Sentry já é fonte real. Não adicionar Sentry por causa do Toolkit."
+    }
+  ]
+}

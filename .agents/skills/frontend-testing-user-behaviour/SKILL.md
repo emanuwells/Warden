@@ -1,41 +1,13 @@
 ---
 name: frontend-testing-user-behaviour
-description: Testa comportamento observável do utilizador.
+description: Escreve testes frontend orientados ao comportamento do utilizador e regressões reais. Usar para componentes, hooks e fluxos UI.
 ---
 
-# Testes Frontend do Comportamento do Utilizador
+# Testes frontend
 
-## Quando usar
-
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Testa comportamento observável do utilizador.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+- Testar resultados visíveis e interações, não detalhes internos.
+- Selecionar elementos por papel, label ou texto acessível.
+- Cobrir sucesso, validação, erro e estado assíncrono relevante.
+- Mockar fronteiras externas, não toda a implementação.
+- Evitar snapshots extensos e waits arbitrários.
+- Reproduzir o bug antes da correção quando for regressão.

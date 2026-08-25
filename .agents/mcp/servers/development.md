@@ -60,3 +60,12 @@ Regras:
 - não executar ações reais em produção;
 - preferir ambientes locais/staging;
 - não guardar credenciais no navegador automatizado.
+
+## WELLS 1.2 — integrações recomendadas on-demand
+
+- **Context7:** preferir CLI + skill; MCP só quando tool calling persistente compensa o contexto.
+- **GitHub MCP oficial:** PR/issues/checks remotos; read-only e toolsets mínimos por defeito.
+- **Docker MCP Toolkit/Gateway:** opção de utilizador para gerir vários MCPs isolados; não é dependência do repo.
+- **Sentry MCP:** apenas em projetos que já usam Sentry e para diagnóstico observável.
+
+Ver recipes em `.agents/integrations/recipes/` e a política de permissões antes de ativar.

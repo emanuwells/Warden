@@ -7,7 +7,7 @@ IDE, modelo ou fornecedor.
 .agents/
 ├── AGENTS.md        # entrada universal e orçamento de contexto
 ├── INDEX.md         # routing por tipo de tarefa
-├── core/            # orchestrator e modelo operacional
+├── core/            # orchestrator, modelo operacional e model routing
 ├── state/           # TODO, HANDOFF, LESSONS, DECISIONS e EVIDENCE
 ├── skills/          # capacidades especializadas, lidas seletivamente
 ├── workflows/       # processos por tipo de tarefa
@@ -18,6 +18,7 @@ IDE, modelo ou fornecedor.
 ├── adapters/        # apontadores curtos por ferramenta
 ├── handoffs/        # orientação para continuidade
 ├── templates/       # modelos reutilizáveis
+├── evals/           # benchmarks provider-agnostic, fora do contexto normal
 └── tools/           # validação local do sistema
 ```
 

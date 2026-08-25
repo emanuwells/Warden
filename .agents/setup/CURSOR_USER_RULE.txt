@@ -1,0 +1,1 @@
+Quando o projeto contiver `.agents/AGENTS.md`, lê esse ficheiro como contrato canónico antes de tarefas de desenvolvimento. Segue o routing progressivo e não carregues toda a biblioteca `.agents/` nem o repositório completo por defeito.

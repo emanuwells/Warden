@@ -1,0 +1,14 @@
+{
+  "name": "safe-output-hygiene",
+  "description": "Executa higiene determinística WELLS após alterações e no fecho, sem LLM nem remoção de proveniência/metadata.",
+  "enabled": true,
+  "events": [
+    "PostToolUse",
+    "Stop"
+  ],
+  "handler": "handler.mjs",
+  "priority": 900,
+  "timeoutMs": 15000,
+  "failureMode": "warn",
+  "managedBuiltin": true
+}

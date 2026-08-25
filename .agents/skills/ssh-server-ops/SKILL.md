@@ -1,41 +1,15 @@
 ---
 name: ssh-server-ops
-description: Opera GitHub/servidores via SSH com segurança.
+description: Executa operações SSH, Git e administração remota com segurança, confirmação e rollback. Usar em servidores reais; não ativar para desenvolvimento local.
 ---
 
-# Operações SSH em Servidor
+# Operações SSH e servidor
 
-## Quando usar
+1. Confirmar host, ambiente e objetivo antes de executar.
+2. Recolher estado read-only primeiro: serviços, disco, memória, logs e Git.
+3. Criar backup ou ponto de rollback antes de alterações.
+4. Executar um comando por vez e validar resultado.
+5. Evitar alterações manuais não documentadas em produção.
+6. Registar comandos relevantes sem segredos.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Opera GitHub/servidores via SSH com segurança.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Reboots, deletes, firewall, permissões, deploy e base de dados exigem confirmação explícita.

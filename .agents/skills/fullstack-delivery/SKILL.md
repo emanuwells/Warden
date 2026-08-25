@@ -1,41 +1,15 @@
 ---
 name: fullstack-delivery
-description: Coordena frontend, backend, DB, Docker e deploy.
+description: Coordena alterações que atravessam frontend, backend, API e dados. Usar apenas quando a funcionalidade cruza várias camadas.
 ---
 
-# Entrega Full-stack
+# Entrega full stack
 
-## Quando usar
+1. Definir contrato e fluxo de dados ponta a ponta.
+2. Ordenar trabalho: schema/contrato, backend, frontend, testes e documentação.
+3. Preservar compatibilidade entre versões durante rollout.
+4. Validar autorização e regras de negócio em servidor.
+5. Testar integração real entre camadas e estados de erro.
+6. Dividir em fases se o diff ficar difícil de rever ou reverter.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Coordena frontend, backend, DB, Docker e deploy.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Não duplicar validação crítica apenas no cliente.

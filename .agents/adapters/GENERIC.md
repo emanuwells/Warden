@@ -1,7 +1,5 @@
 # Adaptador genérico
 
-Prompt universal:
+Prompt universal: `Lê .agents/AGENTS.md e <tarefa>.`.
 
-```text
-Lê .agents/AGENTS.md e segue o carregamento seletivo. Tarefa: <pedido>.
-```
+Modelo/provider: seguir `.agents/core/MODEL_ROUTING.md`; o adapter não fixa modelos concretos.

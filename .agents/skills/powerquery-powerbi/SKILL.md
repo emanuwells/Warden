@@ -1,41 +1,23 @@
 ---
 name: powerquery-powerbi
-description: Apoia Power Query M, DAX e modelos Power BI.
+description: Trabalha com Power Query M, DAX, modelação Power BI e qualidade de dados. Usar em queries, medidas, relações ou preparação de dados para BI.
 ---
 
 # Power Query e Power BI
 
-## Quando usar
+## Power Query
 
-Usar quando a tarefa tocar neste domínio.
+- Preservar query folding quando a fonte o suporta.
+- Tipar colunas explicitamente após estabilizar nomes.
+- Evitar expansão prematura e passos repetidos sobre a mesma fonte.
+- Separar staging, dimensões, factos e parâmetros reutilizáveis.
+- Tratar nulls, chaves, duplicados e erros de conversão de forma explícita.
 
-## Objetivo
+## Modelo/DAX
 
-Apoia Power Query M, DAX e modelos Power BI.
+- Preferir star schema, relações 1:* e direção simples.
+- Usar medidas para cálculos dependentes do contexto de filtro.
+- Distinguir row context, filter context e transição de contexto.
+- Evitar relações many-to-many e colunas calculadas sem necessidade.
 
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Validar totais, granularidade, cardinalidade e casos sem correspondência antes de concluir.

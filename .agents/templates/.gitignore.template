@@ -74,3 +74,9 @@ desktop.ini
 *.temp
 *.swp
 *.swo
+
+# Browser automation / E2E
+.playwright-cli/
+playwright-report/
+test-results/
+

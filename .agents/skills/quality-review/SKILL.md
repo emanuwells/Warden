@@ -1,24 +1,19 @@
 ---
 name: quality-review
-description: Revê alterações técnicas com foco em bugs, regressões, segurança, testes, documentação e higiene do repositório.
+description: Revê diffs ou implementação com foco em bugs, regressões, segurança, contratos, testes e documentação. Usar para revisão independente; não alterar código sem pedido.
 ---
 
+# Revisão de qualidade
 
-# Quality Review
+Inspecionar primeiro o diff e depois apenas o contexto necessário. Reportar findings por severidade com ficheiro/linha, impacto e correção recomendada.
 
-## Checklist
+Verificar:
+- comportamento incorreto e regressões;
+- validação, autorização e exposição de dados;
+- contratos API e migrações;
+- concorrência, idempotência e erros;
+- testes ausentes ou frágeis;
+- documentação e configuração desatualizadas;
+- dependências e ficheiros desnecessários.
 
-- Bug funcional.
-- Regressão provável.
-- Erro de contrato API.
-- Falta de validação de input.
-- Segredo ou dado sensível exposto.
-- Teste ausente.
-- Documentação desatualizada.
-- Ficheiro inútil ou temporário.
-- Dependência desnecessária.
-- Naming vago.
-
-## Saída
-
-Separar por severidade: crítica, alta, média, baixa.
+Se não houver findings, declarar o risco residual e as validações observadas.

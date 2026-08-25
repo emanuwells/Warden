@@ -20,13 +20,15 @@ workflows. Seleciona-os depois de classificar a tarefa.
 
 ## Decisão de routing
 
-1. Classifica: feature, bug, refactor, docs, dados, operações, segurança ou revisão.
+1. Classifica: feature, bug, refactor, docs, dados/pipeline, operações/incidente, GitHub/CI, segurança ou revisão.
 2. Classifica risco: baixo, médio, alto ou crítico.
 3. Escolhe um workflow primário em `.agents/INDEX.md`.
-4. Escolhe até duas skills; adiciona outra apenas com motivo explícito.
-5. Escolhe os papéis que devem validar, sem simular conversas ou duplicar trabalho.
-6. Define validação e rollback proporcionais ao risco.
-7. Usa `.agents/workflows/GOAL_SEEKING_LOOP.md` apenas quando existem critérios
+4. Escolhe até duas skills por fase; adiciona outra apenas com motivo explícito e noutra fase sempre que possível.
+5. Se depender de API/library externa variável, confirma a versão local e ativa `context7-current-docs` apenas para a dúvida concreta.
+6. Se a plataforma permitir escolher modelo, aplica `.agents/core/MODEL_ROUTING.md` por capacidade/custo e não por marca.
+7. Escolhe os papéis que devem validar, sem simular conversas ou duplicar trabalho.
+8. Define validação e rollback proporcionais ao risco; em release/segurança considera `security-quality-gate`.
+9. Usa `.agents/workflows/GOAL_SEEKING_LOOP.md` apenas quando existem critérios
    objetivos e é útil iterar.
 
 ## Escala de execução
@@ -65,8 +67,9 @@ papel alterarem a abordagem. Os papéis mais comuns são:
 
 Antes de concluir:
 
-1. revê o diff e o escopo;
-2. executa validações reais;
-3. atualiza TODO e HANDOFF se a tarefa for não trivial ou continuar;
-4. regista evidência, decisões, lessons e changelog apenas quando aplicável;
-5. comunica o que foi feito, o que foi validado, limitações e próximo passo.
+1. se houve alterações, executa `wells-finalize.mjs --changed --apply`;
+2. revê o diff e o escopo final;
+3. executa validações reais sobre o estado final;
+4. atualiza TODO e HANDOFF se a tarefa for não trivial ou continuar;
+5. regista evidência, decisões, lessons e changelog apenas quando aplicável;
+6. comunica o que foi feito, o que foi validado, limitações e próximo passo.

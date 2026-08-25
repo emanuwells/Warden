@@ -80,6 +80,17 @@ Não concluir trabalho técnico sem validação adequada ou limitação declarad
 [ ] Produção não alterada sem confirmação explícita.
 ```
 
+## GitHub / CI
+
+```text
+[ ] Workflows executam apenas comandos reais do projeto.
+[ ] `permissions` são mínimas e explícitas.
+[ ] Actions externas estão fixadas a SHA completo ou exceção justificada.
+[ ] Não existe `pull_request_target` inseguro.
+[ ] Dependabot cobre GitHub Actions e ecossistemas presentes.
+[ ] Rulesets/checks obrigatórios foram considerados.
+```
+
 ## Segurança
 
 ```text

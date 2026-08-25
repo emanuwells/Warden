@@ -14,6 +14,8 @@ Para trabalho não trivial:
 
 ## Durante a execução
 
+- em projetos consumidores, não editar `.agents/AGENTS.md`, `.agents/INDEX.md` ou `.agents/manifest.json`;
+- colocar contexto específico em `PROJECT_CONTEXT.md`, comandos em `COMMANDS.md` e extensões em `.agents/extensions/`;
 - alterações mínimas e coerentes;
 - sem refactor ou limpeza escondidos;
 - sem dependências novas sem justificação;

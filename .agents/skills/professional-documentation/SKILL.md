@@ -1,41 +1,19 @@
-# Skill — professional-documentation
+---
+name: professional-documentation
+description: Cria documentação profissional completa e factual: README, relatórios, arquitetura, manuais e propostas. Usar quando o output principal é documentação.
+---
 
-## Objetivo
+# Documentação profissional
 
-Criar e manter documentação profissional, factual e consistente, seguindo o
-padrão visual e estrutural do WELLS Project Template e do Traffic Flow.
-
-## README padrão
-
-Usar, quando aplicável:
-
-1. título e badges reais;
-2. descrição curta;
-3. visão geral;
-4. funcionalidades;
-5. arquitetura;
-6. stack;
-7. estrutura do projeto;
-8. requisitos;
-9. instalação;
-10. configuração;
-11. comandos/utilização/API;
-12. testes;
-13. deploy/operação;
-14. segurança;
-15. troubleshooting;
-16. changelog;
-17. licença.
-
-Remover secções que não se aplicam. Um script simples não deve fingir ter API,
-Docker ou arquitetura complexa. Não inventar badges, testes, versões, comandos,
-resultados, compatibilidade ou funcionalidades.
+Estrutura recomendada quando aplicável: título, descrição, funcionalidades,
+tecnologias, requisitos, instalação, configuração, utilização, estrutura,
+arquitetura, testes, troubleshooting, segurança, licença e changelog.
 
 ## Regras
 
-- Confirmar tudo no código, configuração e comandos reais.
-- Manter linguagem clara, humana e tecnicamente rigorosa.
-- Usar diagramas apenas quando acrescentam informação.
-- Atualizar README quando a utilização pública muda; detalhes internos pertencem
-  a `PROJECT_CONTEXT.md` ou documentação técnica.
-- Manter `CHANGELOG.md` append-only e SemVer.
+- Confirmar comandos, versões, paths, APIs e resultados no projeto real.
+- Remover secções não aplicáveis em vez de inventar conteúdo.
+- Usar exemplos executáveis e terminologia consistente.
+- Separar guia do utilizador, documentação técnica e contexto interno.
+- Diagramas só quando clarificam relações que o texto não explica melhor.
+- Changelog é append-only e segue SemVer.

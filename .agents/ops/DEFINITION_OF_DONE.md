@@ -24,6 +24,7 @@ Aplicar proporcionalmente ao risco. Tarefas simples podem ter validação leve; 
 [ ] .agents/state/LESSONS.md atualizado quando houve aprendizagem reutilizável.
 [ ] DECISIONS.md atualizado quando houve decisão permanente.
 [ ] Testes/build/lint/typecheck executados ou limitação justificada.
+[ ] GitHub/CI alterado: workflows auditados para permissões, SHA pins e eventos seguros.
 [ ] Riscos residuais indicados.
 [ ] Próximo passo claro, se existir.
 ```

@@ -1,41 +1,30 @@
 ---
 name: frontend-skill-orchestrator
-description: Coordena competências frontend relevantes.
+description: Seleciona por fase até duas skills técnicas, visuais ou de verificação para tarefas web sem carregar toda a biblioteca frontend.
 ---
 
-# Orquestrador de Competências Frontend
+# Orquestrador frontend
 
-## Quando usar
+## Direção
 
-Usar quando a tarefa tocar neste domínio.
+- produto/dashboard/backoffice: `frontend-design-direction` + `impeccable-ui`;
+- landing/portfolio/marketing: `taste-frontend` + `frontend-design-direction`;
+- screenshot/mockup: `image-to-code` + direção adequada à superfície;
+- inspiração/brand: `awesome-design-md` + `frontend-design-direction`;
+- motion: `emil-design-engineering` + direção/stack relevante.
 
-## Objetivo
+## Implementação técnica
 
-Coordena competências frontend relevantes.
+- React/Vite/TypeScript: `react-vite-typescript` + `vercel-react-best-practices` quando performance/padrões React forem materiais;
+- estrutura/estado: `frontend-component-architecture`;
+- API: `frontend-api-integration`;
+- shadcn: `shadcn-ui` apenas com `components.json` ou pedido explícito.
 
-## Procedimento
+## Verificação
 
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
+- comportamento visual/browser: `playwright-cli` + skill técnica relevante;
+- auditoria UI: `web-design-guidelines` + `frontend-accessibility-wcag`;
+- performance medida: `frontend-performance-web-vitals` + `vercel-react-best-practices` em React.
 
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Ativar no máximo duas skills por fase. Separar direção, implementação e auditoria em vez de
+somar skills. Não usar Taste em dashboards, data tables ou fluxos multi-step.

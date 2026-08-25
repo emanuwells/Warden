@@ -6,7 +6,11 @@ A disponibilidade de muitos ficheiros não autoriza o seu carregamento. O agente
 deve obter informação suficiente com o menor contexto que permita decidir com
 segurança.
 
-## Núcleo
+## Camadas de contexto
+
+**CORE bootstrap:** apenas `.agents/AGENTS.md` e ficheiros diretamente envolvidos.
+
+**ON-DEMAND:** INDEX, workflow, skills, roles, policies, estado, evals e integrações entram apenas depois de existir uma razão concreta. Evals nunca entram em tarefas normais.
 
 Apenas `.agents/AGENTS.md` é o ponto de entrada universal.
 
@@ -19,6 +23,8 @@ Apenas `.agents/AGENTS.md` é o ponto de entrada universal.
 | Evitar erro recorrente | secção relevante de `.agents/state/LESSONS.md` |
 | Escolher workflow/skill | `.agents/INDEX.md` |
 | Coordenar risco/multiárea | `.agents/core/ORCHESTRATOR.md` |
+| API/library variável | `context7-current-docs` + query mínima |
+| Segurança determinística | `security-quality-gate` sem carregar outputs completos no contexto |
 
 ## Limites operacionais
 

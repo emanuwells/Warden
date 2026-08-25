@@ -1,23 +1,15 @@
 ---
 name: feature-delivery
-description: Entrega features full stack com análise, critérios de aceitação, implementação mínima, testes, documentação e revisão.
+description: Entrega uma funcionalidade end-to-end com escopo, implementação mínima, testes e documentação proporcional. Usar em comportamento novo; não usar para bugfix ou refactor puro.
 ---
 
+# Entrega de funcionalidade
 
-# Feature Delivery
+1. Definir comportamento observável e critérios de aceitação.
+2. Localizar o menor conjunto de componentes afetados.
+3. Confirmar contratos, dados, segurança e compatibilidade.
+4. Implementar em incrementos pequenos.
+5. Testar happy path, erro relevante e regressão provável.
+6. Rever diff, atualizar documentação e registar limitações.
 
-## Processo
-
-1. Definir objetivo e critérios de aceitação.
-2. Mapear impacto em frontend, backend, base de dados e infra.
-3. Implementar o mínimo funcional.
-4. Tratar erros e estados limite.
-5. Executar validações.
-6. Atualizar documentação.
-7. Rever diff.
-
-## Regras
-
-- Não misturar refactor não pedido.
-- Não criar dependências sem justificação.
-- Não alterar contrato API sem declarar impacto.
+Evitar funcionalidades adjacentes, abstrações prematuras e refactors não necessários.

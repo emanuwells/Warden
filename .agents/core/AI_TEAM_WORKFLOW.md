@@ -9,8 +9,9 @@ depender de uma ferramenta específica.
 2. Localizar os ficheiros diretamente relacionados com o pedido.
 3. Consultar `.agents/INDEX.md` apenas se a tarefa exigir workflow ou skill.
 4. Usar `.agents/core/ORCHESTRATOR.md` apenas em trabalho multiárea ou de risco.
-5. Executar em passos pequenos, validar e rever o diff.
-6. Atualizar estado e documentação proporcionalmente à alteração.
+5. Escolher perfil de modelo por `.agents/core/MODEL_ROUTING.md` apenas se a plataforma expuser essa escolha.
+6. Executar em passos pequenos, validar e rever o diff.
+7. Atualizar estado e documentação proporcionalmente à alteração.
 
 ## Prompt universal
 

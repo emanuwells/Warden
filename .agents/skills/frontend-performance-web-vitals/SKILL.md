@@ -1,41 +1,15 @@
 ---
 name: frontend-performance-web-vitals
-description: Otimiza LCP, INP, CLS, bundle e imagens.
+description: Diagnostica performance web e Core Web Vitals, bundles, rendering, imagens e rede. Usar perante lentidão medida ou requisito explícito de performance.
 ---
 
-# Performance Frontend e Web Vitals
+# Performance frontend
 
-## Quando usar
+1. Medir antes de alterar: LCP, INP, CLS, bundle e waterfall.
+2. Identificar gargalo dominante: rede, JS, rendering, imagens ou backend.
+3. Aplicar uma otimização por vez e voltar a medir.
+4. Lazy-load apenas o que não bloqueia o fluxo principal.
+5. Evitar memoização, virtualização e code splitting sem evidência.
+6. Proteger acessibilidade e comportamento durante otimização.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Otimiza LCP, INP, CLS, bundle e imagens.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Reportar métricas antes/depois ou declarar quando não foi possível medir.

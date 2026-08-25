@@ -17,6 +17,10 @@ Rever código ou diff como equipa sénior antes de aceitar alterações.
 - ficheiros inúteis removidos;
 - changelog atualizado.
 
+## Segurança proporcional
+
+Para auth, dependências, infra, secrets ou release, executar `security-quality-gate` numa fase separada; não declarar scan limpo se a toolchain estiver ausente.
+
 ## Saída
 
 Classificar problemas por severidade: crítico, alto, médio, baixo.

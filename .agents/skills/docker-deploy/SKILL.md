@@ -1,41 +1,15 @@
 ---
 name: docker-deploy
-description: Gere Docker, Compose, volumes, verificações de saúde e deploy.
+description: Trabalha com Docker, Compose, imagens, runtime e deploy containerizado. Usar ao criar ou alterar containers; não usar apenas porque o projeto contém Dockerfile.
 ---
 
-# Deploy com Docker
+# Docker e deploy
 
-## Quando usar
+1. Identificar runtime, portas, volumes, redes, secrets e healthchecks.
+2. Usar imagens mínimas e versões fixadas; executar como utilizador não-root quando viável.
+3. Separar build e runtime com multi-stage builds.
+4. Não copiar segredos nem ficheiros desnecessários para a imagem.
+5. Definir healthcheck, limites e política de restart adequados.
+6. Validar com build limpo e arranque real.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Gere Docker, Compose, volumes, verificações de saúde e deploy.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Operações de produção exigem plano de rollback e confirmação explícita.

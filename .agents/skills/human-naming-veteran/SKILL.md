@@ -1,41 +1,13 @@
 ---
 name: human-naming-veteran
-description: Aplica naming claro, humano e profissional.
+description: Melhora nomes de variáveis, funções, classes, campos e conceitos para refletirem domínio e intenção. Usar em naming ambíguo; não renomear por preferência estética.
 ---
 
-# Nomeação Humana e Profissional
+# Naming humano e estável
 
-## Quando usar
-
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Aplica naming claro, humano e profissional.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+- Usar termos do domínio já adotados no projeto.
+- Nomear pela responsabilidade e resultado, não pela implementação temporária.
+- Evitar `data`, `item`, `manager`, `helper`, `temp`, `new`, `old` sem contexto.
+- Manter consistência entre API, base de dados, UI e documentação.
+- Renomes públicos exigem análise de compatibilidade.
+- Não combinar renaming massivo com bugfix localizado.

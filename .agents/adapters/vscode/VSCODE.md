@@ -1,4 +1,9 @@
 # VS Code
 
-O sistema WELLS não depende de extensões. Usa o prompt universal no agente
-instalado e mantém a configuração específica de IA dentro de `.agents/`.
+O runtime WELLS é independente da extensão instalada. Em qualquer agente do VS
+Code com acesso ao workspace, usa `Lê .agents/AGENTS.md e <tarefa>.`.
+
+Para Claude Code, instala o plugin pessoal WELLS; para Cursor/Copilot, usa o
+prompt explícito ou uma regra pessoal opcional.
+
+Modelo/provider: seguir `.agents/core/MODEL_ROUTING.md`; o adapter não fixa modelos concretos.

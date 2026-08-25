@@ -1,41 +1,15 @@
 ---
 name: cicd-pipeline-guardian
-description: Protege pipelines, segredos, critérios e deploy automático.
+description: Cria ou altera pipelines CI/CD, critérios, artefactos, segredos e deploy. Usar para workflows de integração/entrega; não ativar em código comum.
 ---
 
-# Guardião de Pipelines CI/CD
+# Guardião de CI/CD
 
-## Quando usar
+1. Identificar triggers, ambientes, permissões e artefactos.
+2. Fixar versões de actions/imagens quando apropriado.
+3. Aplicar permissões mínimas e segredos por ambiente.
+4. Separar build, testes, publicação e deploy.
+5. Garantir cache seguro, concorrência controlada e rollback.
+6. Validar sintaxe e executar dry-run/lint quando disponível.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Protege pipelines, segredos, critérios e deploy automático.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Nunca imprimir segredos, usar credenciais de produção em PRs não confiáveis ou permitir deploy sem gates definidos.

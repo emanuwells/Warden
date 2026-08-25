@@ -1,28 +1,15 @@
 ---
 name: safe-refactor
-description: Executa refactors estruturais seguros por fases. Use quando o pedido envolver refactor, reorganização, migração, dívida técnica, limpeza estrutural ou separação de responsabilidades.
+description: Executa refactors e reorganizações preservando comportamento, com fases, testes e rollback. Usar para mudanças estruturais; não usar em correção local simples.
 ---
 
+# Refactor seguro
 
-# Safe Refactor
+1. Definir comportamento que não pode mudar e validações existentes.
+2. Mapear dependências e consumidores do código afetado.
+3. Dividir em fases pequenas e reversíveis.
+4. Separar movimentos mecânicos de mudanças comportamentais.
+5. Executar testes antes e depois de cada fase relevante.
+6. Atualizar contratos/documentação apenas quando a interface muda.
 
-## Processo
-
-1. Ler `.agents/AGENTS.md`, `PROJECT_CONTEXT.md`, `COMMANDS.md` e `.agents/policies/SAFE_REFACTOR_POLICY.md`.
-2. Mapear comportamento atual e dependências.
-3. Identificar ficheiros afetados.
-4. Propor fases pequenas.
-5. Definir validações e rollback.
-6. Esperar autorização antes de alterar código, salvo se o pedido já autorizou execução.
-7. Executar uma fase de cada vez.
-8. Validar.
-9. Atualizar tasks, changelog e documentação.
-
-## Saída obrigatória antes de código
-
-- diagnóstico;
-- plano por fases;
-- ficheiros afetados;
-- riscos;
-- comandos de validação;
-- rollback.
+Refactors de risco alto devem apresentar plano, ficheiros, validações e rollback antes da execução.

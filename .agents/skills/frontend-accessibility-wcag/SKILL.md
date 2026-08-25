@@ -1,41 +1,15 @@
 ---
 name: frontend-accessibility-wcag
-description: Revê semântica, teclado, foco, contraste e rótulos.
+description: Revê e implementa acessibilidade em interfaces web: semântica, teclado, foco, contraste, formulários e ARIA. Usar em UI/UX; não usar em backend.
 ---
 
-# Acessibilidade Frontend WCAG
+# Acessibilidade frontend
 
-## Quando usar
+- Preferir elementos HTML semânticos antes de ARIA.
+- Garantir navegação por teclado, foco visível e ordem lógica.
+- Associar labels, erros e instruções a inputs.
+- Manter contraste, zoom e reflow adequados.
+- Não depender apenas de cor, hover ou movimento.
+- Testar com teclado e ferramentas automáticas; validar manualmente fluxos críticos.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Revê semântica, teclado, foco, contraste e rótulos.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+ARIA não deve compensar markup incorreto e nunca deve alterar semântica sem necessidade.

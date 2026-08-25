@@ -1,41 +1,15 @@
 ---
 name: database-migration-safety
-description: Reduz risco em schema, migrações e dados.
+description: Planeia e valida alterações de schema ou migrações de dados com compatibilidade, backup e rollback. Usar em DDL, backfills e mudanças persistentes; não usar para SELECT isolado.
 ---
 
-# Segurança de Migrações de base de Dados
+# Segurança de migrações
 
-## Quando usar
+1. Classificar operação: aditiva, destrutiva, backfill ou alteração de tipo.
+2. Medir volume, locks, duração e compatibilidade com versões anteriores.
+3. Preferir expand-and-contract para mudanças sem downtime.
+4. Definir backup, rollback e verificação pós-migração.
+5. Tornar scripts idempotentes quando possível.
+6. Testar numa cópia representativa antes de produção.
 
-Usar quando a tarefa tocar neste domínio.
-
-## Objetivo
-
-Reduz risco em schema, migrações e dados.
-
-## Procedimento
-
-1. Ler `.agents/AGENTS.md`.
-2. Confirmar contexto real do projeto.
-3. Aplicar políticas relevantes em `.agents/policies/`.
-4. Fazer a alteração mínima e profissional.
-5. Validar com critérios de qualidade aplicáveis.
-6. Atualizar documentação, comandos, handoff e changelog quando necessário.
-
-## Regras
-
-- Manter linguagem profissional e conceptual.
-- Evitar nomes temporários ou vagos.
-- Não expor segredos.
-- Preservar alterações existentes do utilizador.
-- Deixar o projeto mais limpo e escalável.
-
-## Checklist
-
-```text
-[ ] Contexto confirmado.
-[ ] Risco avaliado.
-[ ] Regras aplicadas.
-[ ] Validação executada ou justificada.
-[ ] Documentação atualizada quando aplicável.
-```
+Não executar `DROP`, `TRUNCATE`, alteração irreversível ou atualização massiva sem confirmação explícita e plano de recuperação.
