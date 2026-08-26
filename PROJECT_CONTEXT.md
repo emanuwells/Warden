@@ -10,6 +10,7 @@ Ler com `.agents/AGENTS.md`, `COMMANDS.md` e, em tarefas operacionais, `.agents/
 |---|---|
 | Nome | Warden |
 | Tipo | Collector + export + alertas + fatia UI/API publicável no HUB do host |
+| API agregada | `api/warden.php`, publicada em `/usr/share/nginx/html/api` por este repo |
 | Versão | `VERSION` (SemVer) |
 | Licença | Proprietária (todos os direitos reservados) |
 | Estado | Activo em produção (paths via env, não versionados) |

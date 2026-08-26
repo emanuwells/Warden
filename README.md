@@ -5,7 +5,7 @@
 ![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![License](https://img.shields.io/badge/license-Propriet%C3%A1ria-9b59b6)
 
-Runtime de monitorização agnóstico de plataforma: collector Python, export JSON, alertas configuráveis e UI/API PHP publicável no HUB do host. Recolhe métricas de sistema e MariaDB, persiste no schema `Warden` e expõe snapshots para consumo externo (incluindo proxy no [WELLS_API](../WELLS_API) via `GET /api/warden.php`).
+Runtime de monitorização agnóstico de plataforma: collector Python, export JSON, alertas configuráveis e UI/API PHP publicável no HUB do host. Recolhe métricas de sistema e MariaDB, persiste no schema `Warden` e expõe snapshots para consumo externo. O proxy `/api/warden.php` pertence agora a este repositório; o WELLS_API conserva apenas uma cópia auditada e o Swagger.
 
 ## Funcionalidades principais
 

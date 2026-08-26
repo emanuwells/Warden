@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "scope": "wells-api",
+  "owner": "Warden",
+  "files": [
+    { "source": "api/_warden_runtime.php", "target": "_warden_runtime.php" },
+    { "source": "api/warden.php", "target": "warden.php", "route": "/api/warden.php?help=1" }
+  ]
+}

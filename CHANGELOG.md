@@ -5,6 +5,8 @@ Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 ## [Unreleased] - 2026-07-26
 
 ### Alterado
+- `warden.php` e o respetivo runtime passam a ter este repositório como fonte
+  de verdade; manifesto allowlist e deploy seguro adicionados.
 - Migração para WELLS Agent Runtime **0.5.0** em `.agents/` (entrada canónica `.agents/AGENTS.md`).
 - Removidos legados `docs/ai/`, `tools/ai-adapters/`, `AGENTS.md` na raiz e `tasks/` (estado transportado para `.agents/state/`).
 - `README.md`, `COMMANDS.md`, `PROJECT_CONTEXT.md`, `docs/ROOT_STRUCTURE.md` e `scripts/validate-template.ps1` alinhados com o novo layout.

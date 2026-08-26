@@ -2,6 +2,15 @@
 
 Comandos rápidos do Warden. Este ficheiro é referência operacional curta; detalhes completos ficam no `README.md` e em `.agents/state/HANDOFF.md`.
 
+## API agregada
+
+```bash
+php -l api/_warden_runtime.php
+php -l api/warden.php
+bash scripts/deploy-production-api.sh --dry-run
+bash scripts/deploy-production-api.sh
+```
+
 Definir `WARDEN_RUNTIME_ROOT` em `secrets/production.deploy.local.env` antes de comandos SSH remotos.
 
 ## Ambiente
