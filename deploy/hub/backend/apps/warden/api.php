@@ -21,6 +21,9 @@ const WARDEN_API_APP_KEY = 'warden';
 const WARDEN_FAST_STALE_MS = 12000;
 const WARDEN_HEAVY_STALE_MS = 10 * 60 * 1000;
 const WARDEN_FULL_STALE_MS = 10 * 60 * 1000;
+// warden_system_info corre semanalmente (schedule "0 2 * * 1" em src/operational_jobs.py);
+// o limiar reflete essa cadência (7 dias) + 2 dias de margem, não o refresh de fast/heavy/full.
+const WARDEN_SYSTEM_INFO_STALE_MS = 9 * 24 * 60 * 60 * 1000;
 const WARDEN_RETENTION_DAYS = 7;
 const WARDEN_FALLBACK_30D_DAYS = 30;
 const WARDEN_INGEST_LOCK_NAME = 'maiatron_warden_ingest_v1';
@@ -1441,8 +1444,13 @@ function warden_sanitize_operations(array $ops): array
 
     $sys = is_array($ops['warden_system_info'] ?? null) ? $ops['warden_system_info'] : null;
     if ($sys) {
+        $sysGeneratedAt = $sys['generated_at'] ?? null;
+        $sysAgeMs = warden_age_ms(is_string($sysGeneratedAt) && $sysGeneratedAt !== '' ? $sysGeneratedAt : null, time());
         $out['warden_system_info'] = [
-            'generated_at' => $sys['generated_at'] ?? null,
+            'generated_at' => $sysGeneratedAt,
+            'age_ms' => $sysAgeMs,
+            'stale_threshold_ms' => WARDEN_SYSTEM_INFO_STALE_MS,
+            'stale' => $sysAgeMs > WARDEN_SYSTEM_INFO_STALE_MS,
             'host' => $sys['host'] ?? null,
             'os' => is_array($sys['os'] ?? null) ? [
                 'name' => $sys['os']['name'] ?? null,
@@ -1452,6 +1460,7 @@ function warden_sanitize_operations(array $ops): array
                 'dpkg_count' => $sys['packages']['dpkg_count'] ?? null,
                 'snap_count' => $sys['packages']['snap_count'] ?? null,
             ] : null,
+            'collection_error' => $sys['collection_error'] ?? null,
             'preview' => isset($sys['preview']) ? mb_substr((string)$sys['preview'], 0, 32000) : null,
             'artifacts' => is_array($sys['artifacts'] ?? null) ? [
                 'text_path' => $sys['artifacts']['text_path'] ?? null,
