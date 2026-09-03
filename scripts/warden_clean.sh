@@ -18,6 +18,8 @@ CACHE_MTIME_DAYS="${WARDEN_CACHE_MTIME_DAYS:-1}"
 SERVER_TEMP_MTIME_DAYS="${WARDEN_SERVER_TEMP_MTIME_DAYS:-2}"
 NGINX_TEMP_DIR="${WARDEN_NGINX_TEMP_DIR:-/tmp/nginx_backup_temp}"
 NGINX_TEMP_MTIME_DAYS="${WARDEN_NGINX_TEMP_MTIME_DAYS:-1}"
+SYSTEM_INFO_TXT_RETENTION_DAYS="${WARDEN_SYSTEM_INFO_TXT_RETENTION_DAYS:-60}"
+LOG_ROTATE_RETENTION_DAYS="${WARDEN_LOG_ROTATE_RETENTION_DAYS:-14}"
 DRY_RUN=0
 
 usage() {
@@ -47,6 +49,33 @@ run() {
     return 0
   fi
   "$@" || log WARN "Falhou: $description"
+}
+
+# Roda (gzip) um ficheiro grande em vez de o truncar cegamente, preservando histórico
+# recente para debugging. As rotações .gz são podadas depois via LOG_ROTATE_RETENTION_DAYS.
+rotate_large_file() {
+  local description="$1"
+  local file="$2"
+  local size_threshold_mb="$3"
+
+  [[ -f "$file" ]] || return 0
+  local size_bytes
+  size_bytes="$(stat -c '%s' "$file" 2>/dev/null || echo 0)"
+  local threshold_bytes=$(( size_threshold_mb * 1024 * 1024 ))
+  (( size_bytes > threshold_bytes )) || return 0
+
+  local rotated="${file}.$(date -u +%Y%m%dT%H%M%SZ).gz"
+  log INFO "$description"
+  printf '       gzip -c %q > %q && truncate -s 0 %q\n' "$file" "$rotated" "$file"
+  if (( DRY_RUN )); then
+    return 0
+  fi
+  if gzip -c "$file" > "$rotated"; then
+    truncate -s 0 "$file"
+  else
+    log WARN "Falhou a rodar: $file"
+    rm -f "$rotated"
+  fi
 }
 
 while (( $# > 0 )); do
@@ -114,21 +143,34 @@ else
 fi
 
 if [[ -d "$WARDEN_ROOT/runtime/logs" ]]; then
-  run "Truncar logs Warden maiores que 20M" \
-    find "$WARDEN_ROOT/runtime/logs" -maxdepth 1 -type f \
-      \( -name '*.log' -o -name '*.err.log' \) -size +20M -exec truncate -s 0 {} +
+  while IFS= read -r -d '' log_file; do
+    rotate_large_file "Rodar log Warden maior que 20M: $(basename "$log_file")" "$log_file" 20
+  done < <(find "$WARDEN_ROOT/runtime/logs" -maxdepth 1 -type f \( -name '*.log' -o -name '*.err.log' \) -print0)
+
+  run "Remover rotacoes de log antigas (>${LOG_ROTATE_RETENTION_DAYS}d)" \
+    find "$WARDEN_ROOT/runtime/logs" -maxdepth 1 -type f -name '*.log.*.gz' -mtime +"$LOG_ROTATE_RETENTION_DAYS" -delete
 fi
 
-run "Truncar historico db_monitor se exceder 20M" \
-  find "$WARDEN_ROOT/runtime" -maxdepth 1 -type f -name 'db_monitor_history.jsonl' -size +20M -exec truncate -s 0 {} +
+rotate_large_file "Rodar historico db_monitor se exceder 20M" "$WARDEN_ROOT/runtime/db_monitor_history.jsonl" 20
+rotate_large_file "Rodar slack_alert_events.jsonl se exceder 20M" "$WARDEN_ROOT/runtime/slack_alert_events.jsonl" 20
 
-run "Truncar slack_alert_events.jsonl se exceder 20M" \
-  find "$WARDEN_ROOT/runtime" -maxdepth 1 -type f -name 'slack_alert_events.jsonl' -size +20M -exec truncate -s 0 {} +
+if [[ -d "$WARDEN_ROOT/runtime" ]]; then
+  run "Remover rotacoes antigas de historico (>${LOG_ROTATE_RETENTION_DAYS}d)" \
+    find "$WARDEN_ROOT/runtime" -maxdepth 1 -type f \
+      \( -name 'db_monitor_history.jsonl.*.gz' -o -name 'slack_alert_events.jsonl.*.gz' \) \
+      -mtime +"$LOG_ROTATE_RETENTION_DAYS" -delete
+fi
 
 OP_JOBS_MTIME_DAYS="${WARDEN_OPERATIONAL_JOBS_RETENTION_DAYS:-30}"
 if [[ -d "$WARDEN_ROOT/runtime/operational_jobs" ]]; then
   run "Remover state antigo de operational_jobs" \
     find "$WARDEN_ROOT/runtime/operational_jobs" -maxdepth 1 -type f -name '*.json' -mtime +"$OP_JOBS_MTIME_DAYS" -delete
+fi
+
+if [[ -d "$WARDEN_ROOT/runtime/operational" ]]; then
+  run "Remover exports .txt antigos do Warden System Info (>${SYSTEM_INFO_TXT_RETENTION_DAYS}d)" \
+    find "$WARDEN_ROOT/runtime/operational" -maxdepth 1 -type f -name 'warden_system_info_*.txt' \
+      -mtime +"$SYSTEM_INFO_TXT_RETENTION_DAYS" -delete
 fi
 
 if [[ -d "$WARDEN_ROOT/runtime/export" ]]; then

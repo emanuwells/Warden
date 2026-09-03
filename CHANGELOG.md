@@ -2,6 +2,36 @@
 
 Todas as alterações notáveis ao projeto **Warden** serão documentadas aqui.
 
+## [Unreleased] - 2026-09-03
+
+### Corrigido
+- `api/warden.php`: `warden_load_snapshot_file()` aplicava um limiar fixo de 15s a
+  fast e heavy por igual, marcando `stale_heavy` como `true` quase sempre (heavy
+  atualiza a cada 5min). Agora usa limiares dedicados (`WARDEN_PROXY_FAST_STALE_MS`,
+  `WARDEN_PROXY_HEAVY_STALE_MS`), espelhando `WARDEN_FAST_STALE_MS`/`WARDEN_HEAVY_STALE_MS`
+  do backend.
+- `scripts/warden_system_info.py`: uma falha em `lsb_release`/`dpkg`/`snap` deixava
+  `warden_system_info_latest.json` congelado sem qualquer sinal no payload. Cada
+  recolha (SO, dpkg, snap) tem agora o seu próprio `try/except`; uma falha parcial
+  ainda escreve JSON novo com `collection_error` preenchido, em vez de manter dados
+  antigos silenciosamente.
+
+### Adicionado
+- `public/backend/apps/warden/api.php`: bloco `warden_system_info` da API passa a
+  expor `age_ms`/`stale`/`stale_threshold_ms` (limiar de 9 dias, cadência semanal +
+  margem), tal como já acontecia para fast/heavy/full — dá ao Overseer um sinal
+  explícito em vez de aplicar um threshold genérico a um dado semanal.
+- `deploy/hub/frontend/apps/warden/warden.js`: tab Info mostra "(desatualizado)"
+  junto à data de geração quando `warden_system_info.stale` é `true`.
+- `scripts/warden_clean.sh`: retenção de `runtime/operational/warden_system_info_*.txt`
+  (`WARDEN_SYSTEM_INFO_TXT_RETENTION_DAYS`, default 60d — nunca eram podados) e
+  rotação gzip (em vez de truncagem cega) de `runtime/logs/*.log`/`*.err.log`,
+  `db_monitor_history.jsonl` e `slack_alert_events.jsonl` ao ultrapassarem 20 MB,
+  com poda das rotações via `WARDEN_LOG_ROTATE_RETENTION_DAYS` (default 14d).
+- `scripts/docker.crontab`: passa a invocar `warden_clean.sh` completo (antes só
+  `warden_clean.py`), alinhando a housekeeping do modo Docker com produção
+  (systemd + cron).
+
 ## [Unreleased] - 2026-07-26
 
 ### Alterado

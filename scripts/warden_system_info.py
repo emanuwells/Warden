@@ -97,15 +97,32 @@ def gather_info() -> Tuple[Path, Path, List[str]]:
     current_date = datetime.now().strftime("%Y-%m-%d")
     output_file = OUTPUT_DIR / f"warden_system_info_{current_date}.txt"
 
+    collection_errors: List[str] = []
+
     _ts("Obtendo informações do sistema operativo")
-    os_name = _run_cmd(["lsb_release", "-d"]).stdout.split("\t")[1].strip()
-    os_version = _run_cmd(["lsb_release", "-r"]).stdout.split("\t")[1].strip()
+    try:
+        os_name = _run_cmd(["lsb_release", "-d"]).stdout.split("\t")[1].strip()
+        os_version = _run_cmd(["lsb_release", "-r"]).stdout.split("\t")[1].strip()
+    except Exception as exc:
+        _ts(f"Falha ao obter SO: {exc}")
+        collection_errors.append(f"os: {exc}")
+        os_name, os_version = "desconhecido", "desconhecido"
 
     _ts("Listando programas instalados via dpkg")
-    dpkg_programs, dpkg_count = list_dpkg_programs()
+    try:
+        dpkg_programs, dpkg_count = list_dpkg_programs()
+    except Exception as exc:
+        _ts(f"Falha ao listar dpkg: {exc}")
+        collection_errors.append(f"dpkg: {exc}")
+        dpkg_programs, dpkg_count = "", 0
 
     _ts("Listando programas instalados via snap")
-    snap_programs, snap_count = list_snap_programs()
+    try:
+        snap_programs, snap_count = list_snap_programs()
+    except Exception as exc:
+        _ts(f"Falha ao listar snap: {exc}")
+        collection_errors.append(f"snap: {exc}")
+        snap_programs, snap_count = "", 0
 
     _ts("A guardar informações no ficheiro")
     with output_file.open("w", encoding="utf-8") as fh:
@@ -127,12 +144,15 @@ def gather_info() -> Tuple[Path, Path, List[str]]:
             "dpkg_count": dpkg_count,
             "snap_count": snap_count,
         },
+        "collection_error": "; ".join(collection_errors) if collection_errors else None,
         "artifacts": {
             "text_path": str(output_file),
             "json_path": str(LATEST_JSON),
         },
         "preview": _preview_text(output_file),
     }
+    # Escreve sempre que possível, mesmo com falha parcial (ex.: dpkg indisponível) — assim
+    # generated_at avança e o JSON não fica congelado silenciosamente numa recolha antiga.
     _write_json_atomic(LATEST_JSON, payload)
 
     _ts(f"Lista de programas guardada em {output_file}")
@@ -144,6 +164,8 @@ def gather_info() -> Tuple[Path, Path, List[str]]:
         f"dpkg listados: {dpkg_count}",
         f"snap listados: {snap_count}",
     ]
+    if collection_errors:
+        summary.append(f"Falhas parciais: {'; '.join(collection_errors)}")
     return output_file, LATEST_JSON, summary
 
 
@@ -154,6 +176,8 @@ def main() -> None:
 
     try:
         _output_file, _json_file, summary = gather_info()
+        if any(line.startswith("Falhas parciais:") for line in summary):
+            status = "NOK"
     except Exception as exc:  # pragma: no cover
         status = "NOK"
         error_detail = str(exc)

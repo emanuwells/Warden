@@ -2093,7 +2093,8 @@
             ? `${Number.isFinite(dpkg) ? dpkg : 0} dpkg · ${Number.isFinite(snap) ? snap : 0} snap`
             : '—';
         setText('infoPackageCounts', counts);
-        setText('infoGeneratedAt', sys.generated_at ? formatDateTime(sys.generated_at) : '—');
+        const generatedLabel = sys.generated_at ? formatDateTime(sys.generated_at) : '—';
+        setText('infoGeneratedAt', sys.stale ? `${generatedLabel} (desatualizado)` : generatedLabel);
 
         const jobsHost = document.getElementById('infoOpsJobs');
         if (jobsHost) {

@@ -151,7 +151,9 @@ Não apagar snapshots em `runtime/export/` — são regenerados pelos jobs de ex
 - temporários atómicos antigos em `runtime/export/*.tmp-*` e `runtime/archive/weekly/*.tmp-*`;
 - entradas antigas em `runtime/cache/` (preserva `.gitkeep`);
 - `__pycache__`, `.pytest_cache`, `*.pyc` e `*.pyo`, excluindo `.git`, `.venv` e `secrets`;
-- ficheiros de editor/sistema antigos: `*~`, `.DS_Store`, `Thumbs.db`, `*.swp`, `*.swo`.
+- ficheiros de editor/sistema antigos: `*~`, `.DS_Store`, `Thumbs.db`, `*.swp`, `*.swo`;
+- logs grandes (`runtime/logs/*.log`, `*.err.log`, `db_monitor_history.jsonl`, `slack_alert_events.jsonl`) são **rodados** (gzip para `<nome>.<timestamp>.gz`) em vez de truncados às cegas ao ultrapassar 20 MB — preserva histórico recente para debugging; as rotações `.gz` são podadas após `WARDEN_LOG_ROTATE_RETENTION_DAYS` dias (default `14`);
+- exports `.txt` datados do Warden System Info (`runtime/operational/warden_system_info_*.txt`) mais antigos que `WARDEN_SYSTEM_INFO_TXT_RETENTION_DAYS` dias (default `60`, ≈ 8 execuções semanais) — preserva sempre `warden_system_info_latest.json`.
 
 **Nunca apaga:** snapshots JSON ativos (`runtime/export/*.json`), arquivos semanais (`runtime/archive/weekly/*.json.gz`), backups, dumps, diretórios de aplicação, volumes Docker, dados de negócio, relay logs, secrets, virtualenvs nem `.env`. Binlogs MariaDB só são purgados quando `WARDEN_CLEAN_BINLOG_RETENTION_DAYS` está explicitamente configurado.
 

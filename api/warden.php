@@ -8,6 +8,11 @@ require_once __DIR__ . '/_warden_runtime.php';
  * Proxies public ops_fast + ops_heavy snapshots without exposing internal paths or secrets.
  */
 
+// Mirrors WARDEN_FAST_STALE_MS / WARDEN_HEAVY_STALE_MS in public/backend/apps/warden/api.php.
+// Snapshot-file mode has no access to those constants, so they are duplicated here; keep in sync.
+const WARDEN_PROXY_FAST_STALE_MS = 12000;
+const WARDEN_PROXY_HEAVY_STALE_MS = 10 * 60 * 1000;
+
 $apiCfg = wells_api_api_config('warden');
 $allowedOrigins = wells_api_config_value($apiCfg, 'cors.allowed_origins', ['*']);
 if (!is_array($allowedOrigins)) {
@@ -115,7 +120,7 @@ function warden_upstream_host(string $apiUrl): string
     return $host;
 }
 
-function warden_load_snapshot_file(string $path): array
+function warden_load_snapshot_file(string $path, int $staleThresholdMs): array
 {
     if ($path === '' || !is_readable($path)) {
         return ['ok' => false, 'error' => 'Snapshot file not readable'];
@@ -139,7 +144,7 @@ function warden_load_snapshot_file(string $path): array
         'ok' => true,
         'payload' => $decoded,
         'generated_at' => $generatedAt !== '' ? $generatedAt : null,
-        'stale' => $ageMs !== null && $ageMs > 15000,
+        'stale' => $ageMs !== null && $ageMs > $staleThresholdMs,
         'age_ms' => $ageMs,
         'source' => 'snapshot',
     ];
@@ -199,8 +204,8 @@ if ($baseUrl !== '') {
     $heavyEnvelope = warden_fetch_action($baseUrl, 'ops_heavy');
     $upstreamHost = warden_upstream_host($baseUrl);
 } else {
-    $fastEnvelope = warden_load_snapshot_file($fastSnapshotPath);
-    $heavyEnvelope = warden_load_snapshot_file($heavySnapshotPath);
+    $fastEnvelope = warden_load_snapshot_file($fastSnapshotPath, WARDEN_PROXY_FAST_STALE_MS);
+    $heavyEnvelope = warden_load_snapshot_file($heavySnapshotPath, WARDEN_PROXY_HEAVY_STALE_MS);
     $upstreamHost = 'snapshot';
 }
 
