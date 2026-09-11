@@ -20,10 +20,12 @@ const WARDEN_API_SCHEMA_VERSION = 2;
 const WARDEN_API_APP_KEY = 'warden';
 const WARDEN_FAST_STALE_MS = 12000;
 const WARDEN_HEAVY_STALE_MS = 10 * 60 * 1000;
-const WARDEN_FULL_STALE_MS = 10 * 60 * 1000;
+// Cadência do cron full é */15 min; o limiar fica acima dela (ver critério
+// "idade < 16 min" em docs/architecture/warden-pipeline.md).
+const WARDEN_FULL_STALE_MS = 16 * 60 * 1000;
 // warden_system_info corre semanalmente (schedule "0 2 * * 1" em src/operational_jobs.py);
-// o limiar reflete essa cadência (7 dias) + 2 dias de margem, não o refresh de fast/heavy/full.
-const WARDEN_SYSTEM_INFO_STALE_MS = 9 * 24 * 60 * 60 * 1000;
+// tolera 1 execução perdida e só fica stale se também falhar na 2ª semana.
+const WARDEN_SYSTEM_INFO_STALE_MS = 14 * 24 * 60 * 60 * 1000;
 const WARDEN_RETENTION_DAYS = 7;
 const WARDEN_FALLBACK_30D_DAYS = 30;
 const WARDEN_INGEST_LOCK_NAME = 'maiatron_warden_ingest_v1';
